@@ -30,7 +30,7 @@ seokpan-docs/
 ```
 
 * `logical-architecture/`  : 서비스 흐름, Kubernetes 및 주요 구성요소의 논리 구조
-* `physical-architecture/`  : VM 배치, 네트워크 및 인프라 물리 구조
+* `physical-architecture/` : VM 배치, 네트워크 및 인프라 물리 구조
 
 ## Related Repositories
 
