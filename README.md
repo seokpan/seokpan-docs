@@ -24,13 +24,13 @@
 주요 아키텍처 이미지는 별도 디렉터리에서 관리합니다.
 
 ```text
-docs/
+seokpan-docs/
 ├─ logical-architecture/
 └─ physical-architecture/
 ```
 
-* `logical-architecture/` : 서비스 흐름, Kubernetes 및 주요 구성요소의 논리 구조
-* `physical-architecture/` : VM 배치, 네트워크 및 인프라 물리 구조
+* `logical-architecture/`  : 서비스 흐름, Kubernetes 및 주요 구성요소의 논리 구조
+* `physical-architecture/`  : VM 배치, 네트워크 및 인프라 물리 구조
 
 ## Related Repositories
 
