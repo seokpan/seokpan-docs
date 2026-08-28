@@ -66,6 +66,23 @@
 - 영향:
   - NFS Subdir Provisioner는 Observability 구성의 선행조건으로 취급하지 않는다.
 
+### Prometheus·Loki Local PV 배치 확정
+
+- 구분: 구현 단계 확정
+- 기존 기준:
+  - Prometheus와 Loki는 Local PV를 사용하되 실제 Worker와 hostPath는 구현 단계에서 확정하기로 했다.
+- 확정 내용:
+  - Prometheus: `worker-01:/mnt/observability/prometheus`
+  - Loki: `worker-02:/mnt/observability/loki`
+  - Prometheus와 Loki를 서로 다른 Worker에 배치한다.
+- 이유:
+  - Worker 1대 장애 시 Metric과 Log 저장소가 동시에 영향을 받지 않도록 장애 영향 범위를 분리한다.
+  - Prometheus/Loki의 Node 종속 Local PV 장애 실험을 각각 독립적으로 확인할 수 있도록 한다.
+- 영향:
+  - Observability Manifest에서 Prometheus는 `worker-01`, Loki는 `worker-02`에 고정 배치하도록 구성한다.
+  - 각 Local PV는 위 hostPath를 기준으로 생성한다.
+- 관련:
+  - Observability 구현 Issue/PR에서 실제 Manifest와 검증 결과를 연결한다.
 
 ---
 
