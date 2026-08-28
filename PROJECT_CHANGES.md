@@ -38,6 +38,24 @@
 - 관련:
   - `seokpan/seokpan-gitops#5`
 
+### Gateway 구현 버전 및 소유권 경계 확정
+
+- 구분: 구현 단계 확정
+- 기존 기준:
+  - 01~08 공식 문서에서는 Gateway API와 NGINX Gateway Fabric 사용 방향을 정의했지만, 실제 구현 버전과 Ansible/GitOps 간 세부 소유권 경계는 구현 단계에서 확정할 필요가 있었다.
+- 확정 내용:
+  - Gateway API는 `v1.5.1`을 사용한다.
+  - NGINX Gateway Fabric은 `v2.6.7`을 사용한다.
+  - Ansible `k8s_addons` 영역은 Gateway API 표준 CRD, NGINX Gateway Fabric CRD, Controller Bootstrap 및 플랫폼 수준 `GatewayClass` 설치·검증을 담당한다.
+  - GitOps는 프로젝트 서비스용 `NginxProxy`, `Gateway`, 이후 `HTTPRoute` 등 서비스 Desired State를 담당한다.
+  - NGINX Gateway Fabric 공식 NodePort 전체 Manifest에는 기본 `NginxProxy`와 `externalTrafficPolicy: Local` 설정이 함께 포함되므로 그대로 적용하지 않는다. 프로젝트의 `NginxProxy`는 GitOps에서 `externalTrafficPolicy: Cluster`, 고정 NodePort `30080/30443` 기준으로 관리한다.
+- 영향:
+  - Ansible과 GitOps가 동일한 Gateway Data Plane Desired State를 동시에 소유하지 않도록 경계를 분리한다.
+  - Gateway Add-on 자동화는 버전 고정된 upstream Manifest를 기준으로 재현 가능하게 구성한다.
+- 관련:
+  - `seokpan/seokpan-infra#12`
+  - `seokpan/seokpan-gitops#5`
+
 ### Ansible Project 실행환경 Version Matrix 확정
 
 - 구분: 구현 단계 확정
