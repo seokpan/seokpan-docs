@@ -84,6 +84,26 @@
 - 관련:
   - Observability 구현 Issue/PR에서 실제 Manifest와 검증 결과를 연결한다.
 
+### Storage Infrastructure 전용 Namespace 추가
+
+- 구분: 구현 단계 추가 확정
+- 기존 기준:
+  - 01~08 설계에서는 External NFS, NFS Subdir External Provisioner, StorageClass/PV/PVC 역할을 정의했으나 Provisioner 전용 Kubernetes Namespace는 별도로 확정하지 않았다.
+  - 구현 초기 Namespace는 `application`, `platform`, `observability`, `cicd` 중심으로 구성했다.
+- 확정 내용:
+  - NFS Subdir External Provisioner와 Storage 검증용 PVC/Pod를 분리 관리하기 위해 `storage-infra` Namespace를 추가한다.
+  - 김상희의 기존 `platform/ksh` ServiceAccount를 `storage-infra` Namespace의 작업 권한에 연결한다.
+  - Redis Runtime StatefulSet/PVC는 Storage Infrastructure와 분리하여 기존대로 `platform` Namespace를 유지한다.
+  - StorageClass, PV, Provisioner용 ClusterRole/ClusterRoleBinding 등 Cluster-scoped 리소스 권한은 사용자 상시 권한으로 넓게 부여하지 않고 승인된 Bootstrap/GitOps 범위에서 적용한다.
+- 영향:
+  - Kubernetes 프로젝트 Namespace가 구현 단계 기준으로 `application`, `platform`, `observability`, `cicd`, `storage-infra`로 구체화된다.
+  - `seokpan-gitops/platform/namespaces-rbac/`의 Namespace/RBAC Desired State를 수정한다.
+  - NFS Provisioner 구현 및 검증은 `storage-infra`, Redis Runtime은 `platform`이라는 경계를 사용한다.
+- 관련:
+  - `seokpan/seokpan-gitops#3`
+  - `seokpan/seokpan-gitops#8`
+  - `seokpan/seokpan-infra#44`
+
 ---
 
 ## 작성 형식
