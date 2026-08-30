@@ -19,6 +19,20 @@ Docs 전용 Repository로 프로젝트의 공식 기획·설계 문서를 PDF �
 | 07 | 확장 호환형 MVP         |
 | 08 | 최종 기획안             |
 
+## Current Implementation Baseline
+
+PDF 01~08은 프로젝트의 원 기획·설계와 MVP 범위를 정의합니다.
+PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 문서를 함께 적용합니다.
+
+| 문서 | 역할 |
+| --- | --- |
+| [PROJECT_CHANGES.md](PROJECT_CHANGES.md) | PDF 이후 확정된 변경·추가·삭제 결정의 이력 |
+| [MVP_IMPLEMENTATION_BASELINE.md](MVP_IMPLEMENTATION_BASELINE.md) | 현재 App·Infra·GitOps가 함께 소비하는 MVP 구현 기준과 검증 상태 |
+
+요구사항 범위는 07의 MVP를 우선합니다. 변경 이력은 명시된 항목에만 적용하며,
+구현 기준 문서는 원 기획·설계의 범위를 임의로 확대하거나 대체하지 않습니다.
+실제 코드·Manifest·자동화와 작업 상태는 각 구현 Repository에서 관리합니다.
+
 ## Architecture
 
 주요 아키텍처 이미지는 별도 디렉터리에서 관리합니다.

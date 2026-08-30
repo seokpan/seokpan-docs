@@ -124,6 +124,58 @@
 
 ---
 
+## 2026-08-30
+
+### Harbor 내부 Hostname 및 TLS 기준 변경
+
+- 구분: 기존 값 변경 및 역할 확정
+- 기존 기준:
+  - Harbor 내부 접근 이름은 `harbor.stone.test`를 사용했다.
+  - 내부 CA 생성·보관과 Kubernetes 노드 신뢰 배포의 담당 경계는 구현 단계에서 구체화할 필요가 있었다.
+- 변경/확정 내용:
+  - Harbor 공식 서비스 FQDN은 `harbor.seokpan.soldesk.store`를 사용한다.
+  - Harbor VM 주소는 기존과 동일한 `192.168.53.61`을 유지한다.
+  - 구현 문서와 Ansible Role에서 VM은 `harbor-01`, Ansible Inventory Host는 `harbor`로 식별한다. 두 이름은 TLS 서비스 FQDN과 구분한다.
+  - Harbor 인증서 SAN에는 최소 `DNS:harbor.seokpan.soldesk.store`와 `IP:192.168.53.61`을 포함한다.
+  - 별도 내부 DNS가 준비되기 전에는 필요한 Host와 Kubernetes Node에 `/etc/hosts` 매핑을 배포한다.
+  - Harbor 담당은 내부 CA와 Harbor 인증서를 준비하고 CA Private Key를 GitHub에 저장하지 않는다.
+  - Kubernetes Node에는 CA 공개 인증서만 배포하며, Worker/containerd의 신뢰와 실제 Image Pull은 별도 검증한다.
+- 영향:
+  - 현재 설정과 신규 문서에서 `harbor.stone.test`를 현행 Endpoint로 사용하지 않는다.
+  - Host 이름 해석, 인증서 SAN, Harbor Client와 Worker/containerd의 CA 신뢰를 같은 FQDN 기준으로 맞춘다.
+  - `argocd`, `grafana`, `jenkins` 등 후속 내부 서비스는 `<service>.seokpan.soldesk.store` 명명 방향을 사용하되, 실제 적용·검증 완료는 각 구현 작업에서 별도로 확인한다.
+- 관련:
+  - `MVP_IMPLEMENTATION_BASELINE.md`
+  - `seokpan/seokpan-infra`의 Harbor 및 CA 신뢰 자동화
+
+### Application MVP 구현 기준 확정
+
+- 구분: 구현 단계 추가 확정
+- 기존 기준:
+  - 01~08 문서는 Python/FastAPI Modular Monolith, Nginx Frontend, MariaDB·Redis 책임, WebSocket 실시간 처리와 Jenkins·Harbor·GitOps 흐름을 정의했다.
+  - Application의 정확한 Runtime·Framework Version, HTTP/WebSocket 계약 방식, Migration 소유권, Frontend Stack과 단계별 검증 Gate는 구현 착수 전에 구체화할 필요가 있었다.
+- 변경/확정 내용:
+  - 기존 MariaDB Schema를 재사용하고 Domain → Adapter → Headless HTTP/WebSocket → Frontend → Provider·배포 통합 순서로 점진 구현한다.
+  - Backend는 CPython 3.13.15 기반 FastAPI Modular Monolith와 실용적 Ports/Adapters 구조를 사용한다.
+  - 상태 조회·변경 명령은 `/api/v1` HTTP JSON API, 실시간 권위 Snapshot·Event 전달은 `/ws/v1` WebSocket을 기본으로 한다.
+  - MariaDB 영속 데이터와 Redis 공유 Runtime State의 기존 책임을 유지하며, Application이 SQLAlchemy Model·Alembic Migration·Redis Key/Lua 계약을 소유한다.
+  - Frontend는 React·TypeScript·Vite 기반 정적 Application으로 구성하고 Nginx에서 제공한다.
+  - Backend와 Frontend는 별도 Image·Workload로 배포하며 Jenkins Test → Harbor Image → GitOps PR → Argo CD 흐름을 유지한다.
+  - Windows Host에서 개발하되 Application 실행 자산은 CentOS Stream 9·Linux Container 기준 UTF-8·LF로 관리하고 Linux 재현 Gate를 둔다.
+  - Frontend UX/UI Mockup은 구현 전 사용자에게 요청하되 공식 명세가 아닌 방향성 참고자료로 적용한다.
+  - 세부 Version, 실행·환경·검증 상태와 미확정 항목은 `MVP_IMPLEMENTATION_BASELINE.md`를 따른다.
+- 영향:
+  - `seokpan-app`의 Scaffold·Lock·Test·Container·Pipeline은 공용 구현 기준을 소비한다.
+  - `seokpan-infra`는 Provider·Registry·실행환경을 제공하고, `seokpan-gitops`는 Kubernetes Desired State와 Secret 참조를 소유한다.
+  - 결정 완료와 실제 Linux·Provider·Cluster 검증 완료를 구분한다.
+- 관련:
+  - `MVP_IMPLEMENTATION_BASELINE.md`
+  - `seokpan/seokpan-app`
+  - `seokpan/seokpan-infra`
+  - `seokpan/seokpan-gitops`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
