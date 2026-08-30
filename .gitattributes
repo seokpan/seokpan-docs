@@ -1,0 +1,8 @@
+* text=auto
+
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.pdf -text
+*.zip -text
