@@ -176,6 +176,36 @@
 
 ---
 
+## 2026-08-31
+
+### Git Branch 운영 방식 유지 결정
+
+- 구분: 협업 운영 기준 확정
+- 기존 기준:
+  - 각 Repository는 최신 `main`에서 Feature/Task Branch를 생성하고 `Issue → Branch → Commit → Pull Request → Review → Squash Merge` 흐름으로 운영하고 있었다.
+  - 프로젝트 진행 중 개발·안정화·완료 상태를 Branch 수준에서 분리하기 위해 장기 `dev → staging → main` 구조 도입을 대안으로 검토했다.
+- 확정 내용:
+  - 1차 프로젝트에서는 현재의 `main` 중심 Feature/Task Branch + Pull Request 운영 방식을 유지한다.
+  - 작업 Branch는 최신 `main`을 기준으로 생성하고, 완료 후 `main`을 대상으로 Pull Request를 생성한다.
+  - Review 및 필요한 검증을 통과한 변경만 Squash Merge한다.
+  - 장기 `dev`, `staging` Branch는 1차 프로젝트에서는 도입하지 않는다.
+- 판단 근거:
+  - `dev → staging → main` 방식 자체가 부적절해서 제외한 것이 아니다. 실제 Development / Staging / Production 환경이 분리되어 있거나 Release Gate가 필요한 팀에서는 충분히 적절한 전략이다.
+  - 현재 프로젝트는 4인 팀, 짧은 1차 일정, 기존 `main` 중심 Workflow 운영 중, 별도 Dev/Staging Runtime 미구성이라는 조건이다.
+  - 현 시점에서 장기 Branch를 추가하면 여러 Repository의 기준 Branch 변경, Branch 간 동기화, Merge 순서 및 Conflict 관리 비용이 늘어난다.
+  - 실제 Dev/Staging 실행환경이 없는 상태에서 Branch만 추가할 경우 환경 분리 효과는 제한적이며, 1차 프로젝트 핵심 목표인 On-premise 구축·Ansible 재현 자동화·서비스 통합·정량 검증에 대한 직접 기여가 낮다.
+  - 따라서 복잡한 Branch 전략을 몰라서 사용하지 않는 것이 아니라, 현재 프로젝트 조건에서 추가 복잡도를 도입하지 않기로 선택한 것이다.
+- 향후 재검토:
+  - 실제 Development / Staging / Production Runtime 환경을 별도로 운영하는 경우
+  - `main` Merge와 Production 배포 시점을 분리해야 하는 경우
+  - 여러 기능의 장기 통합 검증 또는 Release Candidate 승인 Gate가 필요한 경우
+  - 2차 프로젝트에서 환경별 GitOps 구조가 필요한 경우
+  - 재검토 시에는 Branch 이름만 추가하기보다 `dev → Development`, `staging → Staging`, `main → Production`처럼 실제 배포환경과 연결되는 구조를 우선 검토한다.
+- 관련:
+  - `seokpan/seokpan-docs#6`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
