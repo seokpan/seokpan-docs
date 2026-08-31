@@ -101,6 +101,16 @@ Endpoint·Event 전체 목록, Cookie TTL·CSRF Header, 오류 코드 상세는 
 
 ## 6. MariaDB·Redis 기준
 
+Provider Version 기준은 다음과 같다.
+
+| 구성요소 | MVP 구현 버전 | 적용 상태 |
+| --- | --- | --- |
+| MariaDB | `11.8.9 LTS` | D06 기준 유지 |
+| MaxScale | `24.02.9` | Community Package 가용성에 따른 확정 변경. 실제 Runtime 검증은 Infra 작업에서 별도 확인 |
+
+MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동 Upgrade하지 않으며,
+별도 변경 작업과 회귀검증을 거쳐 적용 여부를 결정한다. 변경 근거는 [프로젝트 변경·결정 이력](PROJECT_CHANGES.md)을 따른다.
+
 | 데이터 | 권위 저장소 |
 | --- | --- |
 | Member, MemberStats, Game, Move, GameResult, RatingHistory | MariaDB |

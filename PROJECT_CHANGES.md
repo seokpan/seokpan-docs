@@ -178,6 +178,27 @@
 
 ## 2026-08-31
 
+### MaxScale MVP 구현 버전 조정
+
+- 구분: 기존 값 변경
+- 기존 기준:
+  - D06의 Version Lock 기준은 MariaDB `11.8.9 LTS`, MaxScale `24.02.10`이었다.
+- 변경/확정 내용:
+  - MariaDB `11.8.9 LTS` 기준은 유지한다.
+  - MaxScale의 MVP 구현 버전은 `24.02.9`로 조정한다.
+  - MaxScale `24.02.10`은 2026-06-15 발표된 GA Release이지만, 2026-08-31 확인 시점의 Community 공개 Repository에서는 설치 가능한 Package가 제공되지 않았다.
+  - Community Repository에서 설치 가능한 동일 `24.02` 계열의 최신 Patch인 `24.02.9`를 사용한다.
+  - 추후 `24.02.10` Package가 Community Repository에 제공되더라도 자동 Upgrade하지 않는다. 별도 변경 작업에서 Package 가용성, Monitor·Router, Replication, Read/Write와 재실행 멱등성을 검증한 뒤 변경 여부를 결정한다.
+- 영향:
+  - Infra 자동화와 Version Lock은 MaxScale `24.02.9`를 정확한 설치 버전으로 사용한다.
+  - 실제 설치·복제·Routing 검증 완료 여부는 구현 Repository의 작업 결과로 관리하며, 이 결정 기록만으로 Runtime 검증 완료를 의미하지 않는다.
+  - 원본 D06 PDF는 변경 전 기준으로 보존한다.
+- 관련:
+  - [MaxScale 24.02.10 Release Notes](https://github.com/mariadb-corporation/mariadb-docs/blob/main/release-notes/maxscale/24.02/24.02.10.md)
+  - [MariaDB MaxScale 24.02 Community 공개 목록](https://dlm.mariadb.com/browse/mariadbmaxscale/24.02/)
+  - `seokpan/seokpan-infra#63`
+  - `seokpan/seokpan-infra#65`
+
 ### Git Branch 운영 방식 유지 결정
 
 - 구분: 협업 운영 기준 확정
