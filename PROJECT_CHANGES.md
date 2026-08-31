@@ -1,6 +1,6 @@
 # 石나가는 판단 프로젝트 변경·결정 이력
 
-이 문서는 `seokpan-docs`의 01~08 공식 기획·설계 문서를 기준점으로 하여,
+이 문서는 `seokpan-docs`의 01-08 공식 기획·설계 문서를 기준점으로 하여,
 실제 구현 과정에서 새로 확정되거나 변경·추가·삭제된 사항을 기록한다.
 
 현재 구현 상태 전체를 다시 설명하는 문서가 아니며,
@@ -32,7 +32,7 @@
   - 서비스 외부 Hostname은 구체적으로 확정되지 않은 상태였다.
 - 확정 내용:
   - 서비스 외부 Hostname을 `game.seokpan.soldesk.store`로 사용한다.
-  - 사용자 서비스 HTTPS 진입 주소는 `https://game.seokpan.soldesk.store`로 한다.
+  - 서비스 HTTPS 진입 주소는 `https://game.seokpan.soldesk.store`로 한다.
   - TLS 종료는 NGINX Gateway Fabric에서 수행한다.
   - Gateway 인증서 SAN에는 최소 `game.seokpan.soldesk.store`를 포함한다.
 - 관련:
@@ -42,7 +42,7 @@
 
 - 구분: 구현 단계 확정
 - 기존 기준:
-  - 01~08 공식 문서에서는 Gateway API와 NGINX Gateway Fabric 사용 방향을 정의했지만, 실제 구현 버전과 Ansible/GitOps 간 세부 소유권 경계는 구현 단계에서 확정할 필요가 있었다.
+  - 01-08 공식 문서에서는 Gateway API와 NGINX Gateway Fabric 사용 방향을 정의했지만, 실제 구현 버전과 Ansible/GitOps 간 세부 소유권 경계는 구현 단계에서 확정할 필요가 있었다.
 - 확정 내용:
   - Gateway API는 `v1.5.1`을 사용한다.
   - NGINX Gateway Fabric은 `v2.6.7`을 사용한다.
@@ -106,13 +106,13 @@
 
 - 구분: 구현 단계 추가 확정
 - 기존 기준:
-  - 01~08 설계에서는 External NFS, NFS Subdir External Provisioner, StorageClass/PV/PVC 역할을 정의했으나 Provisioner 전용 Kubernetes Namespace는 별도로 확정하지 않았다.
+  - 01-08 설계에서는 External NFS, NFS Subdir External Provisioner, StorageClass/PV/PVC 역할을 정의했으나 Provisioner 전용 Kubernetes Namespace는 별도로 확정하지 않았다.
   - 구현 초기 Namespace는 `application`, `platform`, `observability`, `cicd` 중심으로 구성했다.
 - 확정 내용:
   - NFS Subdir External Provisioner와 Storage 검증용 PVC/Pod를 분리 관리하기 위해 `storage-infra` Namespace를 추가한다.
   - 김상희의 기존 `platform/ksh` ServiceAccount를 `storage-infra` Namespace의 작업 권한에 연결한다.
   - Redis Runtime StatefulSet/PVC는 Storage Infrastructure와 분리하여 기존대로 `platform` Namespace를 유지한다.
-  - StorageClass, PV, Provisioner용 ClusterRole/ClusterRoleBinding 등 Cluster-scoped 리소스 권한은 사용자 상시 권한으로 넓게 부여하지 않고 승인된 Bootstrap/GitOps 범위에서 적용한다.
+  - StorageClass, PV, Provisioner용 ClusterRole/ClusterRoleBinding 등 Cluster-scoped 리소스 권한은 개별 작업자의 상시 권한으로 넓게 부여하지 않고 변경이 통제되는 Bootstrap/GitOps 범위에서 적용한다.
 - 영향:
   - Kubernetes 프로젝트 Namespace가 구현 단계 기준으로 `application`, `platform`, `observability`, `cicd`, `storage-infra`로 구체화된다.
   - `seokpan-gitops/platform/namespaces-rbac/`의 Namespace/RBAC Desired State를 수정한다.
@@ -152,17 +152,17 @@
 
 - 구분: 구현 단계 추가 확정
 - 기존 기준:
-  - 01~08 문서는 Python/FastAPI Modular Monolith, Nginx Frontend, MariaDB·Redis 책임, WebSocket 실시간 처리와 Jenkins·Harbor·GitOps 흐름을 정의했다.
-  - Application의 정확한 Runtime·Framework Version, HTTP/WebSocket 계약 방식, Migration 소유권, Frontend Stack과 단계별 검증 Gate는 구현 착수 전에 구체화할 필요가 있었다.
+  - 01-08 문서는 Python/FastAPI Modular Monolith, Nginx Frontend, MariaDB·Redis 책임, WebSocket 실시간 처리와 Jenkins·Harbor·GitOps 흐름을 정의했다.
+  - Application의 정확한 Runtime·Framework Version, HTTP/WebSocket 연동 규격, Migration 소유권, Frontend Stack과 단계별 검증 Gate는 구현 착수 전에 구체화할 필요가 있었다.
 - 변경/확정 내용:
   - 기존 MariaDB Schema를 재사용하고 Domain → Adapter → Headless HTTP/WebSocket → Frontend → Provider·배포 통합 순서로 점진 구현한다.
   - Backend는 CPython 3.13.15 기반 FastAPI Modular Monolith와 실용적 Ports/Adapters 구조를 사용한다.
   - 상태 조회·변경 명령은 `/api/v1` HTTP JSON API, 실시간 권위 Snapshot·Event 전달은 `/ws/v1` WebSocket을 기본으로 한다.
-  - MariaDB 영속 데이터와 Redis 공유 Runtime State의 기존 책임을 유지하며, Application이 SQLAlchemy Model·Alembic Migration·Redis Key/Lua 계약을 소유한다.
+  - MariaDB 영속 데이터와 Redis 공유 Runtime State의 기존 책임을 유지하며, Application이 SQLAlchemy Model·Alembic Migration·Redis Key/Lua 처리 규격을 소유한다.
   - Frontend는 React·TypeScript·Vite 기반 정적 Application으로 구성하고 Nginx에서 제공한다.
   - Backend와 Frontend는 별도 Image·Workload로 배포하며 Jenkins Test → Harbor Image → GitOps PR → Argo CD 흐름을 유지한다.
   - Windows Host에서 개발하되 Application 실행 자산은 CentOS Stream 9·Linux Container 기준 UTF-8·LF로 관리하고 Linux 재현 Gate를 둔다.
-  - Frontend UX/UI Mockup은 구현 전 사용자에게 요청하되 공식 명세가 아닌 방향성 참고자료로 적용한다.
+  - Frontend UX/UI Mockup이 제공되는 경우 공식 명세가 아닌 방향성 참고자료로 적용한다.
   - 세부 Version, 실행·환경·검증 상태와 미확정 항목은 `MVP_IMPLEMENTATION_BASELINE.md`를 따른다.
 - 영향:
   - `seokpan-app`의 Scaffold·Lock·Test·Container·Pipeline은 공용 구현 기준을 소비한다.
