@@ -1,6 +1,6 @@
 # 石나가는 판단 MVP 구현 기준
 
-이 문서는 01~08 공식 기획·설계와 [프로젝트 변경·결정 이력](PROJECT_CHANGES.md)을 실제 구현에서 일관되게 적용하기 위한 공용 기준이다.
+이 문서는 01-08 공식 기획·설계와 [프로젝트 변경·결정 이력](PROJECT_CHANGES.md)을 실제 구현에서 일관되게 적용하기 위한 공용 기준이다.
 원 기획·설계를 대체하지 않으며, 07에서 정한 MVP 범위를 구현 편의를 이유로 확대하거나 축소하지 않는다.
 
 ## 1. 적용 기준과 상태
@@ -9,12 +9,22 @@
 
 1. 07의 MVP 포함·제외 범위
 2. 01의 포함 기능 상세 동작
-3. 03~06의 역할·기술·물리·검증 기준
-4. 사용자가 승인하고 `PROJECT_CHANGES.md`에 기록한 PDF 이후 변경
+3. 03-06의 역할·기술·물리·검증 기준
+4. `PROJECT_CHANGES.md`에 확정 이력으로 기록된 PDF 이후 변경
 5. 이 문서의 MVP 구현 상세
 
-주요 근거는 D07 pp.2~8·12~14, D01 pp.3~5·13~53, D03 pp.2~8, D04 pp.3~18,
-D05 pp.2~14, D06 pp.3~23이다. 페이지는 PDF의 1부터 시작하는 순서다.
+주요 근거 문서와 참조 범위는 다음과 같다.
+
+| 문서 | 참조 페이지 |
+| --- | --- |
+| D01 | 3-5쪽, 13-53쪽 |
+| D03 | 2-8쪽 |
+| D04 | 3-18쪽 |
+| D05 | 2-14쪽 |
+| D06 | 3-23쪽 |
+| D07 | 2-8쪽, 12-14쪽 |
+
+페이지 번호는 PDF 첫 페이지를 1쪽으로 계산한다.
 
 실제 코드와 작업 상태는 각 구현 Repository가 기준이다. 구현이 위 요구사항과 다르면 구현 측 수정 대상으로 다루며,
 구현 상태만을 근거로 원 요구사항을 변경하지 않는다.
@@ -34,8 +44,8 @@ D05 pp.2~14, D06 pp.3~23이다. 페이지는 PDF의 1부터 시작하는 순서�
 
 | Repository | 책임 |
 | --- | --- |
-| `seokpan/seokpan-docs` | 공용 기획·설계, 승인된 변경, 여러 구현 저장소가 소비할 기준 |
-| `seokpan/seokpan-app` | Frontend·Backend Source, Test, DB Model·Migration, Redis Key/Lua 계약, Containerfile, Jenkinsfile |
+| `seokpan/seokpan-docs` | 공용 기획·설계, 확정된 변경, 여러 구현 저장소가 소비할 기준 |
+| `seokpan/seokpan-app` | Frontend·Backend Source, Test, DB Model·Migration, Redis Key/Lua 처리 규격, Containerfile, Jenkinsfile |
 | `seokpan/seokpan-infra` | VM·OS·Network, Ansible, Kubernetes Bootstrap/Add-on, MariaDB·MaxScale, Harbor·CA 신뢰 기반 |
 | `seokpan/seokpan-gitops` | Namespace/RBAC, Application·Platform Workload, Config·Secret 참조, Gateway Route, Argo CD Desired State |
 
@@ -45,18 +55,18 @@ Jenkins는 Application을 직접 `kubectl apply`하지 않고 검증된 Image와
 ## 3. 점진적 구현 순서
 
 ```text
-기존 Schema·MVP 계약 확인
+기존 Schema·MVP 기준 확인
   → Pure Domain 규칙과 Test
   → 기존 Schema를 잇는 Migration Baseline
-  → Port·Fake·Adapter Contract
-  → 실제 MariaDB·Redis Contract Test
+  → Port·Fake·Adapter 연동 규격
+  → 실제 MariaDB·Redis 연동 테스트
   → Headless HTTP/WebSocket First Success
   → Frontend First Success
   → Container·Harbor·Gateway·GitOps 통합
   → 장애·복구·재접속·멱등성·대표 부하 검증
 ```
 
-UI나 실제 Provider가 준비되지 않아도 Domain·Fake·Contract Test로 진행할 수 있다.
+UI나 실제 Provider가 준비되지 않아도 Domain·Fake·연동 규격 테스트로 진행할 수 있다.
 다만 Fake 성공은 MariaDB·Redis·Kubernetes 통합 완료를 의미하지 않는다.
 
 ## 4. Backend 기준
@@ -78,7 +88,7 @@ UI나 실제 Provider가 준비되지 않아도 Domain·Fake·Contract Test로 �
 Ansible Controller의 Project Python 3.12.13과 Application Backend Python 3.13.15는 목적과 실행환경이 다르므로 독립 유지한다.
 Application Container는 Kubernetes Node나 Ansible Controller의 System Python에 의존하지 않는다.
 
-## 5. HTTP·WebSocket 계약 방향
+## 5. HTTP·WebSocket 연동 규격
 
 - 상태 조회와 변경 명령은 `/api/v1` HTTP JSON API를 기본으로 한다.
 - WebSocket `/ws/v1`은 서버 권위 Snapshot과 상태 변경 Event 전달에 사용한다.
@@ -87,7 +97,7 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 - 연결과 재연결 시 Snapshot으로 수렴한다. Event와 Redis Pub/Sub을 무제한 Replay 원본으로 사용하지 않는다.
 - Redis 서버측 Session Cookie를 HTTP와 WebSocket Upgrade에서 함께 사용하며 Token을 URL Query에 넣지 않는다.
 
-Endpoint·Event 전체 목록, Cookie TTL·CSRF Header, 오류 코드 상세는 Scaffold 전에 계약 v0로 확정한다.
+Endpoint·Event 전체 목록, Cookie TTL·CSRF Header, 오류 코드 상세는 Scaffold 전에 서비스 세부 구현 기준 1차안으로 확정한다.
 
 ## 6. MariaDB·Redis 기준
 
@@ -96,16 +106,16 @@ Endpoint·Event 전체 목록, Cookie TTL·CSRF Header, 오류 코드 상세는 
 | Member, MemberStats, Game, Move, GameResult, RatingHistory | MariaDB |
 | Session, Room, Participant, Ready, Game/Turn Runtime, 현재 Vote, 재접속 Snapshot | Redis |
 
-- DB 담당자의 실제 Runtime 조회 결과와 사용자가 제공한 `/root/stone_game_schema_v1.sql`·DDL 출력을 대조해 일치가 보고된
+- DB 담당자의 실제 Runtime 조회 결과와 검증 자료로 제공된 `/root/stone_game_schema_v1.sql`·DDL 출력을 대조해 일치가 보고된
   `member`, `member_stats`, `game`, `game_participant`, `move`, `game_result`, `rating_history` 7개 Table을 초기 Schema 기준으로 재사용한다.
   이는 이 문서 작업에서 DB에 직접 접속해 다시 실행 검증했다는 뜻이 아니다.
-- `seokpan-app`이 SQLAlchemy Model과 Alembic Revision을 소유한다. 기존 DB는 DDL·Checksum 확인 후 승인된 Revision으로 채택하며 초기 Create를 재실행하지 않는다.
-- Migration은 Backend Replica 시작마다 실행하지 않고 승인된 단일 선행 Job 또는 운영 절차로 실행한다.
+- `seokpan-app`이 SQLAlchemy Model과 Alembic Revision을 소유한다. 기존 DB는 DDL·Checksum 검증 후 초기 기준 Revision으로 채택하며 초기 Create를 재실행하지 않는다.
+- Migration은 Backend Replica 시작마다 실행하지 않고 사전에 확정한 단일 선행 Job 또는 운영 절차로 실행한다.
 - Backend는 시점에 따라 바뀔 수 있는 MariaDB Master IP를 고정하지 않고 MaxScale/Common Endpoint를 사용한다.
 - Redis 투표·마감은 Lua로 원자 처리하고, 공식 Move·Result·Rating 중복 방지는 MariaDB Transaction과 Constraint가 담당한다.
 - MariaDB Commit 후 Redis를 갱신하며, Redis 갱신 실패 시 MariaDB 확정 결과로 멱등 재동기화한다.
 - 식별자 기본 형식은 소문자 하이픈 UUIDv4이며 `game.room_id VARCHAR(64)`는 호환성을 유지한 채 신규 값에 UUIDv4를 사용한다.
-- Redis Key Prefix는 `stone:v1:`이며 상세 Key·TTL은 계약 v0에서 Freeze한다.
+- Redis Key Prefix는 `stone:v1:`이며 상세 Key·TTL은 서비스 세부 구현 기준 1차안에서 확정한다.
 
 ## 7. Frontend 기준
 
@@ -125,8 +135,8 @@ Endpoint·Event 전체 목록, Cookie TTL·CSRF Header, 오류 코드 상세는 
 - Move·Vote 마감·승패·Rating을 서버 확인 전에 낙관적으로 확정 표시하지 않는다.
 - Frontend는 Nginx 정적 Application으로 제공하며 Browser History Route는 SPA Fallback을 사용한다.
 - ANALYSIS·채팅·고급 UI를 First Success의 선행조건으로 만들지 않는다.
-- Frontend 화면 골격과 시각 방향을 구체화하기 전에 사용자에게 참고 UI Mockup을 요청한다.
-- 제공된 Mockup은 공식 요구사항이나 Pixel-perfect 명세가 아닌 방향성 참고자료다. docs MVP·확정 계약·접근성·실제 사용자 흐름을 우선하며, Mockup의 자체 오류나 범위 밖 기능을 그대로 구현하지 않는다.
+- Frontend 화면 골격과 시각 방향을 구체화할 때 참고 UI Mockup이 제공되면 방향성 참고자료로 활용한다.
+- 제공된 Mockup은 공식 요구사항이나 Pixel-perfect 명세가 아니다. docs MVP·확정된 구현 기준·접근성·실제 이용 흐름을 우선하며, Mockup의 자체 오류나 범위 밖 기능을 그대로 구현하지 않는다.
 
 ## 8. Image·실행·환경 기준
 
@@ -149,19 +159,19 @@ Endpoint·Event 전체 목록, Cookie TTL·CSRF Header, 오류 코드 상세는 
 - Backend는 Uvicorn 단일 Process로 실행하고 Migration·Seed를 시작 명령에 숨기지 않는다. 종료 유예는 최초 45초 기준이며 WebSocket은 재연결 후 Snapshot으로 수렴한다.
 - Resource Request/Limit은 실행 측정 전 임의의 수치로 확정하지 않는다.
 
-## 9. CI·통합·Evidence Gate
+## 9. CI·통합·검증 단계
 
 | Gate | 목적 |
 | --- | --- |
 | P0 Local | Lock, Format/Lint, Type Check, 빠른 Unit·Component Test |
-| P1 PR | P0, Backend/Frontend Build·Test, 계약·Migration 정적 검증 |
+| P1 PR | P0, Backend/Frontend Build·Test, API·데이터 규격·Migration 정적 검증 |
 | P2 Main Image | Linux 동일 Lock, Image Build·Health, SBOM·Provenance·Scan, Harbor Push·Digest |
 | P3 Provider Integration | MariaDB·Redis, Migration, 2 Backend Replica, HTTPS/WSS, Session·재접속, Metric |
-| P4 MVP Acceptance | Headless·Browser First Success, Race·멱등·장애·복구·대표 부하 Evidence |
+| P4 MVP Acceptance | Headless·Browser First Success, Race·멱등·장애·복구·대표 부하 검증 자료 |
 
 주 CI는 `seokpan-app/Jenkinsfile`의 Declarative Pipeline이다.
 PR에서는 Harbor·GitOps·실제 Provider Credential을 사용하지 않고, `seokpan-app`의 보호된 main에서 검증된 Image만 Harbor와 GitOps 후보로 진행한다.
-Image Scan은 CRITICAL과 수정 가능한 HIGH를 차단하며 예외는 CVE·영향·대안·만료일·승인자를 기록한다.
+Image Scan은 CRITICAL과 수정 가능한 HIGH를 차단하며 예외는 CVE·영향·대안·만료일·예외 승인 책임자를 기록한다.
 
 MVP 완료에는 정상 흐름뿐 아니라 투표 경합, stale 요청, 중복 Move/Result 방지, DB Commit 후 Redis 재동기화,
 WebSocket 재접속과 Snapshot 수렴, 장애로 인한 오패배·Rating 감소 방지 검증이 포함된다.
@@ -177,20 +187,20 @@ WebSocket 재접속과 Snapshot 수렴, 장애로 인한 오패배·Rating 감�
 - Windows Test 성공은 Linux 실행 성공을 대신하지 않으며, 동일 Lock의 Linux Build·Test·Entrypoint·Non-root 실행을 P2 전에 검증한다.
 - Markdown 문서는 실행 자산과 구분하며 특정 Worktree EOL을 강제하지 않는다. Git 정규화와 파일 내 혼합 개행 방지만 적용한다.
 
-## 11. 아직 Freeze하지 않은 항목
+## 11. 아직 확정하지 않은 항목
 
 - HTTP Endpoint·WebSocket Event·Domain Error Code 전체 목록
 - Cookie TTL·갱신·CSRF Header·Password Hash 상세
 - Redis Key·TTL·Resolver Lease와 Lifecycle 상세
-- 기존 Schema 보완 Migration과 실제 적용 Owner·시점
+- 기존 Schema 보완 Migration과 실제 적용 담당 주체·시점
 - DB·Redis Endpoint 및 Kubernetes Secret Resource 이름
 - GitOps Application 경로와 Migration Sync 순서
-- 측정 기반 Resource Request/Limit과 Evidence Retention 기간
+- 측정 기반 Resource Request/Limit과 검증 자료 보관 기간
 
-위 항목은 관련 구현 전에 앞 결정과 Provider 인계를 입력으로 계약 v0에 기록한다.
+위 항목은 관련 구현 전에 앞 결정과 Provider 인계를 입력으로 서비스 세부 구현 기준 1차안에 기록한다.
 뒤 결정이 앞 기준을 변경해야 하면 기존 내용을 조용히 덮지 않고 영향·Migration·재검증 Gate를 기록한다.
 
 ## 12. 변경 관리
 
-공용 계약 변경은 관련 App·Infra·GitOps 영향을 대조하고 사용자 검토 후 `PROJECT_CHANGES.md`와 이 문서를 함께 갱신한다.
-Issue·Branch·Commit·Push·PR·Review·Merge 등 GitHub 변경은 저장소 소유권을 확인하고 사전 승인을 받은 뒤 수행한다.
+공용 구현 기준 변경은 관련 App·Infra·GitOps 영향을 대조하고 공식 변경 승인 절차를 거쳐 `PROJECT_CHANGES.md`와 이 문서를 함께 갱신한다.
+Issue·Branch·Commit·Push·PR·Review·Merge 등 GitHub 변경은 저장소 소유권을 확인하고 저장소 변경 권한자의 사전 승인을 받은 뒤 수행한다.

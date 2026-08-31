@@ -21,7 +21,7 @@ Docs 전용 Repository로 프로젝트의 공식 기획·설계 문서를 PDF �
 
 ## Current Implementation Baseline
 
-PDF 01~08은 프로젝트의 원 기획·설계와 MVP 범위를 정의합니다.
+PDF 01-08은 프로젝트의 원 기획·설계와 MVP 범위를 정의합니다.
 PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 문서를 함께 적용합니다.
 
 | 문서 | 역할 |
