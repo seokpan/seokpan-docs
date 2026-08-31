@@ -33,6 +33,7 @@
 | --- | --- |
 | MVP·구현 방향 | 확정 |
 | Backend·Frontend Windows Compatibility Spike | 통과 |
+| Application 서비스 세부 구현 기준 1차안 | 확정, 구현 미착수 |
 | Linux Container 동일 Lock·Image 실행 | 검증 대기 |
 | 실제 MariaDB·Redis Provider 통합 | 검증 대기 |
 | Harbor·Gateway·GitOps·Argo CD 통합 | 검증 대기 |
@@ -96,8 +97,15 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 - WebSocket 메시지는 Version이 있는 JSON Envelope를 사용하고 `event_id`, `room_id`, `game_id`, `state_version`을 필요한 범위에서 전달한다.
 - 연결과 재연결 시 Snapshot으로 수렴한다. Event와 Redis Pub/Sub을 무제한 Replay 원본으로 사용하지 않는다.
 - Redis 서버측 Session Cookie를 HTTP와 WebSocket Upgrade에서 함께 사용하며 Token을 URL Query에 넣지 않는다.
-
-Endpoint·Event 전체 목록, Cookie TTL·CSRF Header, 오류 코드 상세는 Scaffold 전에 서비스 세부 구현 기준 1차안으로 확정한다.
+- 인증은 Redis 서버측 Session과 Host-only `seokpan_session` Cookie를 사용한다. Production은 `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`을 적용한다.
+- Session은 최초 기준 Idle 2시간·Absolute 24시간이며, Guest 발급·Member 로그인·권한 상승 때 식별값을 회전한다.
+- 상태 변경 HTTP는 허용 Origin·Referer와 `X-CSRF-Token`을 검사하고, WebSocket Upgrade는 Cookie와 Origin을 검사한다. 인증 Token을 URL Query에 넣지 않는다.
+- 비밀번호는 Argon2id로 저장하며 정확한 비용 Parameter는 Linux Application Container에서 측정한 뒤 고정한다.
+- HTTP는 Resource와 상태 전이를 드러내는 명시적 명령을 사용한다. Domain 중복 처리는 `request_id`, 오래된 상태 거부는 `expected_state_version`, Log 추적은 `X-Request-ID`로 구분한다.
+- WebSocket은 Lobby와 Room 연결을 분리하고 첫 Application 메시지로 권위 Snapshot을 보낸다. Event 누락·중복·역전은 Snapshot으로 수렴한다.
+- 일반 단절의 30초 Disconnect Lease는 참가자·팀·진행 중 Game 상태 복원에 사용하되 이전 Vote와 방장 권한은 자동 복원하지 않는다.
+- 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 접속 중인 가장 이른 Member에게 즉시 승계하고 모든 Ready를 해제한다.
+- 승계 가능한 Member가 없으면 Room을 종료한다. `WAITING`은 Game 처리를 만들지 않고, `PLAYING`의 기존 Game만 전적·Rating 미반영 `SYSTEM_INVALID`로 종결한다.
 
 ## 6. MariaDB·Redis 기준
 
@@ -125,7 +133,12 @@ MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동
 - Redis 투표·마감은 Lua로 원자 처리하고, 공식 Move·Result·Rating 중복 방지는 MariaDB Transaction과 Constraint가 담당한다.
 - MariaDB Commit 후 Redis를 갱신하며, Redis 갱신 실패 시 MariaDB 확정 결과로 멱등 재동기화한다.
 - 식별자 기본 형식은 소문자 하이픈 UUIDv4이며 `game.room_id VARCHAR(64)`는 호환성을 유지한 채 신규 값에 UUIDv4를 사용한다.
-- Redis Key Prefix는 `stone:v1:`이며 상세 Key·TTL은 서비스 세부 구현 기준 1차안에서 확정한다.
+- Redis Key Prefix는 `stone:v1:`이며 Room 관련 Key는 `{room_id}` Hash Tag 아래 역할별 Hash·Set·ZSet으로 분리한다.
+- 최초 Lifecycle 기준은 Session Idle 2시간·Absolute 24시간, Disconnect Lease 30초, Resolver Lease 5초, Command 중복 결과 24시간, 종료 Room Tombstone 10분이다.
+- Ready·팀·Room 상태, 연결 세대, Vote·마감, `request_id`, `state_version`은 Version 관리 Lua에서 원자 처리하며 Redis 서버 시각으로 마감을 판정한다.
+- 기존 `game_participant`에는 Application 생성 UUIDv4 `participant_id`와 Game 내 Participant·Member·Guest 중복 방지, 엄격한 Member/Guest 조합 제약을 최소 보완한다.
+- 기존 DB는 DDL·행 Audit 뒤 초기 Alembic Revision으로 채택하고, 빈 DB는 같은 Revision Chain으로 생성한다. 실제 DDL 적용은 Backup·Rollback·담당자 검토와 별도 승인을 거친다.
+- Game Result·Stats·Rating은 하나의 MariaDB Transaction에서 멱등하게 반영한다. D01 Elo 식과 초기 Rating 1000·K 32를 유지하며 `SYSTEM_INVALID`는 전적·Rating에 반영하지 않는다.
 
 ## 7. Frontend 기준
 
@@ -188,7 +201,7 @@ WebSocket 재접속과 Snapshot 수렴, 장애로 인한 오패배·Rating 감�
 
 ## 10. Windows 개발과 Linux 실행 호환 기준
 
-- Windows Host PC에서 Source와 문서를 작성하되 실제 Application 실행 기준은 CentOS Stream 9·Linux Container다.
+- Windows Host PC에서 Source와 문서를 작성한다. 실제 배포 Node OS는 CentOS Stream 9이고, Application은 그 Node의 containerd 위에서 Backend Debian Trixie 계열 Image와 Frontend Alpine 계열 Image로 실행한다. Container Userland가 Node의 CentOS Stream 9 Package·System Python을 상속한다고 보지 않는다.
 - `seokpan-app`의 Source, Shell, YAML, Containerfile/Dockerfile, Jenkinsfile과 Nginx 설정은 UTF-8과 LF를 사용한다.
 - Windows 전용 Batch 파일이 필요한 경우에만 CRLF를 허용한다.
 - `seokpan-app`은 `.gitattributes`로 Git 개행 정책을, `.editorconfig`로 Editor의 UTF-8·개행·마지막 줄 기준을 명시한다.
@@ -197,18 +210,19 @@ WebSocket 재접속과 Snapshot 수렴, 장애로 인한 오패배·Rating 감�
 - Windows Test 성공은 Linux 실행 성공을 대신하지 않으며, 동일 Lock의 Linux Build·Test·Entrypoint·Non-root 실행을 P2 전에 검증한다.
 - Markdown 문서는 실행 자산과 구분하며 특정 Worktree EOL을 강제하지 않는다. Git 정규화와 파일 내 혼합 개행 방지만 적용한다.
 
-## 11. 아직 확정하지 않은 항목
+## 11. 구현·Provider 단계에서 확정하거나 검증할 항목
 
-- HTTP Endpoint·WebSocket Event·Domain Error Code 전체 목록
-- Cookie TTL·갱신·CSRF Header·Password Hash 상세
-- Redis Key·TTL·Resolver Lease와 Lifecycle 상세
-- 기존 Schema 보완 Migration과 실제 적용 담당 주체·시점
+- 정확한 HTTP Request/Response와 WebSocket Event Payload Schema, 생성 OpenAPI
+- Linux Application Container에서 측정할 Argon2id 비용 Parameter
+- 기존 DB 행 Audit, 보완 Migration 적용 담당·시점·Backup·Rollback
 - DB·Redis Endpoint 및 Kubernetes Secret Resource 이름
 - GitOps Application 경로와 Migration Sync 순서
+- Jenkins JDK 21 Image와 Rootless BuildKit의 검증된 Version·Digest
+- Prometheus Operator 환경의 Application ServiceMonitor Port·Label 연결
 - 측정 기반 Resource Request/Limit과 검증 자료 보관 기간
 
-위 항목은 관련 구현 전에 앞 결정과 Provider 인계를 입력으로 서비스 세부 구현 기준 1차안에 기록한다.
-뒤 결정이 앞 기준을 변경해야 하면 기존 내용을 조용히 덮지 않고 영향·Migration·재검증 Gate를 기록한다.
+위 항목은 서비스 방향을 다시 선택하는 목록이 아니다. 코드·실행환경 또는 Provider 인계가 있어야 정확히 고정하거나 검증할 수 있는 항목이다.
+실제 값은 관련 Issue·PR과 실행 결과로 관리하며, 확정된 MVP와 서비스 세부 구현 기준을 조용히 변경하지 않는다.
 
 ## 12. 변경 관리
 
