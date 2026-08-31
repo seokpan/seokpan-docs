@@ -199,6 +199,31 @@
   - `seokpan/seokpan-infra#63`
   - `seokpan/seokpan-infra#65`
 
+### Application 서비스 세부 구현 기준 1차 확정 및 방장 승계 규칙 변경
+
+- 구분: 구현 단계 추가 확정 및 기존 동작 변경
+- 기존 기준:
+  - D01은 방장이 나가거나 30초 재접속 유예가 만료된 뒤 연결 중인 Member에게 방장을 승계하는 흐름을 설명했다.
+  - D07은 방장이 변경되면 모든 Ready를 해제하도록 정의했다.
+  - 인증 수명, HTTP 오류·멱등 처리, WebSocket 연결 단위, Redis Lifecycle·원자 처리와 기존 MariaDB Schema 보완 상세는 구현 전에 확정할 필요가 있었다.
+- 변경/확정 내용:
+  - 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 30초를 기다리지 않고 접속 중인 Member 가운데 입장 순서가 가장 빠른 참가자에게 즉시 승계한다.
+  - 실제 방장 변경과 모든 Ready 해제, Room 상태 Version 증가는 하나의 Redis 원자 처리로 수행한다.
+  - 이전 방장이 30초 이내 재접속하면 참가자·팀·진행 중 Game 상태는 복원할 수 있지만 방장 권한과 단절 시점의 Vote는 자동 복원하지 않는다.
+  - 승계 가능한 접속 중 Member가 없으면 Room을 종료하고 Guest에게 Room 종료를 알린 뒤 Lobby로 이동시킨다.
+  - `WAITING` Room 종료에는 Game·Result·Rating 처리를 만들지 않는다. `PLAYING` Room 종료로 이미 생성된 Game을 계속할 수 없을 때만 개인 패배·전적·Rating을 반영하지 않는 `SYSTEM_INVALID`로 종결한다.
+  - 인증은 Redis 서버측 Session Cookie, Origin·CSRF 검사와 Argon2id 비밀번호 저장을 사용한다.
+  - 상태 변경은 `/api/v1` HTTP 명령, 실시간 전달과 복구는 `/ws/v1` Snapshot·Event를 사용하며, 요청 멱등성과 상태 Version을 검사한다.
+  - Redis는 `stone:v1:` Key Prefix, Room 단위 Hash Tag, Version 관리 Lua와 서버 시각을 사용한다. MariaDB는 기존 7개 Table을 재사용하고 Application Migration으로 참가자 식별·중복 제약을 최소 보완한다.
+- 영향:
+  - 30초 Disconnect Lease는 참가자·팀·진행 중 Game 상태 복원에 적용하며 이전 방장의 권한을 예약하지 않는다.
+  - 팀 변경 시 해당 참가자의 Ready 해제, 투표 시간 변경과 Game 종료 시 전체 Ready 해제 규칙은 유지한다.
+  - 정확한 Endpoint·Event·오류 Code·Redis Key·Migration은 `seokpan-app`의 단일 구현 기준과 코드·Test로 관리한다.
+  - 이 결정은 구현 방향을 확정한 것이며 Application, Provider, Container, Cluster 검증 완료를 의미하지 않는다.
+- 관련:
+  - `MVP_IMPLEMENTATION_BASELINE.md`
+  - `seokpan/seokpan-app`
+
 ### Git Branch 운영 방식 유지 결정
 
 - 구분: 협업 운영 기준 확정
