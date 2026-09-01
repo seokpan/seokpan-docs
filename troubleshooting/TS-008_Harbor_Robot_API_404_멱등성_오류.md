@@ -13,7 +13,7 @@
 
 ## 1단계 — Project별 Robot API 경로 가정이 실제 Harbor API와 달랐다
 
-Harbor Robot Account 자동화의 최초 구현에서는 Project별 Robot 목록 조회를 다음과 같은 API 구조로 가정했다.
+Harbor Robot Account 자동화의 최초 구현에서는 Harbor Project별 Robot Account API Endpoint를 다음과 같은 구조로 가정했다.
 
 ```text
 /api/v2.0/projects/seokpan/robots
@@ -21,7 +21,7 @@ Harbor Robot Account 자동화의 최초 구현에서는 Project별 Robot 목록
 
 그러나 실제 Harbor 2.13.3에서 해당 경로는 `404`를 반환했다.
 
-이 문제는 단순 통신 실패가 아니었다. **Automation 코드가 Harbor의 실제 Robot API 구조를 잘못 가정한 문제**였다.
+이 문제는 단순 통신 실패가 아니었다. **자동화 코드가 Harbor의 실제 Robot API 구조를 잘못 가정한 문제**였다.
 
 ## 2단계 — GC 정책 검증 중 Robot 존재 여부 분기 버그 추가 발견
 

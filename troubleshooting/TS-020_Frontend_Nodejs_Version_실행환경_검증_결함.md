@@ -59,9 +59,9 @@ package.json engines에 공식 Version 계약 존재
 따라서 당시 구조는:
 
 ```text
-버전 요구사항 선언
+Version 요구사항 선언
 ≠
-버전 위반 시 강제 실패
+Version 위반 시 강제 실패
 ```
 
 였다.
@@ -97,41 +97,41 @@ npm 12.0.2
 ## 검토 흐름
 
 ```text
-초기 애플리케이션 기본 구조 구현
+초기 Scaffold 구현
 → 별도 팀원 재현 검증
 → Node 22/npm 10에서도 npm ci가 경고만 내고 진행됨
-→ 버전 계약의 강제력이 부족하다는 사실 확인
+→ Version 계약 강제력이 부족하다는 사실 확인
 → engine-strict=true 추가
 → 공식 Node 24/npm 12 환경에서 재검증
-→ 최신 PR 코드(Head) 재승인
+→ Pull Request의 최신 코드(Head)를 기준으로 재승인
 → main Merge
 ```
 
-새 Commit이 추가되면서 기존 승인이 무효화된 뒤 최신 PR 코드 기준으로 다시 승인된 점도 확인된다. 따라서 이 사례는 **리뷰가 단순 확인 절차가 아니라 실행환경 재현성 결함을 찾아 실제 실행 차단 규칙을 강화한 사례**다.
+새 Commit으로 기존 승인이 해제된 뒤 최신 코드 기준으로 다시 승인된 점도 확인된다. 따라서 이 사례는 **리뷰가 단순 확인 절차가 아니라 실행환경 재현성 결함을 찾아 실제 실행 차단 규칙을 강화한 사례**다.
 
 ## Before → Change → After
 
 | 구분 | Before | Change | After |
 |---|---|---|---|
 | Node Version 계약 | `engines` 선언 | `.npmrc` `engine-strict=true` | 잘못된 Engine을 설치 단계에서 차단 가능 |
-| 비공식 Node 22 검증 | `EBADENGINE` 경고 후 계속 진행 | 즉시 실패 정책 보강 | 공식 Node 24 계약을 실행 수준에서 강제 |
-| 검증 신뢰도 | 기능 Test가 통과하면 버전 불일치를 놓칠 수 있음 | 버전 실행 차단 규칙을 별도 실패 조건으로 추가 | Lockfile과 실제 실행 환경(Runtime)의 버전 계약을 함께 검증 |
+| 비공식 Node 22 검증 | `EBADENGINE` 경고 후 계속 진행 | Fail-fast 정책 보강 | 공식 Node 24 계약을 실행 수준에서 강제 |
+| 검증 신뢰도 | 기능 Test가 통과하면 Version mismatch를 놓칠 수 있음 | Version Gate를 별도 실패 조건으로 추가 | Lock + 실제 실행 환경(Runtime) Version 계약을 함께 검증 |
 
 ## 담당 역할 및 영향
 
-- **정태훈**: 애플리케이션 실행 기준과 기본 구조 담당. Frontend의 재현 가능한 개발/검증 환경을 보장해야 함.
+- **정태훈**: 애플리케이션 실행 기준과 기본 구조(Application Scaffold) 담당. Frontend의 재현 가능한 개발·검증 환경을 보장해야 함.
 - **최유준**: 이후 Jenkins/BuildKit Pipeline이 Frontend Build를 사용하므로, CI 환경에서도 동일 Node Version 계약을 지켜야 함.
-- **애플리케이션 개발 참여자**: 로컬 환경 차이로 “내 PC에서는 빌드됨”이 공식 검증 근거로 오인되는 것을 방지.
+- **애플리케이션 개발 참여자**: 로컬 환경 차이로 “내 PC에서는 빌드됨”이 공식 P0/P1 검증 근거로 오인되는 것을 방지.
 
 ## 남은 범위
 
-이 사례로 확인한 것은 **로컬 기본 구조(Scaffold)의 Node/npm 실행 차단 규칙**다.
+이 사례로 확인한 것은 **로컬 Scaffold의 Node/npm 실행 차단 규칙**이다.
 
 다음은 이후 CI/CD·Container Image 빌드 단계에서 실제 확인해야 한다.
 
 - Frontend Container Image의 Node Build Stage Version
 - Jenkins Agent/BuildKit에서 동일 Node Version 사용 여부
-- CI에서 `npm ci`가 버전 불일치 시 실제로 실패하는지
+- CI에서 `npm ci`가 Version mismatch 시 실제 Fail하는지
 
 따라서 Scaffold 단계의 문제는 해결됐지만, 이 결과를 Jenkins/Container 통합 완료 증거로 확장해서 쓰지는 않는다.
 

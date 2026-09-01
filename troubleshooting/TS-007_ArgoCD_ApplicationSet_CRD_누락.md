@@ -33,7 +33,7 @@ no matches for kind "ApplicationSet" in version "argoproj.io/v1alpha1"
 
 Argo CD Deployment 일부는 존재했지만 ApplicationSet Controller가 요구하는 CRD가 완전하게 초기 구성 자동화(Bootstrap)되지 않았다. Controller는 필요한 API Kind를 발견하지 못해 Cache Sync를 완료하지 못하고 반복 종료했다.
 
-중요하게도 이 문제는 Project Python/ansible-core/kubernetes.core Version Lock을 도입해서 새로 발생한 회귀 문제가 아니었다. **기존 실제 실행 환경(Runtime)에 이미 존재하던 Argo CD Bootstrap 불완전 상태**가 회귀검증 과정에서 드러난 것이다.
+중요하게도 이 문제는 프로젝트의 Python·ansible-core·kubernetes.core 버전을 고정한 작업(Version Lock) 때문에 새로 발생한 회귀 문제(Regression)는 아니었다. **기존 실제 실행 환경(Runtime)에 이미 존재하던 Argo CD 초기 구성 자동화(Bootstrap) 불완전 상태**가 회귀검증 과정에서 드러난 것이다.
 
 ## 조치
 
@@ -75,8 +75,8 @@ Release Manifest Apply
 - Bootstrap 보완 PR #47: https://github.com/seokpan/seokpan-infra/pull/47
 - 현재 Bootstrap 구현: https://github.com/seokpan/seokpan-infra/blob/main/ansible/roles/argocd_bootstrap/tasks/main.yml
 
-## 후속 Bootstrap 검증 보완사항
+## 초기 구성 자동화(Bootstrap)에서 추가로 보완할 검증
 
 Version Lock 환경에서 Argo CD/CRD를 다시 검증한 뒤, `argocd_bootstrap`의 핵심 Ready 대기 목록에 `argocd-application-controller` StatefulSet 확인이 빠져 있다는 지적도 남았다.
 
-이 항목은 당시 ApplicationSet CrashLoopBackOff의 직접 원인은 아니고, 실제 별도 장애가 재현된 것도 아니다. 다만 Argo CD 설치 성공을 판단할 때 일부 Controller만 Ready를 확인하면 전체 제어 구성요소의 정상성을 과대평가할 수 있으므로 **Bootstrap 검증 강화 항목**으로 이 사례 안에 보존한다. 독립 TS로는 분리하지 않는다.
+이 항목은 당시 ApplicationSet CrashLoopBackOff의 직접 원인은 아니고, 실제 별도 장애가 재현된 것도 아니다. 다만 Argo CD 설치 성공을 판단할 때 일부 Controller만 Ready를 확인하면 전체 제어 구성요소의 정상성을 과대평가할 수 있으므로 **초기 구성 자동화(Bootstrap)의 검증 강화 항목**으로 이 사례 안에 보존한다. 독립 TS로는 분리하지 않는다.

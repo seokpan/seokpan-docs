@@ -112,7 +112,7 @@ gtid_domain_id
 
 이 부분은 단순 검토 코멘트로 끝내지 않고 실제 PR 상태를 재확인했다.
 
-담당자가 수정 결과를 댓글로 제시한 시점에도 PR의 실제 Head Diff에는 한동안:
+담당자가 수정 결과를 댓글로 제시한 시점에도 실제 Pull Request의 최신 코드(Head)에는 한동안:
 
 ```text
 mariadb-02 gtid_domain_id: 2
@@ -125,12 +125,12 @@ mariadb-02 gtid_domain_id: 2
 ```text
 "수정했다"는 설명
 ≠
-실제 PR Head에 수정 Commit 존재
+실제 Pull Request 최신 코드에 수정 Commit 존재
 ```
 
 였다.
 
-후속 Commit이 실제로 Push된 뒤 Head를 다시 확인해:
+후속 Commit이 실제로 Push된 뒤 최신 코드를 다시 확인해:
 
 ```text
 mariadb-01: gtid_domain_id: 1
@@ -162,7 +162,7 @@ gtid_domain_id=1
 - read_only:
   - Master OFF
   - Slave ON
-- PR 최신 Head Diff에서 양쪽 `gtid_domain_id: 1` 확인
+- Pull Request 최신 코드에서 양쪽 `gtid_domain_id: 1` 확인
 - 최종 검토 승인
 - PR #88 `main` 브랜치 Merge 완료
 
