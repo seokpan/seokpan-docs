@@ -252,6 +252,39 @@
 
 ---
 
+## 2026-09-01
+
+### GitOps Root Application 선언 경로 및 Repository 역할 경계 확정
+
+- 구분: 구현 구조 변경 및 공식 경로 확정
+- 기존 기준:
+  - `seokpan-gitops/apps/`는 Frontend/Backend 등 실제 Application Runtime Desired State를 관리하는 영역으로 정의되어 있다.
+  - `apps/root/`는 최초 Argo CD 검증용으로 생성되었으나, 이후 `seokpan-infra`의 Argo CD Bootstrap과 Storage GitOps 작업에서 실제 Root Application source path로 사용되었다.
+  - 현재 `apps/root/storage-nfs.yaml`을 통해 `storage-nfs` Child Application이 운영되고 있으므로 기존 경로를 즉시 제거할 수 없다.
+- 변경/확정 내용:
+  - Argo CD Child `Application` CR 선언의 공식 경로를 `argocd/applications/`로 사용한다.
+  - `apps/`는 Frontend/Backend 등 실제 서비스 Application Runtime Desired State를 관리한다.
+  - `platform/`은 Redis, Storage, Gateway, Namespace/RBAC 등 공통 Runtime Platform Desired State를 관리한다.
+  - `cicd/`는 Jenkins 등 CI/CD Runtime Desired State를 관리한다.
+  - `observability/`는 Prometheus, Grafana, Loki, Alloy, Alertmanager 등 관측 Runtime Desired State를 관리한다.
+  - Redis Runtime Manifest는 기존 결정대로 `platform/redis/`를 유지하며, Redis Child Application 선언은 Root 구조 전환 완료 후 `argocd/applications/redis.yaml`에서 관리한다.
+  - `seokpan-infra`의 Argo CD Bootstrap `gitops_root_path`는 `apps/root`에서 `argocd/applications`로 정합화한다.
+  - 기존 `apps/root/`는 신규 경로 준비 → Root source path 전환 → Argo CD/Storage 회귀검증이 모두 완료된 후 제거한다.
+- 영향:
+  - Argo CD 제어 계층과 실제 Workload Desired State 경로를 분리하여 Repository 디렉터리의 역할을 단일 기준으로 해석할 수 있게 한다.
+  - 현재 정상 동작 중인 `storage-nfs` Runtime을 재구축하지 않고 동일 Application 이름과 Workload 의미를 유지한 상태에서 경로만 안전하게 전환한다.
+  - Root Application의 `prune/selfHeal` 영향을 고려하여 기존 `apps/root`를 먼저 제거하지 않는다.
+  - 이 기록은 구조 결정의 확정을 의미하며 실제 GitOps 경로 전환, Infra Bootstrap 변경, Runtime 회귀검증 완료를 의미하지 않는다.
+  - 원본 01-08 PDF와 Architecture 이미지는 변경하지 않는다.
+- 관련:
+  - `seokpan/seokpan-gitops#15`
+  - `seokpan/seokpan-docs#15`
+  - `seokpan/seokpan-gitops#7`
+  - `seokpan/seokpan-gitops#10`
+  - `seokpan/seokpan-gitops#13`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
