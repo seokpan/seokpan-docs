@@ -100,9 +100,7 @@ npm 12.0.2
 | 잘못된 Node 버전 | `EBADENGINE` 경고 후 계속 진행 가능 | 설치 단계에서 차단 가능 |
 | 검증 신뢰도 | 기능 Test 통과만으로 Version mismatch를 놓칠 수 있음 | 실행환경 Version 계약도 검증 조건에 포함 |
 
-## 해결 범위
-
-이 사례에서 해결한 범위는 **Frontend 기본 구조의 Node/npm 실행환경 검증 규칙**이다. 이후 Jenkins·BuildKit·Container Image가 동일 버전을 사용하는지는 CI/CD 통합 단계의 별도 검증 대상이며, 이 보고서의 미완료 상태로 포함하지 않는다.
+이 보고서에서 검증한 범위는 Frontend 기본 구조의 Node/npm 실행환경 계약과 설치 단계 차단 규칙이다.
 
 ## 관련 근거
 
