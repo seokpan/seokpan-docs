@@ -117,7 +117,7 @@ Role이 Root Application Manifest를:
 
 고정 파일명으로 사용하고 있었다.
 
-이전 실행에서 root 소유 파일이 남아 있으면 `/tmp`의 sticky-bit 정책 때문에 `jth` 계정의 Ansible Template 모듈이 임시 파일을 최종 파일로 바꾸는 Rename 처리으로 덮어쓸 수 없었다.
+이전 실행에서 root 소유 파일이 남아 있으면 `/tmp`의 sticky-bit 정책 때문에 `jth` 계정의 Ansible Template 모듈이 임시 파일을 최종 경로로 교체하는 과정에서 해당 파일을 덮어쓸 수 없었다.
 
 ## 2차 수정
 
