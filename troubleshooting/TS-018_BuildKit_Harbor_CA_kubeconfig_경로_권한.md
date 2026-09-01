@@ -9,34 +9,22 @@
 | **발생/발견 시기** | 2026-09-01 |
 | **상태** | **진행 중** |
 | **주 담당** | **최유준 — CI/CD 및 모니터링·관측** |
-| **영향 범위** | 정태훈(Kubernetes 플랫폼·Argo CD 연동), 이유빈(Ansible Controller Access) |
+| **영향 범위** | 정태훈(Kubernetes 플랫폼·Argo CD 연동), 이유빈(Ansible Controller 접근) |
 
 ## 문제 개요
 
-목적은 BuildKit Agent가 Harbor의 Internal CA를 신뢰하게 만드는 것이었다.
+BuildKit Agent Pod가 내부 Harbor TLS를 신뢰하도록 `ca.crt`를 `cicd` Namespace Secret으로 제공하려는 작업이었다.
 
-Ansible `internal_ca` Role에서 공개 CA 인증서를:
+## 첫 번째 검토 문제: 새 Kubernetes Task가 명시적인 kubeconfig를 사용하지 않음
 
-```text
-cicd/harbor-ca-cert Secret
-```
+`internal_ca` Role에 새로 추가한:
 
-으로 배포하도록 PR #87이 작성됐다.
+- `kubernetes.core.k8s_info`
+- `kubernetes.core.k8s`
 
-CA Private Key는 포함하지 않았다.
+Task가 `cluster_kubeconfig`를 명시하지 않았다.
 
-## 첫 번째 리뷰 문제: 새 Kubernetes Task가 명시적인 kubeconfig를 사용하지 않음
-
-새로운:
-
-```text
-kubernetes.core.k8s_info
-kubernetes.core.k8s
-```
-
-Task가 Controller에서 실행되지만 kubeconfig를 명시하지 않았다.
-
-따라서 실행 사용자/`become` 조건에 따라 엉뚱한 kubeconfig를 찾을 수 있었다.
+Controller에서 `become`과 실제 실행 계정이 섞이는 환경에서는 기본 kubeconfig 검색 위치가 달라질 수 있다.
 
 ## 조치
 
@@ -46,194 +34,121 @@ Task가 Controller에서 실행되지만 kubeconfig를 명시하지 않았다.
 kubeconfig: "{{ cluster_kubeconfig }}"
 ```
 
-를 적용했다.
+를 명시했다.
 
 ## CA/TLS 검증
 
-후속 검증에서:
+- `cicd/harbor-ca-cert` Secret 생성
+- CA: Seokpan Internal Root CA
+- Harbor Server Certificate Issuer 일치
+- CP-03 기본 Trust Store에서는:
+  ```text
+  Verify return code: 21
+  ```
+- 내부 CA를 명시하면:
+  ```text
+  Verification: OK
+  Verify return code: 0 (ok)
+  ```
 
-- `cicd/harbor-ca-cert` 존재
-- CA = `Seokpan Internal Root CA`
-- Harbor 인증서 Issuer 일치
-- 기본 Trust Store에서는:
+즉 **CA 인증서 체인(CA Chain) 자체는 정상**임을 증명했다.
 
-```text
-Verify return code: 21
+## 두 번째 검토 문제: 공용 kubeconfig가 특정 사용자 Home에 귀속
+
+수정 과정에서:
+
+```yaml
+cluster_kubeconfig: "/home/cyj/.kube/seokpan-admin.conf"
 ```
 
-- CAfile을 명시하면:
+가 사용됐다.
 
-```text
-Verification: OK
-Verify return code: 0
+하지만 `cluster_kubeconfig`는 `internal_ca`뿐 아니라 `argocd_bootstrap` 같은 공용 Cluster 초기 구성 자동화(Bootstrap) Role도 사용한다.
+
+특정 개인 Home에 공용 관리자 자격증명을 고정하면:
+
+- 다른 실행 계정에서 재현성 저하
+- 개인 소유 자격증명과 프로젝트 초기 구성용 관리자 자격증명의 의미 혼합
+- CA Private Key 보호 문제와 Kubernetes 관리자 자격증명 관리 문제의 경계 혼동
+
+이 발생한다.
+
+## 변경안과 실제 `main` 브랜치의 상태를 구분해야 함
+
+PR #87의 변경안에서는:
+
+```yaml
+cluster_kubeconfig: "/etc/seokpan/kubeconfig/admin.conf"
 ```
 
-즉 CA → Harbor Server Cert 신뢰 관계는 정상.
+로 공용 경로를 제안했다. 다만 PR #87은 아직 Merge되지 않았기 때문에 **현재 `main` 브랜치에서 사용하는 Argo CD Role은 여전히 실행 사용자 Home 기준 경로를 참조하고 있었다.**
 
-## 두 번째 리뷰 문제: 공용 kubeconfig가 특정 사용자 Home에 귀속
-
-수정 과정에서 공용 변수:
+빈 Project 최소 동작 검증(Smoke Test)에서 실제 실행 계정은 `ansible`이었고, `playbooks/argocd_bootstrap.yml`은 첫 Task에서 다음 오류로 중단됐다.
 
 ```text
-cluster_kubeconfig
+Could not find or access '/home/ansible/.kube/seokpan-admin.conf'
 ```
 
-가:
+추가 확인 결과:
 
 ```text
-/home/cyj/.kube/seokpan-admin.conf
-```
-
-로 지정됐다.
-
-하지만 이 값은:
-
-- `internal_ca`
-- `argocd_bootstrap`
-- 이후 Kubernetes Cluster-scoped Automation
-
-이 공통으로 소비한다.
-
-즉 특정 팀원의 Home은 공용 초기 구성 자동화(Bootstrap) Credential 위치로 적절하지 않다.
-
-## 현재 반영 방향과 실제 Main/Smoke 상태를 구분해야 함
-
-이 검토 이후 프로젝트 공용 기준은:
-
-```text
-/etc/seokpan/kubeconfig/admin.conf
-```
-
-로 확정했다.
-
-또한:
-
-```text
-root:ansible-kube
-Directory 0750
-File 0640
-```
-
-처럼 제한된 그룹만 읽도록 정했다.
-
-다만 이 내용은 **설계 방향이 확정됐다는 사실과 실제 Runtime에 모두 적용·검증됐다는 사실을 분리**해서 봐야 한다.
-
-최신 빈 Project 최소 동작 검증(Smoke Test)에서 확인한 실제 상태는 다음과 같다.
-
-```text
-실행 계정: ansible
-
 /home/ansible/.kube/seokpan-admin.conf
 → 파일 없음
 
 /etc/seokpan/kubeconfig/admin.conf
-→ 최초 Smoke 시 Permission denied
+→ ansible 계정 Permission denied
 ```
 
-따라서 당시 `argocd_bootstrap`은 첫 Kubernetes Task에서 **BLOCKED**됐다.
+따라서 이 시점의 Argo CD Smoke는 **진행 불가(BLOCKED)**였으며, Kubernetes Cluster나 Argo CD 자체의 장애가 아니라 Controller 실행계정 기준의 관리자 자격증명 경로·권한 불일치로 판정됐다.
 
-후속 Issue #90에서는 실제 Ansible Controller에서 다음 접근 권한까지 적용됐다.
-
-```text
-ansible-kube 그룹 존재
-ansible 사용자 → ansible-kube 포함
-/etc/seokpan/kubeconfig → group ansible-kube / 0750
-/etc/seokpan/kubeconfig/admin.conf → group ansible-kube / 0640
-ANSIBLE_READ=YES
-```
-
-그리고 PR #87의 후속 실행에서는 공용 kubeconfig와 `ansible-kube` 권한을 사용해 `internal_ca`를 실제 재실행했다.
-
-```text
-cicd Namespace에 Harbor CA Secret 존재 확인 → ok
-Harbor CA Secret 생성 → 기존 Secret이 있어 skipping
-failed=0
-unreachable=0
-changed=0
-```
-
-즉 **`internal_ca`가 `/etc/seokpan/kubeconfig/admin.conf`를 읽어 Kubernetes API에 접근하는 경로는 실제 검증까지 완료**됐다.
-
-다만 `argocd_bootstrap`은 기존:
-
-```text
-/home/ansible/.kube/seokpan-admin.conf
-```
-
-참조가 남아 있다고 #90에서 확인됐으므로, Role을 공용 `cluster_kubeconfig` 기준으로 맞춘 뒤 별도 Smoke 재실행이 여전히 필요하다.
+즉 이 문제는 단순히 “경로 문자열을 `/etc`로 바꾸면 끝”이 아니라 **실제 Ansible 실행계정·공용 경로·파일 권한을 동시에 맞춰야 하는 재현성 문제**로 확인됐다.
 
 ## 권한 문제에서 확정된 공용 접근 기준
 
-여기서 또 하나 중요한 실행상의 조건이 있었다.
+`argocd_bootstrap`과 `internal_ca`의 `kubernetes.core` Task는 Controller에서 실행되므로, 실제 Playbook 실행 계정이 공용 관리자 kubeconfig를 읽을 수 있어야 한다.
 
-처음에는:
+따라서 `root:root 0600`만 사용하면 일반 Ansible 실행자가 파일을 읽지 못한다.
 
-```text
-root:root 0600
-```
-
-처럼 관리자만 읽는 방안도 생각할 수 있었다.
-
-그러나 현재 프로젝트 Ansible 실행 방식에서 `kubernetes.core` Task는 Controller에서:
+초기 확인 시에는 공용 kubeconfig가 `/etc/seokpan/kubeconfig/admin.conf`에 있어도 실제 `ansible` 실행 계정이 읽을 수 없어 `Permission denied`가 발생했다. 이에 Issue #90에서 공용 접근 기준을 다음과 같이 확정하고 실제 Ansible VM에 적용했다.
 
 ```text
-delegate_to: localhost
-become: false
+directory: 750
+admin.conf: 640
+group: ansible-kube
 ```
 
-로 실행된다.
+적용된 기준은 다음과 같다.
 
-따라서 root-only 파일은 현재 구조와 충돌한다.
+- 공용 기준 경로: `/etc/seokpan/kubeconfig/admin.conf`
+- `ansible` 실행 계정을 `ansible-kube` 그룹에 포함
+- kubeconfig는 Root 소유를 유지하면서 `ansible-kube` 그룹에만 읽기 허용
+- `/etc/seokpan/kubeconfig` 디렉터리 권한 `750`
+- `/etc/seokpan/kubeconfig/admin.conf` 파일 권한 `640`
+- 실제 `ansible` 계정에서 `ANSIBLE_READ=YES` 확인
+- CA Private Key의 보관 위치와 접근 정책은 이번 Kubernetes 관리자 kubeconfig 변경과 분리
 
-프로젝트에서 채택한 현실적 기준:
+따라서 **Linux 파일 권한 문제 자체는 해결**됐다. 이후 PR #87에서 `internal_ca` Playbook을 실제 재실행해 공용 `/etc/seokpan/kubeconfig/admin.conf`를 통한 Kubernetes API 접근도 확인했다. `cicd Namespace에 Harbor CA Secret 존재 확인` Task는 `ok`, 기존 Secret 생성 Task는 `skipping` 되었고 최종 결과는 `failed=0`, `unreachable=0`, `changed=0`이었다. 즉 **공용 kubeconfig 경로 + `ansible-kube` 제한 읽기 권한 + `internal_ca`의 `cluster_kubeconfig` 사용 경로까지는 실제 실행 검증이 완료**됐다.
 
-```text
-/etc/seokpan/kubeconfig/admin.conf
-root:ansible-kube
-0640
-```
-
-Directory:
-
-```text
-/etc/seokpan/kubeconfig
-root:ansible-kube
-0750
-```
-
-즉:
-
-- 일반 작업자는 읽지 못함
-- 승인된 초기 구성 실행자만 `ansible-kube` Group
-- 공용 Role은 동일 변수 사용
-- Credential 내용은 Git에 저장하지 않음
+현재 남은 문제는 `argocd_bootstrap`까지 같은 공용 경로 기준으로 정상 동작하는지 별도로 Smoke 검증하는 것이다. PR #87과 Issue #90은 아직 Open이며, `internal_ca` 검증 완료만으로 Argo CD Bootstrap과 Jenkins BuildKit 전체 연동까지 완료됐다고 보지는 않는다.
 
 ## 반드시 구분할 것
 
-**CA Private Key**
-
 ```text
-인증서 서명용
-최유준 보호 영역
-이번 변경에서 이동하지 않음
+CA Private Key
+→ CA 담당자의 보호 자산
+→ 개인 보호 영역 가능
+→ Git 금지
+
+Kubernetes Bootstrap admin.conf
+→ Cluster-scoped Bootstrap용 관리자 자격증명
+→ 특정 개인 Home에 공용 기준으로 귀속하지 않음
+→ Git 금지
 ```
-
-**Kubernetes 관리자 kubeconfig**
-
-```text
-Cluster Bootstrap Credential
-특정 팀원 개인 Credential이 아님
-공용 자동화가 사용
-```
-
-둘은 보안 자산이지만 목적이 다르다.
 
 ## 아직 완료라고 쓰면 안 되는 이유
 
 - PR #87은 아직 Open
-- `/etc/seokpan/kubeconfig/admin.conf` Group/Permission 적용 완료
-- `internal_ca`의 공용 kubeconfig 기반 Kubernetes API 접근 및 기존 `harbor-ca-cert` 확인은 실제 재실행 완료
-- `argocd_bootstrap`의 공용 `cluster_kubeconfig` 경로 정합화 및 Smoke 재실행 완료 Evidence는 아직 없음
+- 공용 kubeconfig와 `internal_ca`의 실제 Kubernetes API 접근은 재검증 PASS했지만 `argocd_bootstrap`의 동일 기준 Smoke 완료 근거는 아직 없음
 - 권한 조정 Issue #90은 Open 상태이며, Linux 그룹·파일 권한 및 `internal_ca` 검증은 완료됐지만 Argo CD 후속 검증과 Issue 정리가 남아 있음
 - Jenkins BuildKit Agent가 실제 CA를 Mount/Trust한 뒤 Harbor Image Push까지 성공하는 전체 연동 검증은 후속 대상
 
@@ -242,5 +157,5 @@ Cluster Bootstrap Credential
 - PR #87: https://github.com/seokpan/seokpan-infra/pull/87
 - 관련 Issue #79: https://github.com/seokpan/seokpan-infra/issues/79
 - kubeconfig 권한 Issue #90: https://github.com/seokpan/seokpan-infra/issues/90
-- #90 권한 적용 완료 Evidence: https://github.com/seokpan/seokpan-infra/issues/90#issuecomment-5491859068
-- PR #87 공용 kubeconfig 실제 `internal_ca` 재실행 Evidence: https://github.com/seokpan/seokpan-infra/pull/87#issuecomment-5492170895
+- #90 권한 적용 완료 근거: https://github.com/seokpan/seokpan-infra/issues/90#issuecomment-5491859068
+- PR #87 공용 kubeconfig 실제 `internal_ca` 재실행 근거: https://github.com/seokpan/seokpan-infra/pull/87#issuecomment-5492170895
