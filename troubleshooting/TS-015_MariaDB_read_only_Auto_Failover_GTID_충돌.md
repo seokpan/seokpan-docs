@@ -109,8 +109,6 @@ After
 + Failover/Rejoin 동작 재검증
 ```
 
-이 보고서는 `read_only`와 GTID Domain 문제의 해결 범위만 기록한다. 별도의 수동 Switchover 동작 검증은 독립적인 후속 작업이므로 이 사건의 미해결 상태로 포함하지 않는다.
-
 ## 관련 근거
 
 - Issue #50: https://github.com/seokpan/seokpan-infra/issues/50
