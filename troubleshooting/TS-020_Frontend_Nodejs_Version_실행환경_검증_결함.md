@@ -1,20 +1,19 @@
 [← 트러블슈팅 목차로 돌아가기](README.md)
 
-# TS-020 — Application Frontend의 Node.js Version 계약이 `npm ci`에서 경고만 내고 통과하던 실행 Gate 결함
+# TS-020 — Frontend가 잘못된 Node.js 버전에서도 `npm ci`를 통과하던 실행환경 검증 결함
 
-> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 아래 내용만으로 사건의 배경, 영향, 원인, 조치, 검증 결과와 남은 사항을 이해할 수 있도록 작성했습니다.
+> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치, 검증 결과와 남은 사항을 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
 |---|---|
-| **시점** | 2026-08-31 |
+| **발생/발견 시기** | 2026-08-31 |
 | **상태** | **해결** |
-| **주 담당** | **정태훈 — Kubernetes 플랫폼 / 애플리케이션 통합** |
-| **영향 역할** | 최유준(향후 Jenkins/Container Build 사용 경로), Application 개발·검증 참여자 |
-| **핵심 범주** | Application Scaffold / Dependency Lock / Runtime Contract / Reproducibility |
+| **주 담당** | **정태훈 — Kubernetes 플랫폼 및 애플리케이션 통합** |
+| **영향 범위** | 최유준(Jenkins·컨테이너 빌드), 애플리케이션 개발·검증 참여자 |
 
-## 발견 배경
+## 문제 개요
 
-Application Scaffold PR #7은 Frontend의 공식 실행 기준을 다음처럼 고정했다.
+애플리케이션 기본 구조(Application Scaffold) PR #7은 Frontend의 공식 실행 기준을 다음처럼 고정했다.
 
 ```text
 Node.js 24
@@ -53,7 +52,7 @@ package.json engines에 공식 Version 계약 존재
 
 이는 기능 장애가 발생한 사건은 아니지만, **프로젝트가 고정한 실행환경과 다른 버전으로도 검증이 성공한 것처럼 보일 수 있는 재현성 결함**이다. 향후 로컬 개발자·Jenkins Build Agent·Container Build 환경이 달라질 경우 같은 Lockfile을 사용하더라도 실행환경 계약이 느슨해질 수 있다.
 
-## 원인
+## 원인 분석
 
 `package.json`의 `engines` 선언만으로는 npm이 기본 설정에서 항상 설치를 중단하지 않는다.
 
@@ -95,7 +94,7 @@ npm 12.0.2
 
 모두 정상 통과했다.
 
-## Review 흐름
+## 검토 흐름
 
 ```text
 초기 Scaffold 구현
@@ -116,9 +115,9 @@ npm 12.0.2
 |---|---|---|---|
 | Node Version 계약 | `engines` 선언 | `.npmrc` `engine-strict=true` | 잘못된 Engine을 설치 단계에서 차단 가능 |
 | 비공식 Node 22 검증 | `EBADENGINE` 경고 후 계속 진행 | Fail-fast 정책 보강 | 공식 Node 24 계약을 실행 수준에서 강제 |
-| 검증 신뢰도 | 기능 Test가 통과하면 Version mismatch를 놓칠 수 있음 | Version Gate를 별도 실패 조건으로 추가 | Lock + Runtime Version 계약을 함께 검증 |
+| 검증 신뢰도 | 기능 Test가 통과하면 Version mismatch를 놓칠 수 있음 | Version Gate를 별도 실패 조건으로 추가 | Lock + 실제 실행 환경(Runtime) Version 계약을 함께 검증 |
 
-## 역할 영향
+## 담당 역할 및 영향
 
 - **정태훈**: Application 실행 기준·Scaffold Owner. Frontend의 재현 가능한 개발/검증 환경을 보장해야 함.
 - **최유준**: 이후 Jenkins/BuildKit Pipeline이 Frontend Build를 소비하므로, CI 환경에서도 동일 Node Version 계약을 지켜야 함.
@@ -136,11 +135,9 @@ npm 12.0.2
 
 따라서 Scaffold 단계의 문제는 해결됐지만, 이 결과를 Jenkins/Container 통합 완료 증거로 확장해서 쓰지는 않는다.
 
-## 근거
+## 관련 근거
 
 - Application Scaffold Issue #6: https://github.com/seokpan/seokpan-app/issues/6
 - Application Scaffold PR #7: https://github.com/seokpan/seokpan-app/pull/7
 - PR #7 별도 검증 Comment: https://github.com/seokpan/seokpan-app/pull/7#issuecomment-5479225246
 - PR #7 후속 보완 Comment: https://github.com/seokpan/seokpan-app/pull/7#issuecomment-5479524358
-
----

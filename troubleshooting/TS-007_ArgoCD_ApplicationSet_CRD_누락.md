@@ -2,86 +2,110 @@
 
 # TS-007 — Argo CD ApplicationSet CRD 누락으로 Controller가 장시간 CrashLoopBackOff
 
-> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 아래 내용만으로 사건의 배경, 영향, 원인, 조치, 검증 결과와 남은 사항을 이해할 수 있도록 작성했습니다.
+> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치, 검증 결과와 남은 사항을 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
 |---|---|
-| **시점** | 2026-08-28 발견·구성 보완, 2026-08-31 회귀검증에서 기존 장애로 재확인 |
+| **발생/발견 시기** | 2026-08-28 발견·구성 보완, 2026-08-31 회귀검증에서 기존 장애로 재확인 |
 | **상태** | **실제 장애 · 해결** |
 | **주 담당** | **최유준 — CI/CD 및 Argo CD 설치·초기 구성** |
-| **영향 역할** | 정태훈(Kubernetes/GitOps Integration), GitOps를 사용하는 전체 작업 |
-| **핵심 범주** | Argo CD / CRD / Bootstrap / Runtime Dependency |
-| **Evidence** | Runtime CrashLoopBackOff + Controller Log + CRD 존재 여부 + 현재 Bootstrap 검증 코드 |
+| **영향 범위** | 정태훈(Kubernetes/GitOps Integration), GitOps를 사용하는 전체 작업 |
 
-## 증상
+## 문제 개요
 
-Version Lock 회귀검증 과정에서 Kubernetes/Calico/API 자체는 정상이었지만 `argocd-applicationset-controller`가 약 **26시간 CrashLoopBackOff** 상태였던 것이 확인됐다.
+버전 고정(Version Lock) 이후 Argo CD/CRD 회귀검증을 위해 실제 `argocd` Namespace를 확인하던 중, 과거 설치 상태에서 `argocd-applicationset-controller`가 약 26시간 `CrashLoopBackOff`였던 Evidence가 다시 확인됐다.
 
-Controller Log의 핵심은 다음과 같았다.
+직접 확인된 로그:
 
 ```text
+failed to wait for applicationsets initial sync:
 no matches for kind "ApplicationSet" in version "argoproj.io/v1alpha1"
 ```
 
-그리고 Cluster에는:
+CRD 확인 결과:
 
-- `applications.argoproj.io` 존재
-- `appprojects.argoproj.io` 존재
-- **`applicationsets.argoproj.io` 부재**
+```text
+applications.argoproj.io
+appprojects.argoproj.io
 
-상태였다.
+applicationsets.argoproj.io
+→ 없음
+```
 
-## 원인
+즉 전체 Argo CD가 설치되지 않은 것이 아니라, **ApplicationSet Controller가 필요로 하는 CRD만 누락된 불완전 설치 상태**였다.
 
-Argo CD Deployment 일부는 존재했지만 ApplicationSet Controller가 요구하는 CRD가 완전하게 Bootstrap되지 않았다. Controller는 필요한 API Kind를 발견하지 못해 Cache Sync를 완료하지 못하고 반복 종료했다.
+## 원인 분석
 
-중요하게도 이 문제는 Project Python/ansible-core/kubernetes.core Version Lock을 도입해서 새로 발생한 Regression이 아니었다. **기존 Runtime에 이미 존재하던 Argo CD Bootstrap 불완전 상태**가 회귀검증 과정에서 드러난 것이다.
+초기 Argo CD 설치/검증은 개별 구성요소 위주로 진행됐고, 초기 구성 자동화(Bootstrap)이:
+
+```text
+Release Manifest에 포함된 필수 CRD 전체 존재
+→ Controller 전체 Ready
+```
+
+를 하나의 완료조건으로 강제하지 않았다.
+
+따라서:
+
+```text
+Server Running
+Repo Server Running
+Redis Running
+Application Controller Running
+```
+
+만 보면 Argo CD가 정상처럼 보일 수 있었지만, 실제로는 ApplicationSet 기능이 죽어 있었다.
 
 ## 조치
 
-Argo CD Bootstrap Role을 대형 CRD까지 포함해 Release Manifest를 Server-Side Apply하는 구조로 정리했다. 또한 대형 CRD가 실제 생성됐는지 별도 검증하도록 했다.
+후속 Argo CD Bootstrap에서는 수동으로 CRD 일부를 골라 설치하지 않고 **공식 Release Manifest 전체를 Server-Side Apply**하는 방향으로 보완됐다.
 
-현재 main의 Bootstrap은:
+현재 `argocd_bootstrap`에는 다음 검증도 포함된다.
 
-- Argo CD Release Manifest Server-Side Apply
-- `argocd_large_crds` 존재 확인
-- `applicationsets.argoproj.io` 같은 대형 CRD 미존재 시 실패
-- `argocd-applicationset-controller` 포함 핵심 Deployment `Available=True` 대기
-
-를 수행한다.
+- `applications.argoproj.io`
+- `appprojects.argoproj.io`
+- `applicationsets.argoproj.io`
+- 대형 CRD 여부 확인
+- ApplicationSet Controller Deployment `Available`
 
 ## 검증 관점
 
-```text
-잘못된 완료 판단
-Argo CD 일부 Pod 존재
-→ 설치 완료라고 판단
+이 사례의 중요한 점은 “26시간 뒤에 고쳤다”가 아니라, 당시 장애가 이후 **버전 고정 회귀검증에서 다시 추적되어 Root Cause와 현재 코드의 예방책까지 연결되었다**는 점이다.
 
-보강된 완료 판단
-Release Manifest Apply
-→ 필수 CRD 존재 확인
-→ ApplicationSet Controller Available
-→ Root Application Synced/Healthy
+```text
+과거 장애 Evidence
+→ Version Lock 회귀검증
+→ applicationsets CRD 누락 확인
+→ 현재 Bootstrap과 비교
+→ Release Manifest SSA + CRD/Controller 검증이 재발 방지책임을 확인
 ```
 
 ## 역할 영향
 
-- **최유준:** Argo CD 설치/Bootstrap 제공 영역 수정
-- **정태훈:** Version Lock/Kubernetes 회귀검증 중 장애 분리 및 GitOps 통합 소비
-- **전체 GitOps 사용 영역:** Root/Child Application 운영 전 Argo CD 제어면 완전성 확보
+- **최유준:** Argo CD 설치/Bootstrap Owner. Release Manifest와 필수 CRD·Controller Ready를 함께 보장해야 한다.
+- **정태훈:** Kubernetes/GitOps Consumer. Root Application 및 하위 Application을 사용하므로 Argo의 부분 장애가 곧 GitOps 통합 장애가 된다.
+- **GitOps 전체:** Server UI/API가 뜬다는 사실만으로 ApplicationSet 기능 정상까지 주장할 수 없게 됐다.
 
-## 근거
+## 관련 근거
 
-- Argo CD Bootstrap Issue #23: https://github.com/seokpan/seokpan-infra/issues/23
-- 장애 Evidence Comment: https://github.com/seokpan/seokpan-infra/issues/23#issuecomment-5450542886
-- Bootstrap 보완 PR #47: https://github.com/seokpan/seokpan-infra/pull/47
-- 현재 Bootstrap 구현: https://github.com/seokpan/seokpan-infra/blob/main/ansible/roles/argocd_bootstrap/tasks/main.yml
-
----
-
+- Parent Version Lock Issue #38: https://github.com/seokpan/seokpan-infra/issues/38
+- Argo 초기 Issue #23: https://github.com/seokpan/seokpan-infra/issues/23
+- Version Lock PR #46의 Argo/CRD 회귀검증 코멘트: https://github.com/seokpan/seokpan-infra/pull/46
+- 현재 Bootstrap Role: `ansible/roles/argocd_bootstrap/`
 
 ## 후속 Bootstrap 검증 Gap
 
-Version Lock 환경에서 Argo CD/CRD를 다시 검증한 뒤, `argocd_bootstrap`의 핵심 Ready 대기 목록에 `argocd-application-controller` StatefulSet 확인이 빠져 있다는 지적도 남았다.
+Version Lock 회귀검증에서 실제 ApplicationSet CRD 누락 장애는 재발하지 않았지만, Bootstrap의 Ready 검증 범위 자체는 한 차례 더 보강 여지가 확인됐다.
 
-이 항목은 당시 ApplicationSet CrashLoopBackOff의 직접 원인은 아니고, 실제 별도 장애가 재현된 것도 아니다. 다만 Argo CD 설치 성공을 판단할 때 일부 Controller만 Ready를 확인하면 전체 제어면 정상성을 과대평가할 수 있으므로 **Bootstrap Validation hardening 항목**으로 이 사례 안에 보존한다. 독립 TS로는 분리하지 않는다.
+현재 Bootstrap 검증은 다음 Deployment의 Ready를 대기한다.
+
+- `argocd-server`
+- `argocd-repo-server`
+- `argocd-redis`
+- `argocd-dex-server`
+- `argocd-applicationset-controller`
+- `argocd-notifications-controller`
+
+반면 `argocd-application-controller`는 StatefulSet이며, 해당 Ready 대기가 동일 검증 목록에는 포함되지 않았다. 실제 Runtime에서는 `argocd-application-controller-0`이 `Running`이고 전체 Argo CD 동작도 PASS였으므로 이것을 새 장애로 분류하지는 않는다.
+
+다만 **"Argo CD Bootstrap 완료"를 강하게 주장하려면 Application Controller StatefulSet도 명시적으로 Ready 상태를 기다리는 편이 더 정확하다.** 이 항목은 후속 Validation hardening 대상이다.

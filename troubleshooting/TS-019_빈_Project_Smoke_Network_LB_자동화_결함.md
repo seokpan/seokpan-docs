@@ -1,22 +1,21 @@
 [← 트러블슈팅 목차로 돌아가기](README.md)
 
-# TS-019 — 빈 Project 재현성 Smoke에서 Network/LB 자동화의 NIC Fact 구조 가정과 Check Mode 검증 결함이 드러남
+# TS-019 — 빈 Project 재현성 최소 동작 검증(Smoke Test)에서 Network/LB 자동화의 NIC Ansible 수집 정보(Fact) 구조 가정과 Ansible Check Mode(실제 변경 없이 예상 결과를 확인하는 모드) 검증 결함이 드러남
 
-> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 아래 내용만으로 사건의 배경, 영향, 원인, 조치, 검증 결과와 남은 사항을 이해할 수 있도록 작성했습니다.
+> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치, 검증 결과와 남은 사항을 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
 |---|---|
-| **시점** | 2026-09-01 |
+| **발생/발견 시기** | 2026-09-01 |
 | **상태** | **진행 중** |
 | **주 담당** | **이유빈 — 네트워크 및 공통 인프라·Ansible 통합** |
-| **영향 역할** | 정태훈(Kubernetes 사용), 김상희(Data Endpoint), 최유준(CI/CD·관측 Endpoint) |
-| **핵심 범주** | Ansible Facts / Network Automation / Check Mode / Reproducibility |
+| **영향 범위** | 정태훈(Kubernetes 사용), 김상희(Data Endpoint), 최유준(CI/CD·관측 Endpoint) |
 
-## 발견 배경
+## 문제 개요
 
 기존 Project `.venv`와 Collection을 재사용하지 않는 빈 Project 환경에서 Version Matrix를 재생성한 뒤 Common / Network / LB 최소 Smoke를 수행했다.
 
-이 검증은 기존 Runtime이 이미 정상인 상태에서 **코드가 새 실행환경에서도 같은 검증 결과를 내는지** 확인하기 위한 것이었다.
+이 검증은 기존 실제 실행 환경(Runtime)이 이미 정상인 상태에서 **코드가 새 실행환경에서도 같은 검증 결과를 내는지** 확인하기 위한 것이었다.
 
 ## 문제 1 — NIC Fact 필터링이 모든 `ansible_facts` 항목을 Interface 객체처럼 가정
 
@@ -78,7 +77,7 @@ Runtime Network / HAProxy
 → Network/LB 자동화 코드 결함 발견
 ```
 
-이 사례는 기존 Runtime에서 우연히 정상 동작했다는 사실만으로 자동화의 재현성이 증명되지 않는다는 점을 보여준다. 특히 Version Lock 이후 빈 실행환경 Smoke가 **숨겨진 자료형 가정과 Check Mode 검증 결함을 실제로 드러냈다.**
+이 사례는 기존 Runtime에서 우연히 정상 동작했다는 사실만으로 자동화의 재현성이 증명되지 않는다는 점을 보여준다. 특히 버전 고정(Version Lock) 이후 빈 실행환경 Smoke가 **숨겨진 자료형 가정과 Check Mode 검증 결함을 실제로 드러냈다.**
 
 ## 수정 방향
 
@@ -107,8 +106,6 @@ HAProxy 쪽은:
 
 따라서 상태는 **진행 중**이다.
 
-## 근거
+## 관련 근거
 
 - Clean Environment / Smoke Issue #84: https://github.com/seokpan/seokpan-infra/issues/84
-
----
