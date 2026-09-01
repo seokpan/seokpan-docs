@@ -13,86 +13,86 @@
 
 ## 문제 개요
 
-초기 Inventory에는:
-
-```text
-mariadb_master:
-  hosts:
-    mariadb-02
-
-mariadb_replica:
-  hosts:
-    mariadb-01
-```
-
-가 있었다.
-
-그러나 실제 DB는 MaxScale 자동 장애조치(Auto Failover)를 사용한다.
-
-## 문제
-
-Master/Replica 역할이 바뀔 수 있는데 Inventory가 이를 고정했다.
-
-결국 Ansible이 현재 역할을 잘못 추론할 가능성이 있었다.
-
-## 1차 조치
-
-```yaml
-database:
-  hosts:
-    mariadb-01:
-    mariadb-02:
-```
-
-로 통합했다.
-
-## 후속 문제
-
-Inventory만 바꿨다고 끝난 게 아니었다.
-
-Playbook에:
-
-```yaml
-hosts: mariadb_master
-```
-
-가 남아 있으면 Inventory 개선을 소비하지 못한다.
-
-실제로 `mariadb_backup.yml`에서 이 참조가 발견됐다.
-
-## 2차 조치
-
-Backup Playbook도:
+초기 Inventory는:
 
 ```text
 mariadb_master
-→ database
+└─ mariadb-01
+
+mariadb_replica
+└─ mariadb-02
+```
+
+처럼 서버 이름과 실제 DB 역할을 동일시했다.
+
+그러나 TS-004, TS-009 검증에서 Auto Failover로 역할이 실제로 바뀌는 것이 확인됐다.
+
+## 문제
+
+Ansible Inventory는 Host Identity를 표현해야 하는데, 바뀔 수 있는 실제 실행 환경(Runtime) Role을 정적으로 박아두고 있었다.
+
+```text
+mariadb-01 = Host Identity
+Primary = 실제 실행 환경 State
+
+둘은 같은 개념이 아님
+```
+
+## 1차 조치
+
+Inventory를:
+
+```text
+database
+├─ mariadbs
+│  ├─ mariadb-01
+│  └─ mariadb-02
+└─ maxscale
+   └─ maxscale-01
 ```
 
 로 변경했다.
 
-그리고 Role 내부에서 MaxScale을 통해 **실제 실행 환경(Runtime) Master를 판별**하도록 정리했다.
+## 후속 문제
+
+Inventory 변경 자체는 정상 반영됐지만, `playbooks/mariadb.yml`이 여전히:
+
+```text
+hosts: mariadb_master:mariadb_replica
+```
+
+를 참조하고 있었다.
+
+즉 **Inventory 구조는 바뀌었지만 이를 사용하는 Playbook 코드가 옛 그룹 이름을 계속 사용**하고 있었다.
+
+새 Inventory에서 Playbook 대상 Host를 찾지 못할 수 있는 상태였다.
+
+## 2차 조치
+
+- `hosts: mariadbs`로 변경
+- MariaDB/MaxScale/NFS Role과 Playbook 전체 검색
+- 옛 `mariadb_master` / `mariadb_replica` 참조 제거 확인
 
 ## 검증
 
 ```text
-Inventory parse PASS
-
-mariadb-01:
-Replication role 확인
-
-mariadb-02:
-Replication role 확인
+mariadb-01 → 정상 대상
+mariadb-02 → 정상 대상
+unreachable=0
+failed=0
 ```
+
+MaxScale Playbook도 추가 수정 불필요 확인.
 
 ## 담당 역할 및 영향
 
-- 이유빈: Inventory 구조
-- 김상희: Backup Role/DB Runtime 판별
-- 정태훈: Application은 개별 DB Host가 아니라 VIP/MaxScale만 사용
+- **이유빈:** Inventory 구조 제공 방식 변경
+- **김상희:** 새 Inventory를 사용하는 MariaDB Playbook 후속 정합화
+- **정태훈:** 애플리케이션은 최종적으로 고정 DB Host가 아니라 VIP/MaxScale 경로를 사용
 
 ## 관련 근거
 
-- Issue #58: https://github.com/seokpan/seokpan-infra/issues/58
-- PR #61: https://github.com/seokpan/seokpan-infra/pull/61
-- Backup 후속 Fix PR #65: https://github.com/seokpan/seokpan-infra/pull/65
+- 초기 정적 그룹 PR #33: https://github.com/seokpan/seokpan-infra/pull/33
+- Inventory 재구조화 PR #70: https://github.com/seokpan/seokpan-infra/pull/70
+- Follow-up Issue #71: https://github.com/seokpan/seokpan-infra/issues/71
+- Playbook 수정 PR #72: https://github.com/seokpan/seokpan-infra/pull/72

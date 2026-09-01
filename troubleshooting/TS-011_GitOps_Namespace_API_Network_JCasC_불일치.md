@@ -9,148 +9,122 @@
 | **발생/발견 시기** | 2026-08-31 ~ 2026-09-01 |
 | **상태** | **코드 정합화 해결 · 일부 실제 Scrape 검증은 후속** |
 | **주 담당** | **최유준 — CI/CD 및 모니터링·관측** |
-| **영향 범위** | 정태훈(K8s Namespace/RBAC), 이유빈(Network), 김상희(DB Exporter) |
+| **영향 범위** | 정태훈(K8s Namespace/RBAC), 이유빈(네트워크), 김상희(DB Exporter) |
 
 ## 문제 개요
 
-`seokpan-gitops` 초안은 방향 자체는 맞았지만 실제 프로젝트와 여러 곳에서 어긋나 있었다.
+초기 `seokpan-gitops` 초안에는 임시/구버전 기준이 섞여 있었다.
 
-대표 문제:
+대표적으로:
 
-```text
-문서 Namespace: cicd / observability
-초안: jenkins / monitoring
-
-Gateway:
-초안 LoadBalancer
-실제 정책 NodePort
-
-HAProxy:
-TLS passthrough 필요
-초안에 NodePort backend 연결 없음
-
-Harbor:
-초안 FQDN이 공식값과 다름
-
-DB:
-Exporter endpoint 없음
-```
+- `jenkins` Namespace
+- `monitoring` Namespace
+- 중복 Namespace 선언 파일
+- Application ServiceMonitor Placeholder
+- 잘못된 MariaDB/LB Exporter 주소
+- Core/v1 Endpoints
+- 잘못된 kubelet NetworkPolicy CIDR
+- MariaDB 역할을 Primary/Replica로 정적 표기
 
 ## 1차 정합화
 
-Issue #5에서 문서+구현 전체 기준으로 수정했다.
+Namespace의 공식 선언 위치를:
+
+```text
+platform/namespaces-rbac/namespaces.yaml
+```
+
+하나로 통일했다.
+
+공식 Namespace:
+
+- `application`
+- `platform`
+- `cicd`
+- `observability`
+- `storage-infra`
+
+구버전:
+
+```text
+jenkins → cicd
+monitoring → observability
+```
+
+로 변경했다.
 
 ## Network/Observability 수정
 
-NGF Service가:
-
-```text
-LoadBalancer
-```
-
-이면 외부 LB가 이미 HAProxy인 프로젝트 구조와 충돌한다.
-
-따라서:
-
-```text
-NodePort
-externalTrafficPolicy: Cluster
-30080 / 30443
-```
-
-로 정리했다.
-
-HAProxy는:
-
-```text
-VIP:443
-→ worker-01:30443
-→ worker-02:30443
-```
-
-TCP passthrough 구조로 반영했다.
+- MariaDB/LB Exporter 실제 IP 정합화
+- `Endpoints` → `Kubernetes EndpointSlice(서비스 Endpoint 정보를 담는 리소스)`
+- Kubelet 대상 잘못된 `192.168.54.0/24` 제거
+- 실제 CP/Worker `/32` 주소로 제한
+- LB/VRouter 필요한 대상 추가
+- MariaDB 설명은 고정 Primary/Replica가 아니라 Host + 검증 시점 실제 실행 환경(Runtime) Role로 변경
 
 ## 서버 측 검증
 
-단순 YAML 파싱에서 끝내지 않고 실제 Kubernetes API에:
+`kubectl apply --dry-run=server`에서 대부분의 리소스가 통과했다.
 
-```bash
-kubectl apply --dry-run=server
+ServiceMonitor만 당시 Prometheus Operator CRD가 아직 없어서:
+
+```text
+no matches for kind "ServiceMonitor"
 ```
 
-로 검증했다.
+가 발생했으며, 이것은 **해당 시점의 예상된 제한사항**으로 분리했다.
 
 ## 2차 문제: Metadata는 바꿨는데 JCasC 내부 문자열은 `jenkins` 그대로
 
-PR #12에서:
+후속 PR 검증에서 Jenkins JCasC 내부의:
 
-```yaml
-metadata:
-  namespace: cicd
-```
+- Kubernetes Cloud Namespace
+- Jenkins URL
+- Agent Template Namespace
 
-로 바꿨지만 JCasC 문자열 내부의:
+등이 여전히 `jenkins`를 참조하고 있음이 발견됐다.
 
-```text
-namespace: "jenkins"
-```
+즉 YAML Metadata와 내부 Configuration String의 정합화 범위가 달랐다.
 
-가 남아 있었다.
+이를 `cicd`로 다시 맞췄다.
 
-즉 **YAML Metadata 정합화와 Embedded Configuration 정합화는 별도**였다.
+## 3차 문제: EndpointSlice를 만들었지만 ServiceMonitor가 EndpointSlice Discovery를 사용하지 않음
 
-후속 수정에서:
+외부 VM Exporter를:
 
 ```text
-jenkins
-→ cicd
+Service
++ EndpointSlice
++ ServiceMonitor
 ```
 
-로 일치시켰다.
-
-## 3차 문제: Kubernetes EndpointSlice(서비스 Endpoint 정보를 담는 리소스)를 만들었지만 ServiceMonitor가 EndpointSlice Discovery를 사용하지 않음
-
-MariaDB/MaxScale/Harbor 외부 VM을 관측하기 위해 Kubernetes EndpointSlice 리소스를 생성했다.
-
-하지만 초기 ServiceMonitor에는:
+조합으로 구성했는데 리뷰에서:
 
 ```yaml
 spec:
   serviceDiscoveryRole: EndpointSlice
 ```
 
-가 없었다.
+가 빠져 있는 것이 발견됐다.
 
-Prometheus Operator 기본 방식과 실제 EndpointSlice 연결 방식이 다를 수 있으므로 실제 Scrape로 이어지지 않을 수 있었다.
-
-후속 수정에서 `serviceDiscoveryRole: EndpointSlice`를 추가했다.
+이 상태에서는 EndpointSlice가 존재해도 Prometheus Operator의 ServiceMonitor Discovery가 그 대상을 실제 Scrape Target으로 잡지 못할 가능성이 있었다.
 
 ## 조치
 
-- Namespace 정합화
-- Gateway NodePort 정합화
-- HAProxy 443 passthrough
-- Harbor FQDN 수정
-- Redis/PV 분리
-- DB Exporter endpoint
-- JCasC 내부 Namespace 수정
-- EndpointSlice ServiceMonitor Discovery Role 추가
+- Service ↔ EndpointSlice Label 일치
+- ServiceMonitor Selector ↔ Service Label 일치
+- `serviceDiscoveryRole: EndpointSlice` 반영
+- Port 이름 정합화
+
+리뷰 후 승인됐다.
 
 ## 남은 제한사항
 
-**Manifest의 server dry-run 성공 = 실제 Prometheus Scrape 성공은 아니다.**
-
-따라서 실제:
-
-```text
-Prometheus Target UP
-Grafana Query 성공
-Loki Log 조회 성공
-```
-
-등은 별도 실제 클러스터 실행 환경(Runtime) 검증이 필요하다.
+당시 ServiceMonitor CRD 자체가 아직 실제 실행 환경에 없던 시점의 검증은 Server Dry-run으로 완결할 수 없었다. 따라서 **Manifest 정합화 완료와 실제 Prometheus Scrape 성공을 같은 완료로 표현하지 않는다.**
 
 ## 관련 근거
 
-- GitOps 추적 Issue #5: https://github.com/seokpan/seokpan-gitops/issues/5
-- PR #12: https://github.com/seokpan/seokpan-gitops/pull/12
+- 초기 GitOps 초안 PR #9: https://github.com/seokpan/seokpan-gitops/pull/9
+- Namespace/API 정합화 PR #11: https://github.com/seokpan/seokpan-gitops/pull/11
+- JCasC/Exporter 후속 PR #12: https://github.com/seokpan/seokpan-gitops/pull/12
+- Infra Jenkins Secret Namespace 후속 PR #76: https://github.com/seokpan/seokpan-infra/pull/76

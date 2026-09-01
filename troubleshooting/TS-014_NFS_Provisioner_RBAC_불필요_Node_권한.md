@@ -21,14 +21,14 @@ Storage Manifest 5개를 처음 대조할 때 `rbac.yaml`에 `nodes get/list/wat
 
 실제 GitOps PR #13을 검토하면서 현재 사용하는 NFS Subdir External Provisioner v4.0.2의 동작과 필요한 권한을 다시 대조했다. 그 결과 `nodes get/list/watch`를 프로젝트의 상시 ClusterRole에 넣어야 한다는 근거가 충분하지 않다고 판단했다.
 
-Cluster-scoped 권한은 Argo CD Git에 선언한 목표 상태(Desired State)에 들어가면 지속적으로 유지되므로, “Upstream에 있었던 것으로 보인다”는 이유만으로 권한을 추가하는 것은 최소권한 원칙에 맞지 않았다.
+Cluster-scoped 권한은 Argo CD의 목표 상태(Desired State)에 들어가면 지속적으로 유지되므로, “Upstream에 있었던 것으로 보인다”는 이유만으로 권한을 추가하는 것은 최소권한 원칙에 맞지 않았다.
 
 ## 최종 조치
 
 - `nodes get/list/watch` 권한 제거
 - Provisioner가 실제 요구하는 RBAC만 유지
 - StorageClass `nfs-k8s`, Provisioner `v4.0.2`, `storage-infra` 경계 재검토
-- Validation PVC/Pod는 상시 Desired State에서 분리
+- 검증용(Validation) PVC/Pod는 상시 목표 상태(Desired State)에서 분리
 - `archiveOnDelete`는 실제 실행 환경(Runtime) 데이터 보존 관점으로 별도 확정
 
 ## 후속 검증

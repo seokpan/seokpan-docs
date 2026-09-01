@@ -13,77 +13,48 @@
 
 ## 문제 개요
 
-Kubernetes 전체 자동화 재현 검증을 위해 `kubernetes_cluster.yml`이 확장됐다.
-
-구조:
+개별 Kubernetes 자동화가 `main` 브랜치에 합쳐진 뒤 `kubernetes_cluster.yml`을 하나의 흐름으로 통합했다.
 
 ```text
-Preflight Validation
-→ cp-01 Bootstrap
-→ cp-02/03 Join
-→ worker-01/02 Join
+cp-01 초기 구성 자동화(Bootstrap)
+→ cp-02/cp-03 Join
+→ Worker Join
 → Calico
-→ Post Validation
+→ Gateway Add-on
 ```
-
-실제 Runtime은 이미 정상이고, 최신 `main` 브랜치에서 Syntax Check/Check Mode를 검증했다.
 
 ## 증상
 
-Check Mode에서 read-only 검증 `command`까지 skip되면서 이후 `assert`가 참조할 변수가 만들어지지 않았다.
+Check Mode에서 실제 변경 Task는 실행하지 않는 것이 맞지만, 기존 코드에서는 상태를 읽기 위한 `command` 계열 검증까지 같이 Skip됐다. 그 결과 후속 `assert`가 참조할 변수 자체가 생성되지 않아 Check Mode가 실패했다.
 
-즉:
-
-```text
-변경 Task Skip
-→ 정상
-
-read-only Validation도 Skip
-→ register 변수 없음
-→ Assert 실패
-```
+즉 장애의 원인은 Kubernetes 실제 실행 환경(Runtime)이 아니라 **“변경 작업”과 “read-only 검증”을 Check Mode에서 같은 방식으로 취급한 자동화 설계**였다.
 
 ## 조치
 
-조회/검증 Task에는:
-
-```yaml
-check_mode: false
-changed_when: false
-```
-
-를 적용했다.
-
-그 결과:
-
-```text
-변경은 하지 않음
-하지만 현재 상태는 실제 조회
-```
-
-가 가능해졌다.
+- kubeadm config 검증, API `/readyz`, Node 등록 확인을 Check Mode에서도 실행
+- Worker Node 등록 확인도 read-only 검증으로 분리
+- Gateway `kubectl diff/wait/rollout/get`은 Check Mode에서도 실행
+- 실제 `kubectl apply`, Join Token 생성, Join 실행 등 변경 작업만 Check Mode에서 Skip
 
 ## 검증
 
-수정 후:
-
-```text
-5 nodes Ready
-Calico 5/5 Running
-CoreDNS 2/2 Running
-PRE_CLUSTER_GATE=PASS
-```
-
-및 Check Mode PASS.
+- Syntax Check PASS
+- 전체 Check Mode PASS
+- Actual Run PASS
+- CP3 + Worker2 `changed=0`, `failed=0`, `unreachable=0`
+- Calico/Gateway 상태 정상
 
 ## 의미
 
-Check Mode의 목적은 **“아무 Task도 실행하지 않는다”가 아니라 “상태를 바꾸지 않으면서 안전하게 예상 결과를 검증한다”**는 것이다.
+```text
+Check Mode = 아무 명령도 실행하지 않는 모드  X
+Check Mode = 상태 변경은 막되, 변경 판단에 필요한 read-only 검증은 수행  O
+```
 
-이 원칙은 후속 NFS 자동화에서도 동일하게 중요해졌다.
+이 수정으로 “멱등성 검증을 위한 Check Mode 자체가 검증 로직 때문에 실패하는” 역설을 제거했다.
 
 ## 관련 근거
 
-- Umbrella Issue #7: https://github.com/seokpan/seokpan-infra/issues/7
-- PR #52: https://github.com/seokpan/seokpan-infra/pull/52
-- PR #56: https://github.com/seokpan/seokpan-infra/pull/56
+- Parent Issue #7: https://github.com/seokpan/seokpan-infra/issues/7
+- PR #67: https://github.com/seokpan/seokpan-infra/pull/67
+- Merge Commit `619708717c7c...`의 Check Mode 수정 이력

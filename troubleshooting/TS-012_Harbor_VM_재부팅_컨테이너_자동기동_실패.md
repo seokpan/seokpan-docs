@@ -13,108 +13,92 @@
 
 ## 문제 개요
 
-Harbor VM을 재부팅했더니:
+Harbor VM 재부팅 후:
 
-```text
-harbor-log
-```
+- `harbor-log` → Up / Healthy
+- 나머지 8개 Container → `Exited (128)`
 
-만 실행되고:
+상태가 확인됐다.
 
-```text
-registry
-registryctl
-postgresql
-core
-portal
-jobservice
-redis
-proxy
-```
-
-등은 모두 `Exited` 상태였다.
-
-Harbor API도:
-
-```text
-HTTP 000
-```
-
-즉 응답하지 않았다.
+개별 Container에는 `restart: always`가 설정돼 있었지만 전체 Harbor가 정상 복구되지 않았다.
 
 ## 수동 복구 확인
 
 ```bash
-cd /opt/harbor/harbor
-podman-compose -f docker-compose.yml up -d
+cd /root/harbor
+docker compose up -d
 ```
 
-후 전체 컨테이너가 `Up`으로 돌아왔고:
+실행 시 9개 Container가 모두 정상 기동했고:
 
 ```text
-https://harbor.seokpan.soldesk.store
-→ HTTP 200
+https://harbor.seokpan.soldesk.store → HTTP 200
 ```
 
-으로 복구됐다.
+을 확인했다.
 
 ## 원인 분석
 
-설치 스크립트는 Harbor를 올렸지만 **VM Boot 시 Compose Stack을 다시 올리는 Host-level Service**가 없었다.
-
-즉:
-
-```text
-설치 성공
-≠
-재부팅 후 자동 복구
-```
-
-였다.
+Container 개별 Restart Policy만으로는 VM Boot 시 Compose `depends_on`과 전체 Startup Ordering을 신뢰성 있게 재현하지 못했다.
 
 ## 조치
 
-`harbor.service` systemd Unit 추가.
+`harbor.service` systemd Unit을 도입했다.
 
-핵심:
+주요 기준:
 
-- After Network
-- After Podman
-- `podman-compose up -d`
-- `RemainAfterExit=yes`
-- `WantedBy=multi-user.target`
+```text
+After=docker.service network-online.target
+Requires=docker.service
+ExecStart=docker compose up -d
+ExecStop=docker compose down
+enabled
+started
+```
+
+Container별 `restart: always`는 그대로 두고:
+
+- 정상 운영 중 개별 Container 장애 → Docker Restart Policy
+- VM Boot/Reboot 전체 Harbor Startup → systemd
+
+로 역할을 분리했다.
 
 ## 최종 검증
 
-PR #69의 후속 승인 검토에 VM 재부팅 Evidence가 기록됐다.
+수정 후 VM을 다시 재부팅해:
 
-재부팅 후:
+- Harbor 전체 Container 정상
+- HTTPS 200
+- `harbor.service` enabled / active
 
-- Harbor 전체 컨테이너 정상 기동
-- HTTPS HTTP 200
-- `harbor.service enabled`
-- `harbor.service active`
-
-확인 완료.
-
-따라서 이 사례는 현재 **해결**로 기록할 수 있다.
+를 확인했다.
 
 ## Before → After
 
 ```text
 Before
 VM Reboot
-→ Harbor 대부분 Exited
-→ API Down
+  ↓
+Docker 개별 restart policy
+  ↓
+Startup 순서 미보장
+  ↓
+8개 Container Exited(128)
 
 After
-systemd Unit
-→ Boot 시 Compose Stack 복구
-→ HTTPS 200
+VM Reboot
+  ↓
+systemd harbor.service
+  ↓
+docker/network 이후 compose up -d
+  ↓
+9개 Container 정상
+  ↓
+HTTPS 200
 ```
 
 ## 관련 근거
 
-- Issue #62: https://github.com/seokpan/seokpan-infra/issues/62
-- PR #69: https://github.com/seokpan/seokpan-infra/pull/69
-- 재부팅 검증 승인 Review: https://github.com/seokpan/seokpan-infra/pull/69#pullrequestreview-5068702053
+- PR #74: https://github.com/seokpan/seokpan-infra/pull/74
+- 최종 재부팅 검증/승인 검토: https://github.com/seokpan/seokpan-infra/pull/74#pullrequestreview-5064661305
+- 관련 Issue #16: https://github.com/seokpan/seokpan-infra/issues/16

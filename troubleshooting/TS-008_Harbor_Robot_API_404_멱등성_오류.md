@@ -13,103 +13,64 @@
 
 ## 1단계 — Project별 Robot API 경로 가정이 실제 Harbor API와 달랐다
 
-Harbor Robot Account 자동화의 최초 구현에서는 Harbor Project별 Robot Account API Endpoint를 다음과 같은 구조로 가정했다.
+초기 Robot Account 자동화는 Harbor Project별 API Endpoint를 전제로 구현하려 했으나 실제 Harbor v2 API에서 해당 경로가 동작하지 않아 **404**가 확인됐다.
 
 ```text
-/api/v2.0/projects/seokpan/robots
+/api/v2.0/projects/{project}/robots
+→ 404
 ```
 
-그러나 실제 Harbor 2.13.3에서 해당 경로는 `404`를 반환했다.
+확인 후 Robot 조회/생성 기준을 Harbor의 전역 Robot API인 다음 경로로 수정하고 이름/Project 기준으로 필터링하도록 바꿨다.
 
-이 문제는 단순 통신 실패가 아니었다. **자동화 코드가 Harbor의 실제 Robot API 구조를 잘못 가정한 문제**였다.
+```text
+/api/v2.0/robots
+```
+
+즉 문제는 Harbor 서비스 장애가 아니라 **API 구조를 잘못 가정한 자동화 구현 오류**였다.
 
 ## 2단계 — GC 정책 검증 중 Robot 존재 여부 분기 버그 추가 발견
 
-후속 작업에서는 실제 Harbor API에 맞춰 Robot 조회 경로를 정리하고 자동화 검증을 계속했다.
-
-그 과정에서 Project/Robot/GC 정책 검증 중 다음 문제가 다시 발견됐다.
-
-Robot이 이미 존재하는 상태에서:
-
-```yaml
-set_fact:
-  harbor_robot_exists: "{{ ... }}"
-```
-
-값이 문자열 형태로 취급되면서 실제 값이:
+후속 Harbor GC 자동화에서 기존 Robot Account 경로를 다시 실행하면서 `_harbor_robot_exists`가 Boolean이 아니라 문자열 `"False"` 형태로 전달될 때 Jinja 조건에서 truthy하게 평가될 수 있는 문제가 발견됐다.
 
 ```text
-"False"
+"False"  ≠  false
 ```
 
-인데도 Jinja truthiness에서는 non-empty string이므로 True처럼 동작할 수 있었다.
-
-결과적으로:
-
-- Robot이 없음
-- 하지만 `not harbor_robot_exists`가 기대대로 동작하지 않음
-- 생성 Task가 실행되지 않을 수 있음
-
-이라는 멱등성 결함이 있었다.
+그 결과 존재하지 않는 Robot을 존재하는 것으로 판단해 생성 분기가 잘못될 수 있었다.
 
 ## 최종 조치
 
-다음 두 층의 문제를 각각 정리했다.
-
-1. 실제 Harbor Robot API 구조에 맞게 조회 경로 수정
-2. `set_fact`에 Boolean Jinja Expression 직접 사용
-
-예:
-
-```yaml
-harbor_robot_exists: >-
-  {{
-    (
-      harbor_robot_list_status.status | int == 200
-      and harbor_robot_name in (...)
-    )
-  }}
-```
+- Project별 잘못된 Robot API Endpoint 제거
+- 전역 `/api/v2.0/robots` 사용 후 이름/Project 기준 필터링
+- `_harbor_robot_exists | bool` 명시적 캐스팅
+- Create Task에서 이미 존재하는 경우의 `409`를 허용 가능한 상태로 처리
+- Secret 안내 Task에 `secret is defined` 가드 추가
+- Robot Secret 실제 값은 Git에 저장하지 않는 원칙 유지
 
 ## 검증
 
-- Project 조회 성공
-- Robot 조회 성공
-- Robot 없는 상태에서 생성
-- Robot 있는 상태에서 재생성 안 함
-- 재실행 `changed=0`
-- GC Schedule:
-
-```text
-type=WEEKLY
-weekday=0
-hour=3
-```
-
-- Garbage Collection Dry-run 성공
+- Harbor API 호출 경로 정상 응답 확인
+- 동일 Harbor Playbook 재실행 시 Robot 존재/생성 분기가 정상 동작
+- GC Schedule GET → 최초 POST / 기존 PUT 분기도 재실행 검증
+- Playbook `failed=0` 확인
 
 ## Before → After
 
 ```text
-Before 1
-잘못된 Project Robot API
+Before
+잘못된 Project Robot API 가정
 → 404
+→ Endpoint 수정
+→ 후속 재실행에서 문자열 False 분기 결함 발견
 
-After 1
-실제 Harbor Robot API 기준으로 정리
-
-Before 2
-Robot 존재 여부를 문자열처럼 취급
-→ 멱등성 분기 오류
-
-After 2
-실제 Boolean으로 계산
-→ 없는 경우만 생성
-→ 재실행 changed=0
+After
+Harbor 실제 API 구조 사용
++ Boolean 명시 변환
++ 충돌 상태 처리
++ 재실행 가능한 Robot/GC 자동화
 ```
 
 ## 관련 근거
 
-- 초기 Robot API 404 기록: https://github.com/seokpan/seokpan-infra/issues/30
-- PR #70: https://github.com/seokpan/seokpan-infra/pull/70
-- PR #71: https://github.com/seokpan/seokpan-infra/pull/71
+- 최초 Harbor/Argo 자동화 PR #47: https://github.com/seokpan/seokpan-infra/pull/47
+- Robot/GC 후속 PR #69: https://github.com/seokpan/seokpan-infra/pull/69
