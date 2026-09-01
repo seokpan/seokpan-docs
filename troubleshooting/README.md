@@ -33,7 +33,7 @@
 16. **[TS-016 — GitOps Root 전환 중 Argo CD Bootstrap 연쇄 오류](TS-016_ArgoCD_Root_전환_kubeconfig_tmp_충돌.md)**
 17. **[TS-017 — MariaDB read_only·Auto Failover·GTID 충돌](TS-017_MariaDB_read_only_Auto_Failover_GTID_충돌.md)**
 18. **[TS-018 — BuildKit Harbor CA 연동 중 kubeconfig 경로·권한 문제](TS-018_BuildKit_Harbor_CA_kubeconfig_경로_권한.md)**
-19. **[TS-019 — 빈 환경 Smoke에서 Network/LB 자동화 결함 발견](TS-019_빈_Project_Smoke_Network_LB_자동화_결함.md)**
+19. **[TS-019 — 새 환경 Smoke Test에서 Network/LB 자동화 결함 발견](TS-019_빈_Project_Smoke_Network_LB_자동화_결함.md)**
 20. **[TS-020 — Frontend Node.js 버전 실행환경 검증 결함](TS-020_Frontend_Nodejs_Version_실행환경_검증_결함.md)**
 21. **[TS-021 — Harbor 비밀정보 평문 노출과 자격증명 교체 필요](TS-021_Harbor_비밀정보_평문_노출_교체.md)**
 
