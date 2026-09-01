@@ -59,13 +59,11 @@ Redis PR #14 생성
 → Redis 실제 배포 Manifest 자체(platform/redis)는 보존
 → Root 구조 전환을 먼저 완료
 → argocd/applications/ 공식화
-→ Redis PR #18을 최신 main에서 다시 구성
+→ Redis PR #18을 최신 main 브랜치에서 다시 구성
 → Redis Application `Synced / Healthy` + PVC/AOF Persistence 검증 PASS
 ```
 
 즉 이 사례의 안전조치는 "옛 경로를 지우지 않았다"에 그치지 않고, **잘못된 제어계층에 연결될 신규 Redis 배포 PR을 실제 Merge 전에 폐기하고 구조 결정을 선행**한 것이다.
-
-근거: `seokpan-gitops#7`의 Root 경로 정합성 코멘트, PR #14(Closed/미병합), PR #18(재구성 후 Redis 배포 검증).
 
 ## 2단계. 실제 Bootstrap 실행에서 kubeconfig `~` 경로 실패
 
@@ -141,7 +139,7 @@ Storage 담당 후속 회귀검증에서도:
 - StorageClass `nfs-k8s` 유지
 - RBAC 정상
 - Redis PVC 이미 `Bound`
-- 새 5Gi RWX Validation PVC `Bound`
+- 새 5Gi RWX 검증용(Validation) PVC `Bound`
 - Pod에서 실제 `/mnt/validation.txt` Write 성공
 - 검증 리소스 정리
 
@@ -155,7 +153,7 @@ Storage 담당 후속 회귀검증에서도:
 GitHub 저장소의 디렉토리 역할 정리
 → 안전한 전환 순서 설계
 → 실제 적용
-→ kubeconfig 경로 해석 방식(Path Semantics) 오류
+→ kubeconfig의 `~` 경로가 자동으로 확장되지 않는 문제
 → 수정
 → 다시 적용
 → /tmp 파일 소유권 오류
@@ -168,9 +166,11 @@ GitHub 저장소의 디렉토리 역할 정리
 
 ## 관련 근거
 
-- GitOps Decision #15: https://github.com/seokpan/seokpan-gitops/issues/15
+- GitOps 구조 결정 Issue #15: https://github.com/seokpan/seokpan-gitops/issues/15
 - Docs PR #16: https://github.com/seokpan/seokpan-docs/pull/16
 - GitOps 경로 준비 PR #16: https://github.com/seokpan/seokpan-gitops/pull/16
+- 초기 Redis 연결 PR #14(Closed/미병합): https://github.com/seokpan/seokpan-gitops/pull/14
+- Root 전환 후 Redis 재구성 PR #18: https://github.com/seokpan/seokpan-gitops/pull/18
 - Infra Root Path PR #81: https://github.com/seokpan/seokpan-infra/pull/81
 - kubeconfig 오류 Issue #82: https://github.com/seokpan/seokpan-infra/issues/82
 - kubeconfig 수정 PR #83: https://github.com/seokpan/seokpan-infra/pull/83
