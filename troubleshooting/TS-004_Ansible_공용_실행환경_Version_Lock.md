@@ -46,7 +46,7 @@ Ansible Controller에는 이미 다음 실행환경이 설치되어 있었다.
 - `3.12.13` → PASS
 - 테스트 Wrapper로 `3.12.12` 조건 → FAIL, Exit 1
 
-또한 `ansible-core 2.20.8`에서 `INJECT_FACTS_AS_VARS` 관련 경고가 확인되어, 우선 확인된 `kubeadm_control_plane` Template의 top-level fact 참조를 `ansible_facts[...]` 방식으로 변경했다. 이 항목은 Version Lock 자체의 실패가 아니라 새 실행환경에서 드러난 호환성 경고였으므로 별도의 해결 사건으로 확대하지 않았다.
+또한 `ansible-core 2.20.8`에서 `INJECT_FACTS_AS_VARS` 관련 경고가 확인되어, 우선 확인된 `kubeadm_control_plane` Template의 top-level fact 참조를 `ansible_facts[...]` 방식으로 변경했다.
 
 ## 검증
 
@@ -59,7 +59,7 @@ Version Lock PR과 Exact Python 검증 보완이 `main`에 반영된 뒤 다음�
 - 기존 System Python/Ansible은 변경하지 않음
 - 잘못된 Python patch version을 실제 실패 조건으로 차단
 
-이 보고서는 **버전 고정과 프로젝트 실행환경 분리까지의 해결 내용만 기록**한다. 이후 별도로 수행된 전체 인프라 빈 환경 Smoke/Rollback 검증은 완료 전 작업이므로 이 보고서의 해결 범위에 포함하지 않는다.
+따라서 프로젝트 공용 Ansible 실행환경은 시스템 기본 설치 상태에 의존하지 않고, 프로젝트가 정한 버전 조합을 별도 환경에서 재현하도록 정리됐다.
 
 ## 담당 역할 및 영향
 
