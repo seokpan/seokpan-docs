@@ -384,9 +384,7 @@
     UPDATE 권한을 추가하기로 확정(이슈 #91).
   - `db_admin` 계정은 Alembic Migration 실행 전용으로 범위를 고정하고, 정상
     Backend Runtime 커넥션에는 제공하지 않기로 확정.
-  - Infra(Ansible)는 Database·계정·권한 및 7개 Table 생성까지만 담당하고, 이후
-    컬럼/제약조건 등 스키마 구조 변경(Alembic Migration)은 Backend 책임 범위로
-    분리.
+  - Infra(Ansible)는 `stone_game` Database와 계정·권한을 준비하고, Table 생성·변경을 포함한 Schema DDL은 `seokpan-app`의 Alembic Revision을 유일한 기준으로 관리한다.
 - 영향:
   - Backend는 게임 결과 확정 트랜잭션(`game_result` INSERT + `game`
     UPDATE + `member` UPDATE(rating) + `member_stats` UPDATE +
@@ -397,6 +395,34 @@
 - 관련:
   - `seokpan/seokpan-infra#89`
   - `seokpan/seokpan-infra#91`
+
+### Alembic Migration 실행 Gate 및 기존/신규 DB 적용 경계 확정
+
+- 구분: 구현 단계 추가 확정
+- 기존 기준:
+  - `seokpan-app`이 SQLAlchemy Model·Table DDL·Alembic Revision을 소유하고, `db_admin`을 Migration 전용 계정으로 사용하기로 확정되어 있었다.
+  - 기존 Runtime DB는 사전 DDL·행 Audit 후 Baseline Revision으로 Stamp하고, 신규 빈 DB는 동일 Revision Chain으로 생성하도록 경계가 정해져 있었다.
+  - Migration은 Backend Replica 시작마다 실행하지 않고 단일 선행 Job 또는 운영 절차로 실행하는 원칙까지는 있었으나, 실제 Provider Integration에서의 실행 Gate는 구체화가 필요했다.
+- 변경/확정 내용:
+  - CI는 Alembic Revision Chain, Migration Test, Offline SQL 등 실제 DB를 변경하지 않는 정적 검증까지만 자동 수행한다.
+  - 실제 DDL 또는 Stamp는 Backend Startup이나 각 Replica에서 자동 실행하지 않고, Provider Integration 단계에서 `db_admin` Credential을 사용하는 **승인된 단일 One-shot Migration 실행**으로 수행한다.
+  - One-shot 실행 자산의 구체 형태와 Secret 참조 위치는 구현 단계에서 `seokpan-app#22`를 기준으로 확정한다.
+  - 기존 Runtime DB는 Master·Replication, DDL·행 Audit, Backup/Restore·Rollback 가능 상태를 확인한 뒤 Baseline Revision으로 Stamp하고, 이후 필요한 Revision을 별도 승인 후 적용한다.
+  - 신규 빈 DB는 Infra가 `stone_game` Database와 Migration 계정을 준비한 뒤 동일 Alembic Revision Chain에 대해 `alembic upgrade head`를 실행해 Schema를 생성한다.
+  - Migration 성공 후 Revision, Replication, MaxScale Read/Write 및 기존 데이터 보존을 확인한 뒤 Backend Rollout을 진행한다.
+  - `db_admin` Credential은 정상 Backend Pod에 주입하지 않는다.
+- 영향:
+  - Schema 변경 권한을 Runtime Backend에서 분리하면서도 신규 DB 재현성과 기존 DB 안전한 Baseline 편입을 같은 Alembic Revision Chain으로 관리할 수 있다.
+  - Jenkins 일반 배포나 Argo CD Auto-Sync가 자동으로 DB DDL을 수행하는 구조로 해석하지 않는다.
+  - 실제 Migration 실행·검증 완료 여부는 구현 Repository의 Issue/Evidence로 관리하며, 이 결정 기록만으로 Runtime 적용 완료를 의미하지 않는다.
+- 관련:
+  - `seokpan/seokpan-app#17`
+  - `seokpan/seokpan-app#22`
+  - `seokpan/seokpan-app#19`
+  - `seokpan/seokpan-infra#55`
+  - `seokpan/seokpan-infra#89`
+  - `seokpan/seokpan-infra#91`
+  - `seokpan/seokpan-docs#30`
 
 ---
 
