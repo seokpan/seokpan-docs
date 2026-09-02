@@ -285,6 +285,121 @@
 
 ---
 
+## 2026-09-02
+
+### MariaDB read_only / auto_failover 정책 충돌 해결 및 GTID Domain 통합
+
+- 구분: 기존 설정 변경
+- 기존 기준:
+  - `custom.cnf`에 `read_only` 값이 정적으로 고정되어 있어, MaxScale `auto_failover`가
+    Master/Slave 역할을 전환해도 실제 `read_only` 상태가 새 역할과 어긋나는 충돌이
+    있었다(이슈 #50).
+  - 양쪽 서버의 `gtid_domain_id`가 통일되어 있지 않았다.
+- 변경/확정 내용:
+  - `custom.cnf`에서 `read_only` 항목을 제거하고, `enforce_read_only_slaves=true`
+    설정으로 MaxScale이 Runtime에서 단독으로 `read_only` 상태를 관리하도록 변경했다.
+  - `gtid_domain_id`를 양쪽 서버 모두 `1`로 통일했다.
+  - 실서버(mariadb-01/02) 적용 및 재시작 검증 완료: Master는 재시작 후
+    `read_only OFF` 유지, Slave는 재시작 후 `read_only ON`으로 수렴, GTID 완전
+    일치, 복제 정상 확인.
+- 영향:
+  - Ansible이 `read_only`를 정적으로 관리하지 않고, MaxScale이 역할 변경에 따라
+    동적으로 관리하는 구조로 바뀌었다.
+  - 향후 failover/switchover 발생 시에도 `read_only` 상태가 실제 역할과
+    불일치할 위험이 제거된다.
+- 관련:
+  - `seokpan/seokpan-infra#50`
+  - `seokpan/seokpan-infra#88`
+
+### MariaDB Master/Replica 역할을 설계 문서 고정값이 아닌 동적 조회 기준으로 운영
+
+- 구분: 기존 가정 수정
+- 기존 기준:
+  - 05 물리 아키텍처 문서 등에서는 `mariadb-01`을 Master, `mariadb-02`를 Slave로
+    전제하고 있었다.
+- 변경/확정 내용:
+  - MaxScale `auto_failover` 도입 이후 Master/Slave 역할은 장애·재부팅 상황에
+    따라 자동으로 바뀔 수 있음을 확인했다(2026-09-01 기준 실제 Master는
+    `mariadb-02`, Slave는 `mariadb-01`).
+  - 문서상 고정 역할 표기는 참고값으로만 취급하고, 실제 작업 전에는 항상
+    `maxctrl list servers`로 현재 역할을 재확인하는 것을 원칙으로 확정했다.
+- 영향:
+  - 계정/스키마 등 DCL·DDL 작업은 문서 기준이 아니라 실행 시점의 실제 Master를
+    기준으로 수행해야 한다.
+  - 향후 05 문서 갱신 시 "고정 역할"이 아닌 "동적 역할, MaxScale 관리" 방식으로
+    표현 수정이 필요하다.
+- 관련:
+  - `seokpan/seokpan-infra#50`
+
+### auto_rejoin GTID 갈라짐 시 자동 재편입 실패 확인
+
+- 구분: Runtime 검증으로 기존 가정 수정
+- 기존 기준:
+  - MaxScale `auto_rejoin` 기능으로 장애 복구 후 Slave가 자동으로 복제에
+    재편입될 것으로 가정하고 있었다.
+- 변경/확정 내용:
+  - PR #88 재부팅 검증 중, GTID가 갈라진 상태에서는 `auto_rejoin`이 안전을 위해
+    재편입을 거부(실패)하고, `mariadb-backup` 기반 수동 재구축이 필요함을
+    확인했다. GTID가 일치하는 상태에서는 `auto_rejoin`이 정상 동작함을 별도로
+    확인했다.
+- 영향:
+  - F-06(Primary 장애) 시나리오에 "GTID 갈라짐 시 수동 재구축 필요" 케이스를
+    반드시 포함해야 한다.
+  - 이슈 #55(Backup/Restore 자동화)에 이 수동 재구축 절차를 반영해야 한다.
+- 관련:
+  - `seokpan/seokpan-infra#88`
+  - `seokpan/seokpan-infra#55`
+
+### 기존 app_user 계정 폐기, identity_svc/game_svc로 완전 전환
+
+- 구분: 기존 계획 변경(항목 제거)
+- 기존 기준:
+  - MVP 초기에는 `app_user` 단일 계정(SELECT/INSERT/UPDATE/DELETE/EXECUTE ON
+    stone_game.*)이 Backend Runtime 접근 계정으로 존재했다.
+- 변경/확정 내용:
+  - 개인정보(member)와 게임 데이터 간 신뢰 경계를 분리하기 위해 `app_user`를
+    폐기하고 `identity_svc`/`game_svc` 2개 계정 체계로 완전히 전환하기로
+    확정했다(2026-09-01).
+  - 실서버 확인 결과 `app_user` 계정은 이미 존재하지 않는 상태였다(삭제
+    시점·경위 기록 없음).
+- 영향:
+  - `stone_game_flow_test.sql` 등 `app_user` 기준으로 작성된 문서/스크립트는
+    identity_svc/game_svc 조합 기준으로 갱신이 필요하다.
+  - Backend 커넥션 설계는 단일 풀이 아닌 identity_svc/game_svc 2-커넥션 풀
+    구조를 전제로 한다.
+- 관련:
+  - `seokpan/seokpan-infra#89`
+
+### identity_svc/game_svc Runtime 계정 분리 코드화 및 game_svc Rating UPDATE 권한 추가
+
+- 구분: 구현 단계 확정
+- 기존 기준:
+  - identity_svc/game_svc 계정과 권한은 수동으로 생성·검증된 상태였고, game_svc는
+    `member(member_id, nickname, rating)` 컬럼 SELECT만 가능했다(UPDATE 권한 없음).
+  - db_admin 계정의 사용 범위(Migration 전용 여부)는 별도로 명시되어 있지 않았다.
+- 변경/확정 내용:
+  - identity_svc/game_svc 계정 생성 및 GRANT를 Ansible로 코드화하기로
+    확정(이슈 #89).
+  - 경기 결과 확정 시 Rating을 반영할 수 있도록 `game_svc`에 `member(rating)`
+    UPDATE 권한을 추가하기로 확정(이슈 #91).
+  - `db_admin` 계정은 Alembic Migration 실행 전용으로 범위를 고정하고, 정상
+    Backend Runtime 커넥션에는 제공하지 않기로 확정.
+  - Infra(Ansible)는 Database·계정·권한 및 7개 Table 생성까지만 담당하고, 이후
+    컬럼/제약조건 등 스키마 구조 변경(Alembic Migration)은 Backend 책임 범위로
+    분리.
+- 영향:
+  - Backend는 게임 결과 확정 트랜잭션(`game_result` INSERT + `game`
+    UPDATE + `member` UPDATE(rating) + `member_stats` UPDATE +
+    `rating_history` INSERT)에서 `game_svc` 계정만으로 Rating 갱신까지 처리할
+    수 있게 된다.
+  - Schema 구조 변경 권한과 계정 관리 권한의 소유 주체가 Infra/Backend로
+    명확히 분리된다.
+- 관련:
+  - `seokpan/seokpan-infra#89`
+  - `seokpan/seokpan-infra#91`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
