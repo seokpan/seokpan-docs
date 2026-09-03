@@ -426,6 +426,35 @@
 
 ---
 
+## 2026-09-03
+
+### Controller 관리자 kubeconfig 및 privileged Ansible 접근 기준 확정
+
+- 구분: 구현 단계 추가 확정
+- 기존 기준:
+  - Kubernetes 관리자 kubeconfig는 Controller의 `/etc/seokpan/kubeconfig/admin.conf`를 공용 경로로 사용하도록 구성되어 있었다.
+  - Controller에서 Kubernetes API를 사용하는 Ansible 자동화는 `cluster_kubeconfig` 변수를 통해 공용 kubeconfig를 참조하는 방향으로 통일되어 있었다.
+  - 일반 Kubernetes 작업은 담당자별 ServiceAccount와 역할별 RBAC를 사용하는 구조로 구성되어 있었다.
+  - 다만 개인 사용자 홈에 별도의 `kubernetes-admin` kubeconfig가 존재할 수 있었고, `ansible-kube` 그룹 멤버십에 대한 공통 운영 기준은 명확히 정의되어 있지 않았다.
+- 변경/확정 내용:
+  - Controller의 관리자 kubeconfig 기준 경로는 `/etc/seokpan/kubeconfig/admin.conf` 하나로 유지한다.
+  - 개인 사용자 홈에는 별도의 `kubernetes-admin` kubeconfig를 운영 기준으로 유지하지 않는다.
+  - 일반 Kubernetes 작업은 각 담당자의 역할별 kubeconfig와 Kubernetes RBAC를 사용한다.
+  - Controller에서 `cluster_kubeconfig`를 소비하는 승인된 privileged Ansible 작업은 공용 관리자 kubeconfig를 사용한다.
+  - `ansible-kube` 그룹은 공용 관리자 kubeconfig에 대한 접근 제어 그룹으로 사용하며, `cluster_kubeconfig` 기반 privileged Ansible 작업을 실제 수행할 필요가 있는 Linux 사용자에게만 멤버십을 부여한다.
+  - 팀원 전체 또는 일반 Kubernetes 작업 편의를 이유로 `ansible-kube` 멤버십을 일괄 부여하지 않는다.
+  - privileged Ansible 작업 필요성이 없는 계정에는 관리자 kubeconfig 접근권한을 부여하지 않는다.
+- 영향:
+  - 관리자 kubeconfig 접근 지점을 Controller의 공용 경로로 단일화하여 cluster-admin Credential의 불필요한 개인별 복제를 방지한다.
+  - 일반 Kubernetes 작업과 privileged Ansible 자동화의 인증 경로를 분리하여 역할별 RBAC와 관리자 권한의 사용 목적을 구분한다.
+  - 담당자의 역할이 변경되거나 새로운 privileged Ansible 작업이 추가되는 경우에도 실제 실행 책임을 기준으로 관리자 kubeconfig 접근 여부를 판단한다.
+- 관련:
+  - `seokpan/seokpan-infra#90`
+  - `seokpan/seokpan-infra#118`
+  - `seokpan/seokpan-gitops#3`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
