@@ -103,6 +103,26 @@ Role이 Root Application Manifest를 `/tmp/root-application-argocd.yaml` 고정 
 
 하나의 경로 변경이 실제 자동화 실행과 배포 상태에 미치는 영향을 단계적으로 검증하면서 안전하게 전환한 사례다.
 
+## 후속 운영 기준
+
+이 보고서의 `~/.kube/seokpan-admin.conf` 오류와 당시 조치는 **2026-09-01 사건 기록**으로 그대로 보존한다. 이후 Controller의 Kubernetes 관리자 Credential 운영 기준은 추가 정합화를 거쳐 변경되었다.
+
+현재 기준은 다음과 같다.
+
+- Controller 공용 관리자 kubeconfig: `/etc/seokpan/kubeconfig/admin.conf`
+- `cluster_kubeconfig`를 소비하는 승인된 privileged localhost Ansible 작업은 위 공용 경로를 사용
+- 공용 관리자 kubeconfig 접근은 `ansible-kube` 그룹으로 제한
+- 일반 Kubernetes 작업은 개인 `kubernetes-admin` 사본이 아니라 역할별 ServiceAccount/RBAC kubeconfig 사용
+- 역할별 kubeconfig TokenRequest 유효기간 기준은 90일
+
+현재 운영 기준과 후속 정합화 근거:
+
+- `seokpan-docs` 현재 변경·결정 이력: [PROJECT_CHANGES.md — 2026-09-03 Controller 관리자 kubeconfig 및 privileged Ansible 접근 기준](../PROJECT_CHANGES.md#2026-09-03)
+- `seokpan-infra` 후속 정합화 Issue #118: https://github.com/seokpan/seokpan-infra/issues/118
+- 최초 공용 접근그룹 구성 이력 Issue #90: https://github.com/seokpan/seokpan-infra/issues/90
+
+따라서 이 문서의 당시 `~/.kube/seokpan-admin.conf` 경로를 현행 경로로 치환해서 읽지 않는다. **당시 장애 원인과 해결 이력은 본문을 따르고, 현재 운영 시에는 위 후속 기준을 적용한다.**
+
 ## 관련 근거
 
 - GitOps 구조 결정 Issue #15: https://github.com/seokpan/seokpan-gitops/issues/15
