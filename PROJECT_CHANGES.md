@@ -439,7 +439,11 @@
 - 변경/확정 내용:
   - Controller의 관리자 kubeconfig 기준 경로는 `/etc/seokpan/kubeconfig/admin.conf` 하나로 유지한다.
   - 개인 사용자 홈에는 별도의 `kubernetes-admin` kubeconfig를 운영 기준으로 유지하지 않는다.
-  - 일반 Kubernetes 작업은 각 담당자의 역할별 kubeconfig와 Kubernetes RBAC를 사용한다.
+  - 일반 Kubernetes 작업은 각 담당자의 기존 ServiceAccount와 역할별 RBAC에 연결된 개인 kubeconfig를 사용한다.
+  - 역할별 개인 kubeconfig Credential은 TokenRequest 기반으로 발급하며, 유효기간 기준은 90일로 한다.
+  - 역할별 Token이 만료되면 기존 ServiceAccount와 RBAC 범위를 변경하지 않고 동일 역할 범위로 재발급한다.
+  - ServiceAccount Token과 kubeconfig 실제 Credential은 Git에 저장하지 않는다.
+  - 비만료 ServiceAccount Token을 신규 운영 기준으로 사용하지 않으며, 별도 X.509 User 인증체계로 전환하지 않는다.
   - Controller에서 `cluster_kubeconfig`를 소비하는 승인된 privileged Ansible 작업은 공용 관리자 kubeconfig를 사용한다.
   - `ansible-kube` 그룹은 공용 관리자 kubeconfig에 대한 접근 제어 그룹으로 사용하며, `cluster_kubeconfig` 기반 privileged Ansible 작업을 실제 수행할 필요가 있는 Linux 사용자에게만 멤버십을 부여한다.
   - 팀원 전체 또는 일반 Kubernetes 작업 편의를 이유로 `ansible-kube` 멤버십을 일괄 부여하지 않는다.
@@ -447,6 +451,7 @@
 - 영향:
   - 관리자 kubeconfig 접근 지점을 Controller의 공용 경로로 단일화하여 cluster-admin Credential의 불필요한 개인별 복제를 방지한다.
   - 일반 Kubernetes 작업과 privileged Ansible 자동화의 인증 경로를 분리하여 역할별 RBAC와 관리자 권한의 사용 목적을 구분한다.
+  - 역할별 kubeconfig의 만료·재발급 기준을 명시하여 TokenRequest Credential이 만료된 채 방치되는 운영 공백을 방지한다.
   - 담당자의 역할이 변경되거나 새로운 privileged Ansible 작업이 추가되는 경우에도 실제 실행 책임을 기준으로 관리자 kubeconfig 접근 여부를 판단한다.
 - 관련:
   - `seokpan/seokpan-infra#90`
