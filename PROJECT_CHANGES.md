@@ -458,6 +458,38 @@
   - `seokpan/seokpan-infra#118`
   - `seokpan/seokpan-gitops#3`
 
+### Gateway Argo CD 소유권 및 HTTPS Platform 완료
+
+- 구분: 구현 상태 변화 및 책임 경계 확정
+- 기존 기준:
+  - Gateway/NginxProxy Manifest와 Runtime은 존재했지만, Argo CD 공식 Child Application 편입 전에는 `platform/gateway/base`가 Root App-of-Apps의 직접 관리 대상이 아니었다.
+  - Gateway Base의 HTTP Listener와 Worker `30080` 경로는 검증됐으나, HTTPS는 `application/game-seokpan-tls` Secret이 없어 `InvalidCertificateRef` 상태로 Deferred돼 있었다.
+  - 2026-09-02 Mentoring Baseline은 `Gateway HTTP 완료 / Gateway HTTPS·WSS 미완료`로 기록돼 있다.
+- 변경/확정 내용:
+  - `argocd/applications/gateway.yaml`을 통해 Gateway를 공식 Argo CD Child Application으로 편입하고, `platform/gateway/base`를 Gateway Runtime Desired State의 단일 Git 경로로 유지한다.
+  - Gateway/NginxProxy/향후 HTTPRoute는 `seokpan-gitops`가 소유하고, Gateway 전용 Leaf Certificate 발급과 `application/game-seokpan-tls` Secret Provider는 `seokpan-infra`의 Ansible이 소유한다.
+  - 기존 Seokpan Internal Root CA는 재사용하되 Harbor와 Gateway의 Leaf Certificate/Private Key는 분리한다.
+  - Gateway TLS Secret 실제 값과 Private Key는 GitOps Repository에 저장하지 않는다.
+  - `application/game-seokpan-tls`는 `kubernetes.io/tls` 타입으로 자동 생성·갱신하며, 재실행 시 유효한 Certificate/Secret 상태에서는 변경하지 않는다.
+  - Runtime에서 HTTPS Listener `Accepted=True`, `ResolvedRefs=True`, `Programmed=True`를 확인했고 기존 `InvalidCertificateRef`가 제거됐다.
+  - Worker-01/02의 `30080/30443` TCP, Worker `30443` TLS, Common VIP `10.1.93.90:443` TLS를 모두 검증했다.
+  - 정상 Hostname `game.seokpan.soldesk.store`에서는 Worker/VIP HTTPS 요청이 TLS 검증 후 NGF의 `404` 응답까지 도달했고, 잘못된 HTTPS SNI Hostname은 `tlsv1 unrecognized name`으로 거부되는 것을 확인했다.
+  - Argo CD `gateway` Application은 `Synced / Healthy` 상태를 확인했다.
+- 영향:
+  - Gateway Platform 수준의 HTTPS/TLS는 서비스 구현과 독립적으로 완료 상태로 전환됐다.
+  - `Gateway HTTPS Platform PASS`는 실제 Frontend/Backend Route, HTTP→HTTPS Redirect, WebSocket/WSS, Browser First Success 완료를 의미하지 않는다. 해당 Application 통합 범위는 계속 Deferred한다.
+  - 2026-09-02 Mentoring Baseline은 당시 시점의 역사 기록으로 유지하며, 본 항목을 후속 변화 근거로 연결한다.
+  - 임시 Echo Service/HTTPRoute는 사용하지 않았으므로 별도 정리 대상은 없다.
+- 관련:
+  - `seokpan/seokpan-gitops#22`
+  - `seokpan/seokpan-gitops` PR #23
+  - `seokpan/seokpan-infra#111`
+  - `seokpan/seokpan-infra` PR #112
+  - `seokpan/seokpan-infra#118`
+  - `seokpan/seokpan-infra#122`
+  - `seokpan/seokpan-infra` PR #123
+  - `seokpan/seokpan-docs#34`
+
 ---
 
 ## 작성 형식
