@@ -157,7 +157,7 @@
 - 변경/확정 내용:
   - 기존 MariaDB Schema를 재사용하고 Domain → Adapter → Headless HTTP/WebSocket → Frontend → Provider·배포 통합 순서로 점진 구현한다.
   - Backend는 CPython 3.13.15 기반 FastAPI Modular Monolith와 실용적 Ports/Adapters 구조를 사용한다.
-  - 상태 조회·변경 명령은 `/api/v1` HTTP JSON API, 실시간 권위 Snapshot·Event 전달은 `/ws/v1` WebSocket을 기본으로 한다.
+  - 상태 조회·변경 명령은 `/api/v1` HTTP JSON API, 실시간 서버 기준 Snapshot·Event 전달은 `/ws/v1` WebSocket을 기본으로 한다.
   - MariaDB 영속 데이터와 Redis 공유 Runtime State의 기존 책임을 유지하며, Application이 SQLAlchemy Model·Alembic Migration·Redis Key/Lua 처리 규격을 소유한다.
   - Frontend는 React·TypeScript·Vite 기반 정적 Application으로 구성하고 Nginx에서 제공한다.
   - Backend와 Frontend는 별도 Image·Workload로 배포하며 Jenkins Test → Harbor Image → GitOps PR → Argo CD 흐름을 유지한다.
@@ -205,10 +205,10 @@
 - 기존 기준:
   - D01은 방장이 나가거나 30초 재접속 유예가 만료된 뒤 연결 중인 Member에게 방장을 승계하는 흐름을 설명했다.
   - D07은 방장이 변경되면 모든 Ready를 해제하도록 정의했다.
-  - 인증 수명, HTTP 오류·멱등 처리, WebSocket 연결 단위, Redis Lifecycle·원자 처리와 기존 MariaDB Schema 보완 상세는 구현 전에 확정할 필요가 있었다.
+  - 인증 수명, HTTP 오류·멱등 처리, WebSocket 연결 단위, Redis Lifecycle·Lua 처리와 기존 MariaDB Schema 보완 상세는 구현 전에 확정할 필요가 있었다.
 - 변경/확정 내용:
   - 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 30초를 기다리지 않고 접속 중인 Member 가운데 입장 순서가 가장 빠른 참가자에게 즉시 승계한다.
-  - 실제 방장 변경과 모든 Ready 해제, Room 상태 Version 증가는 하나의 Redis 원자 처리로 수행한다.
+  - 실제 방장 변경과 모든 Ready 해제, Room 상태 Version 증가는 하나의 Redis Lua 실행으로 함께 처리한다.
   - 이전 방장이 30초 이내 재접속하면 참가자·팀·진행 중 Game 상태는 복원할 수 있지만 방장 권한과 단절 시점의 Vote는 자동 복원하지 않는다.
   - 승계 가능한 접속 중 Member가 없으면 Room을 종료하고 Guest에게 Room 종료를 알린 뒤 Lobby로 이동시킨다.
   - `WAITING` Room 종료에는 Game·Result·Rating 처리를 만들지 않는다. `PLAYING` Room 종료로 이미 생성된 Game을 계속할 수 없을 때만 개인 패배·전적·Rating을 반영하지 않는 `SYSTEM_INVALID`로 종결한다.
@@ -300,7 +300,7 @@
     설정으로 MaxScale이 Runtime에서 단독으로 `read_only` 상태를 관리하도록 변경했다.
   - `gtid_domain_id`를 양쪽 서버 모두 `1`로 통일했다.
   - 실서버(mariadb-01/02) 적용 및 재시작 검증 완료: Master는 재시작 후
-    `read_only OFF` 유지, Slave는 재시작 후 `read_only ON`으로 수렴, GTID 완전
+    `read_only OFF` 유지, Slave는 재시작 후 `read_only ON`으로 정상 반영, GTID 완전
     일치, 복제 정상 확인.
 - 영향:
   - Ansible이 `read_only`를 정적으로 관리하지 않고, MaxScale이 역할 변경에 따라
@@ -489,6 +489,48 @@
   - `seokpan/seokpan-infra#122`
   - `seokpan/seokpan-infra` PR #123
   - `seokpan/seokpan-docs#34`
+
+---
+
+## 2026-09-04
+
+### Project Endpoint Registry 및 Kubernetes Pod 이름 해석 기준 확정
+
+- 구분: 구현 단계 추가 확정 및 기존 누락 보완
+- 기존 기준:
+  - Host와 Kubernetes Node에서 필요한 프로젝트 FQDN은 `/etc/hosts`로 제공하고, Pod에서 필요한 프로젝트 Endpoint는 CoreDNS에서 별도로 제공하도록 05·06 설계에 정의돼 있었다.
+  - 실제 구현에서는 Host/Node의 `/etc/hosts` 배포만 먼저 적용돼 있었고, Pod에서 사용하는 CoreDNS에는 프로젝트 FQDN이 등록되지 않아 BuildKit Agent가 `harbor.seokpan.soldesk.store`를 조회할 때 `SERVFAIL`이 발생했다.
+- 변경/확정 내용:
+  - 공용 `project_endpoints` 정의를 두고 Host `/etc/hosts`와 CoreDNS가 같은 Endpoint 값을 사용하도록 구성한다.
+  - Host에서 필요한 Endpoint는 `common_hosts`, Pod에서 필요한 Endpoint는 Ansible `coredns_records` Role을 통해 각각 배포한다.
+  - CoreDNS 전체 설정을 덮어쓰지 않고 관리 대상 `hosts` Block만 갱신하며, 변경 전 Backup, 사전 구조 확인, 변경 시 Rollout, 실패 시 복구 절차를 포함한다.
+  - 현재 Host/CoreDNS에 적용하는 Endpoint는 다음과 같다.
+    - `harbor.seokpan.soldesk.store → 192.168.53.61:443`
+    - `db.seokpan.soldesk.store → 10.1.93.90:3306`
+    - `game.seokpan.soldesk.store → 10.1.93.90:80/443`
+    - `grafana.seokpan.soldesk.store → 10.1.93.90:443`
+  - `k8s-api.seokpan.soldesk.store`는 API Server 인증서 SAN 정리 전이므로 Host/CoreDNS에 배포하지 않는다.
+  - `jenkins.seokpan.soldesk.store`는 외부 Route 미구성 상태이므로 배포하지 않는다.
+  - `argocd.seokpan.soldesk.store`는 MVP에서 외부 UI가 필수가 아니므로 배포를 보류한다.
+  - Redis, Prometheus, Loki, Alertmanager 등 Kubernetes 내부 서비스는 기존 Kubernetes Service DNS를 계속 사용한다.
+  - NFS는 현재 Storage Backend IP를 그대로 사용한다.
+- 검증 결과:
+  - Kubernetes Service DNS와 일반 External DNS 회귀검증 PASS
+  - Harbor/DB/Game/Grafana 프로젝트 Endpoint 이름 해석 PASS
+  - Pod → Harbor DNS, TCP/443, TLS Handshake 및 HTTP 응답 확인
+  - Pod → DB DNS 및 TCP/3306 확인
+  - Host `/etc/hosts` 적용과 Ansible 재실행 멱등성 확인
+  - `seokpan-gitops#21`의 후속 BuildKit 검증에서 기존 Harbor DNS `SERVFAIL`이 재발하지 않았고 실제 Image Build/Push까지 이어서 확인
+- 영향:
+  - Host와 Pod가 같은 프로젝트 FQDN을 사용하되 이름 해석 경로는 Host `/etc/hosts`와 Kubernetes CoreDNS로 분리해 관리한다.
+  - Backend는 개별 MariaDB 서버 IP 대신 `db.seokpan.soldesk.store:3306`을 사용한다. 실제 Backend Query와 Migration 검증은 Application/DB 통합 단계에서 별도로 수행한다.
+  - `game.seokpan.soldesk.store`의 이름 해석과 Gateway HTTPS 기반 완료는 실제 Frontend/Backend Route 완료를 의미하지 않는다.
+  - `grafana.seokpan.soldesk.store`의 이름 해석 완료는 Observability 서비스 전체 정상화를 의미하지 않는다.
+- 관련:
+  - `seokpan/seokpan-infra#99`
+  - `seokpan/seokpan-infra` PR #108
+  - `seokpan/seokpan-gitops#21`
+  - `seokpan/seokpan-docs#33`
 
 ---
 
