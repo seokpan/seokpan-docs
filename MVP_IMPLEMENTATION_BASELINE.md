@@ -137,10 +137,12 @@ Provider Version 기준은 다음과 같다.
 MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동 Upgrade하지 않으며,
 별도 변경 작업과 회귀검증을 거쳐 적용 여부를 결정한다. 변경 근거는 [프로젝트 변경·결정 이력](PROJECT_CHANGES.md)을 따른다.
 
-| 데이터 | 최종 기준 저장소 |
+| 데이터 | 저장 위치 |
 | --- | --- |
 | Member, MemberStats, Game, Move, GameResult, RatingHistory | MariaDB |
 | Session, Room, Participant, Ready, Game/Turn Runtime, 현재 Vote, 재접속 Snapshot | Redis |
+
+MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이터를 저장하고, Redis는 세션·방·투표처럼 실행 중 여러 Backend가 공유해야 하는 상태를 저장한다.
 
 - DB 담당자의 실제 Runtime 조회 결과와 검증 자료로 제공된 `/root/stone_game_schema_v1.sql`·DDL 출력을 대조해 일치가 보고된
   `member`, `member_stats`, `game`, `game_participant`, `move`, `game_result`, `rating_history` 7개 Table을 초기 Schema 기준으로 재사용한다.

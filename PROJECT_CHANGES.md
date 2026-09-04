@@ -300,7 +300,7 @@
     설정으로 MaxScale이 Runtime에서 단독으로 `read_only` 상태를 관리하도록 변경했다.
   - `gtid_domain_id`를 양쪽 서버 모두 `1`로 통일했다.
   - 실서버(mariadb-01/02) 적용 및 재시작 검증 완료: Master는 재시작 후
-    `read_only OFF` 유지, Slave는 재시작 후 `read_only ON`으로 수렴, GTID 완전
+    `read_only OFF` 유지, Slave는 재시작 후 `read_only ON`으로 정상 반영, GTID 완전
     일치, 복제 정상 확인.
 - 영향:
   - Ansible이 `read_only`를 정적으로 관리하지 않고, MaxScale이 역할 변경에 따라

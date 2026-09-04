@@ -51,7 +51,7 @@ Threshold 이내에 기존 Master가 복구되어 Failover 없이 역할을 유�
 read_only=OFF
 ```
 
-Replica는 `read_only=ON`으로 정상 수렴했다.
+Replica는 `read_only=ON`으로 정상 반영됐다.
 
 ## 추가 확인: Auto Rejoin이 GTID Divergence를 거부
 
