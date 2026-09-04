@@ -181,21 +181,21 @@ MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동
 
 ## 8. Image·실행·환경 기준
 
-| Workload | Runtime | Port | 최초 Replica 기준 |
+| Workload | Runtime | Port | 현재/활성화 기준 |
 | --- | --- | --- | --- |
-| Backend | `python:3.13.15-slim-trixie`, Uvicorn 단일 Process | 8000 | 2 |
-| Frontend | `nginxinc/nginx-unprivileged:1.30.4-alpine3.24` | 8080 | 2 |
+| Backend | `python:3.13.15-slim-trixie`, Uvicorn 단일 Process | 8000 | 현재 `0`, 실제 활성화 시 초기 `1` Replica |
+| Frontend | `nginxinc/nginx-unprivileged:1.30.4-alpine3.24` | 8080 | 현재 `0`, 초기 Replica는 활성화 작업에서 확정 |
 
 - Backend와 Frontend는 별도 Image·Workload로 배포한다.
 - 외부 주소는 `https://game.seokpan.soldesk.store`, Registry는 `harbor.seokpan.soldesk.store`다.
 - Harbor 관련 명칭은 VM `harbor-01`, Ansible Inventory Host `harbor`, 서비스 FQDN `harbor.seokpan.soldesk.store`, IP `192.168.53.61`로 구분한다. 현행 Ansible 자산은 OS hostname 자체를 설정하지 않는다.
 - Image Tag는 `git-<12자리-main-commit>` 형식을 사용하고 동일 Tag를 덮어쓰지 않는다. GitOps는 검증된 Digest를 소비한다.
-- Backend와 Frontend Kubernetes Service Port 이름은 `http`를 사용한다. 현재 GitOps의 Application ServiceMonitor에 남은 `metrics` Port 가정은 앱 통합 때 수정한다.
-- Backend Health는 `/health/startup`, `/health/live`, `/health/ready`, Metric은 `/metrics`를 사용한다. DB·Redis 장애를 Liveness 실패로 처리하지 않는다.
+- Backend와 Frontend Kubernetes Service Port 이름은 `http`를 사용한다. Application용 ServiceMonitor는 Backend `/metrics` 구현과 실제 Metric Port/Label 계약이 확인된 뒤 추가한다.
+- Backend Health는 `/health/startup`, `/health/live`, `/health/ready`를 사용한다. `/metrics`는 아직 구현 전이며 구현 후 별도 검증한다. DB·Redis 장애를 Liveness 실패로 처리하지 않는다.
 - Frontend Health는 `/health/live`를 사용한다.
 - 설정 Prefix는 `SEOKPAN_`이다. 공용 이름은 `SEOKPAN_ENVIRONMENT`, `SEOKPAN_LOG_LEVEL`, `SEOKPAN_PUBLIC_BASE_URL`,
-  `SEOKPAN_ALLOWED_ORIGINS`, `SEOKPAN_TRUSTED_HOSTS`, `SEOKPAN_DATABASE_URL`, `SEOKPAN_REDIS_URL`, `SEOKPAN_INSTANCE_ID`를 사용한다.
-  DB·Redis 연결 정보는 Kubernetes Secret 참조로 주입하며 실제 Secret 값과 CA Private Key를 Git·Image·Log에 기록하지 않는다.
+  `SEOKPAN_ALLOWED_ORIGINS`, `SEOKPAN_TRUSTED_HOSTS`, `SEOKPAN_IDENTITY_DATABASE_URL`, `SEOKPAN_GAME_DATABASE_URL`, `SEOKPAN_REDIS_URL`, `SEOKPAN_INSTANCE_ID`를 사용한다.
+  Migration 전용 `SEOKPAN_MIGRATION_DATABASE_URL`은 일반 Backend Runtime에 주입하지 않는다. DB·Redis 연결 정보는 Kubernetes Secret 참조로 주입하며 실제 Secret 값과 CA Private Key를 Git·Image·Log에 기록하지 않는다.
 - 두 Workload는 Non-root, Capability Drop, `RuntimeDefault` seccomp와 읽기 전용 Root Filesystem을 기본으로 한다.
 - Backend는 Uvicorn 단일 Process로 실행하고 Migration·Seed를 시작 명령에 숨기지 않는다. 종료 유예는 최초 45초 기준이며 WebSocket은 재연결 후 Snapshot을 다시 받아 상태를 맞춘다.
 - Resource Request/Limit은 실행 측정 전 임의의 수치로 확정하지 않는다.
@@ -233,7 +233,7 @@ WebSocket 재접속 후 Snapshot으로 상태 재확인, 장애로 인한 오패
 - 정확한 HTTP Request/Response와 WebSocket Event Payload Schema, 생성 OpenAPI
 - Linux Application Container에서 측정할 Argon2id 비용 Parameter
 - 기존 DB 행 Audit, 보완 Migration 적용 담당·시점·Backup·Rollback
-- DB·Redis Endpoint 및 Kubernetes Secret Resource 이름
+- DB TLS/CA Option과 Kubernetes Secret Resource 이름
 - GitOps Application 경로와 Migration Sync 순서
 - Jenkins JDK 21 Image와 Rootless BuildKit의 검증된 Version·Digest
 - Prometheus Operator 환경의 Application ServiceMonitor Port·Label 연결
