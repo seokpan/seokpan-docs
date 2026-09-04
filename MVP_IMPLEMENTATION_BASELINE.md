@@ -33,11 +33,11 @@
 | --- | --- |
 | MVP·구현 방향 | 확정 |
 | Backend·Frontend Windows Compatibility Spike | 통과 |
-| Application 서비스 세부 구현 기준 1차안 | 확정, 구현 미착수 |
+| Application 서비스 세부 구현 기준 1차안 | 확정, 구현 진행 중 (`seokpan-app#3` 기준) |
 | Linux Container 동일 Lock·Image 실행 | 검증 대기 |
-| 실제 MariaDB·Redis Provider 통합 | 검증 대기 |
-| Harbor·Gateway·GitOps·Argo CD 통합 | 검증 대기 |
-| Application Scaffold·기능 구현 | 미착수 |
+| 실제 MariaDB·Redis Provider 통합 | Redis Runtime 구성 완료, 실제 Backend 연결 및 MariaDB Provider 통합 대기 |
+| Harbor·Gateway·GitOps·Argo CD 통합 | 기반 구성 완료, 실제 Application Runtime 통합 대기 |
+| Application Scaffold·기능 구현 | 진행 중 — 세부 상태는 `seokpan-app#3` 기준 |
 
 결정, 정적 자산 존재, 담당자 실행 보고, 직접 Runtime 검증을 같은 완료 상태로 표시하지 않는다.
 
@@ -52,6 +52,24 @@
 
 Application Source와 Kubernetes Desired State를 한 Repository에 섞지 않는다.
 Jenkins는 Application을 직접 `kubectl apply`하지 않고 검증된 Image와 GitOps 변경 흐름을 사용한다.
+
+### Project Endpoint 기준
+
+프로젝트에서 사용하는 고정 FQDN은 `seokpan-infra`의 공용 Endpoint 정의를 기준으로 관리한다.
+Host에서 필요한 이름은 `/etc/hosts`, Kubernetes Pod에서 필요한 이름은 CoreDNS를 통해 제공한다.
+
+| Endpoint | 주소 | Host `/etc/hosts` | CoreDNS | 현재 상태 |
+| --- | --- | --- | --- | --- |
+| `harbor.seokpan.soldesk.store` | `192.168.53.61:443` | 적용 | 적용 | BuildKit → Harbor 실제 사용 경로 확인 |
+| `db.seokpan.soldesk.store` | `10.1.93.90:3306` | 적용 | 적용 | DNS/TCP 확인, 실제 Backend DB 연결은 별도 통합 작업 |
+| `game.seokpan.soldesk.store` | `10.1.93.90:80/443` | 적용 | 적용 | Gateway HTTPS 기반 완료, 실제 Application Route는 별도 |
+| `grafana.seokpan.soldesk.store` | `10.1.93.90:443` | 적용 | 적용 | 이름 해석 적용, 실제 Observability 서비스 상태는 별도 확인 |
+| `k8s-api.seokpan.soldesk.store` | `10.1.93.90:6443` 예정 | 미적용 | 미적용 | API Server 인증서 SAN 정리 전 |
+| `jenkins.seokpan.soldesk.store` | `10.1.93.90:443` 예정 | 미적용 | 미적용 | 외부 Route 구성 전 |
+| `argocd.seokpan.soldesk.store` | `10.1.93.90:443` 예정 | 미적용 | 미적용 | MVP 외부 UI 비필수로 보류 |
+
+Redis는 `redis.platform.svc.cluster.local:6379`을 사용하고, Prometheus·Loki·Alertmanager 등 Kubernetes 내부 서비스도 Kubernetes Service DNS를 사용한다.
+NFS는 현재 Storage Backend IP 기준을 유지한다.
 
 ## 3. 점진적 구현 순서
 
