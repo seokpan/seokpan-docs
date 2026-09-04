@@ -151,7 +151,11 @@ MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이
   이는 이 문서 작업에서 DB에 직접 접속해 다시 실행 검증했다는 뜻이 아니다.
 - `seokpan-app`이 SQLAlchemy Model과 Alembic Revision을 소유한다. 기존 DB는 DDL·Checksum 검증 후 초기 기준 Revision으로 채택하며 초기 Create를 재실행하지 않는다.
 - Migration은 Backend Replica 시작마다 실행하지 않고 사전에 확정한 단일 선행 Job 또는 운영 절차로 실행한다.
-- Backend는 시점에 따라 바뀔 수 있는 MariaDB Master IP를 고정하지 않고 MaxScale/Common Endpoint를 사용한다.
+- Backend는 시점에 따라 바뀔 수 있는 MariaDB Master IP나 Common VIP를 연결 문자열에 직접 고정하지 않고 `db.seokpan.soldesk.store:3306`을 사용한다.
+- MaxScale `Read-Write-Listener:3306`은 TLS 전용으로 사용한다. Backend Runtime과 Alembic Online Migration은 공개 Root CA와 `db.seokpan.soldesk.store` Hostname을 모두 검증하며 평문 연결이나 Hostname 검증 우회를 허용하지 않는다.
+- DB URL은 계정·Endpoint·Database를 전달하고, 공개 Root CA 파일 경로는 `SEOKPAN_DATABASE_CA_FILE`로 분리한다. 세 DB 연결은 공통 SSL Context를 사용하며 URL별 CA 경로나 TLS 검증 해제 Option을 두지 않는다.
+- Application Runtime GitOps는 `application/seokpan-internal-ca` ConfigMap의 `ca.crt`를 `/etc/seokpan/pki/ca.crt`에 읽기 전용으로 Mount한다. 이번 DB TLS 연결 구성에는 공개 Root CA만 사용하며, CA Private Key와 MaxScale 서비스 Private Key를 Git·Image·Kubernetes에 복사하지 않는다.
+- Identity·Game DB URL Secret은 일반 Backend에 제공하되 `SEOKPAN_MIGRATION_DATABASE_URL`과 `db_admin` Credential은 승인된 단일 Migration Workload에만 제공한다. Alembic Offline SQL 생성은 DB·CA 접근 없이 유지한다.
 - Redis 투표·마감은 하나의 Lua 실행에서 함께 처리하고, 공식 Move·Result·Rating 중복 방지는 MariaDB Transaction과 Constraint가 담당한다.
 - MariaDB Commit 후 Redis를 갱신하며, Redis 갱신 실패 시 MariaDB 확정 결과로 멱등 재동기화한다.
 - 식별자 기본 형식은 소문자 하이픈 UUIDv4이며 `game.room_id VARCHAR(64)`는 호환성을 유지한 채 신규 값에 UUIDv4를 사용한다.
@@ -198,7 +202,7 @@ MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이
 - Backend Health는 `/health/startup`, `/health/live`, `/health/ready`를 사용한다. `/metrics`는 아직 구현 전이며 구현 후 별도 검증한다. DB·Redis 장애를 Liveness 실패로 처리하지 않는다.
 - Frontend Health는 `/health/live`를 사용한다.
 - 설정 Prefix는 `SEOKPAN_`이다. 공용 이름은 `SEOKPAN_ENVIRONMENT`, `SEOKPAN_LOG_LEVEL`, `SEOKPAN_PUBLIC_BASE_URL`,
-  `SEOKPAN_ALLOWED_ORIGINS`, `SEOKPAN_TRUSTED_HOSTS`, `SEOKPAN_IDENTITY_DATABASE_URL`, `SEOKPAN_GAME_DATABASE_URL`, `SEOKPAN_REDIS_URL`, `SEOKPAN_INSTANCE_ID`를 사용한다.
+  `SEOKPAN_ALLOWED_ORIGINS`, `SEOKPAN_TRUSTED_HOSTS`, `SEOKPAN_IDENTITY_DATABASE_URL`, `SEOKPAN_GAME_DATABASE_URL`, `SEOKPAN_DATABASE_CA_FILE`, `SEOKPAN_REDIS_URL`, `SEOKPAN_INSTANCE_ID`를 사용한다.
   Migration 전용 `SEOKPAN_MIGRATION_DATABASE_URL`은 일반 Backend Runtime에 주입하지 않는다. DB·Redis 연결 정보는 Kubernetes Secret 참조로 주입하며 실제 Secret 값과 CA Private Key를 Git·Image·Log에 기록하지 않는다.
 - 두 Workload는 Non-root, Capability Drop, `RuntimeDefault` seccomp와 읽기 전용 Root Filesystem을 기본으로 한다.
 - Backend는 Uvicorn 단일 Process로 실행하고 Migration·Seed를 시작 명령에 숨기지 않는다. 종료 유예는 최초 45초 기준이며 WebSocket은 재연결 후 Snapshot을 다시 받아 상태를 맞춘다.
@@ -237,7 +241,7 @@ WebSocket 재접속 후 Snapshot으로 상태 재확인, 장애로 인한 오패
 - 정확한 HTTP Request/Response와 WebSocket Event Payload Schema, 생성 OpenAPI
 - Linux Application Container에서 측정할 Argon2id 비용 Parameter
 - 기존 DB 행 Audit, 보완 Migration 적용 담당·시점·Backup·Rollback
-- DB TLS/CA Option과 Kubernetes Secret Resource 이름
+- DB URL Secret Resource 이름과 단일 Migration Workload 이름
 - GitOps Application 경로와 Migration Sync 순서
 - Jenkins JDK 21 Image와 Rootless BuildKit의 검증된 Version·Digest
 - Prometheus Operator 환경의 Application ServiceMonitor Port·Label 연결

@@ -556,6 +556,37 @@
   - `seokpan/seokpan-app#46`
   - `seokpan/seokpan-app` PR #49
 
+### MaxScale TLS 연결 및 공개 CA 전달 기준 확정
+
+- 구분: 구현 연동 규격 확정
+- 기존 기준:
+  - Backend는 변동 가능한 MariaDB Master IP 대신 MaxScale/Common Endpoint를 사용하고, Runtime 계정과 Migration 계정을 분리하도록 정해져 있었다.
+  - Infra PR #137의 담당자 실행 자료에서 MaxScale `Read-Write-Listener:3306`의 TLS 전용 전환, `db.seokpan.soldesk.store` SAN과 CA·Hostname 검증 완료가 보고됐다.
+  - Worker OS의 CA Trust는 Backend Container에 자동으로 전달되지 않으며, DB TLS 연결 설정과 Kubernetes CA 전달 방법은 구현 단계 확정 항목으로 남아 있었다.
+- 변경/확정 내용:
+  - Backend Runtime과 Alembic Online Migration은 실제 Master IP나 Common VIP를 연결 문자열에 직접 사용하지 않고 `db.seokpan.soldesk.store:3306`으로 접속한다.
+  - Identity·Game Runtime은 기존 `SEOKPAN_IDENTITY_DATABASE_URL`, `SEOKPAN_GAME_DATABASE_URL`을 유지하고, 승인된 단일 Migration 실행만 `SEOKPAN_MIGRATION_DATABASE_URL`을 사용한다.
+  - 공개 Root CA 파일 경로는 세 DB URL에 반복하지 않고 `SEOKPAN_DATABASE_CA_FILE=/etc/seokpan/pki/ca.crt` 하나로 제공한다.
+  - Application은 공개 CA와 Hostname 검증이 켜진 공통 SSL Context를 Identity·Game Runtime Engine과 Alembic Online Engine에 적용한다.
+  - DB URL에 별도 CA 경로나 Hostname 검증 해제 등 TLS 정책을 우회하는 Query Option을 두지 않는다. 실제 Runtime과 Online Migration은 CA 파일이 없거나 읽을 수 없으면 시작하지 않는다.
+  - Alembic Offline SQL 생성은 DB와 CA 파일에 접근하지 않고 계속 실행할 수 있어야 한다.
+  - Application Runtime GitOps는 `application` Namespace의 `seokpan-internal-ca` ConfigMap, Key `ca.crt`를 `/etc/seokpan/pki/ca.crt`에 읽기 전용으로 Mount한다.
+  - Identity·Game DB URL은 일반 Backend 전용 Secret 참조로 제공하고, Migration URL과 `db_admin` Credential은 일반 Backend Deployment에 넣지 않는다.
+  - 이번 DB TLS 연결 구성에는 공개 Root CA만 전달한다. CA Private Key와 MaxScale 서비스 Private Key는 App·GitOps Repository, Image 또는 Kubernetes에 복사하지 않는다. 공개 Root CA 인계 시 X.509 SHA-256 Certificate Fingerprint를 함께 대조한다.
+  - 서비스 Leaf Certificate의 현재 발급 유효기간은 365일이며, `tls_deploy`의 30일 기준은 인증서 전체 유효기간이 아니라 만료 전 재발급 판단 구간이다.
+- 영향:
+  - App의 TLS 연결 구현은 `seokpan-app#50`에서 진행한다. `seokpan-gitops#29`가 만든 Application Runtime 기반 위에 공개 CA Mount·DB Secret 참조·단일 Migration Workload를 추가하는 작업은 별도 GitOps Issue와 PR로 진행한다.
+  - 공용 `tls_deploy` Role의 SAN 변경 감지는 `seokpan-infra#138`에서 병렬로 보완한다. 이 작업은 App TLS 연결 구현을 막지 않지만 실제 배포 전 공개 CA와 Fingerprint를 인계받아야 한다.
+  - 구체 DB Secret Resource 이름과 단일 Migration Workload 이름은 실제 Provider 활성화 작업에서 확정한다.
+  - 문서 반영과 App 정적 테스트는 실제 Migration·Backend DB 연결 완료를 의미하지 않는다. 승인된 Migration 실행 후 Backend 1 Replica에서 Identity·Game DB TLS 연결을 확인하고 이후 2 Replica로 확장한다.
+- 관련:
+  - `seokpan/seokpan-app#22`
+  - `seokpan/seokpan-app#50`
+  - `seokpan/seokpan-infra#102`
+  - `seokpan/seokpan-infra#138`
+  - `seokpan/seokpan-infra` PR #137
+  - `seokpan/seokpan-gitops#29`
+
 ---
 
 ## 작성 형식
