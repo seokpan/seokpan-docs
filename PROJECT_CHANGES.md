@@ -492,6 +492,48 @@
 
 ---
 
+## 2026-09-04
+
+### Project Endpoint Registry 및 Kubernetes Pod 이름 해석 기준 확정
+
+- 구분: 구현 단계 추가 확정 및 기존 누락 보완
+- 기존 기준:
+  - Host와 Kubernetes Node에서 필요한 프로젝트 FQDN은 `/etc/hosts`로 제공하고, Pod에서 필요한 프로젝트 Endpoint는 CoreDNS에서 별도로 제공하도록 05·06 설계에 정의돼 있었다.
+  - 실제 구현에서는 Host/Node의 `/etc/hosts` 배포만 먼저 적용돼 있었고, Pod에서 사용하는 CoreDNS에는 프로젝트 FQDN이 등록되지 않아 BuildKit Agent가 `harbor.seokpan.soldesk.store`를 조회할 때 `SERVFAIL`이 발생했다.
+- 변경/확정 내용:
+  - 공용 `project_endpoints` 정의를 두고 Host `/etc/hosts`와 CoreDNS가 같은 Endpoint 값을 사용하도록 구성한다.
+  - Host에서 필요한 Endpoint는 `common_hosts`, Pod에서 필요한 Endpoint는 Ansible `coredns_records` Role을 통해 각각 배포한다.
+  - CoreDNS 전체 설정을 덮어쓰지 않고 관리 대상 `hosts` Block만 갱신하며, 변경 전 Backup, 사전 구조 확인, 변경 시 Rollout, 실패 시 복구 절차를 포함한다.
+  - 현재 Host/CoreDNS에 적용하는 Endpoint는 다음과 같다.
+    - `harbor.seokpan.soldesk.store → 192.168.53.61:443`
+    - `db.seokpan.soldesk.store → 10.1.93.90:3306`
+    - `game.seokpan.soldesk.store → 10.1.93.90:80/443`
+    - `grafana.seokpan.soldesk.store → 10.1.93.90:443`
+  - `k8s-api.seokpan.soldesk.store`는 API Server 인증서 SAN 정리 전이므로 Host/CoreDNS에 배포하지 않는다.
+  - `jenkins.seokpan.soldesk.store`는 외부 Route 미구성 상태이므로 배포하지 않는다.
+  - `argocd.seokpan.soldesk.store`는 MVP에서 외부 UI가 필수가 아니므로 배포를 보류한다.
+  - Redis, Prometheus, Loki, Alertmanager 등 Kubernetes 내부 서비스는 기존 Kubernetes Service DNS를 계속 사용한다.
+  - NFS는 현재 Storage Backend IP를 그대로 사용한다.
+- 검증 결과:
+  - Kubernetes Service DNS와 일반 External DNS 회귀검증 PASS
+  - Harbor/DB/Game/Grafana 프로젝트 Endpoint 이름 해석 PASS
+  - Pod → Harbor DNS, TCP/443, TLS Handshake 및 HTTP 응답 확인
+  - Pod → DB DNS 및 TCP/3306 확인
+  - Host `/etc/hosts` 적용과 Ansible 재실행 멱등성 확인
+  - `seokpan-gitops#21`의 후속 BuildKit 검증에서 기존 Harbor DNS `SERVFAIL`이 재발하지 않았고 실제 Image Build/Push까지 이어서 확인
+- 영향:
+  - Host와 Pod가 같은 프로젝트 FQDN을 사용하되 이름 해석 경로는 Host `/etc/hosts`와 Kubernetes CoreDNS로 분리해 관리한다.
+  - Backend는 개별 MariaDB 서버 IP 대신 `db.seokpan.soldesk.store:3306`을 사용한다. 실제 Backend Query와 Migration 검증은 Application/DB 통합 단계에서 별도로 수행한다.
+  - `game.seokpan.soldesk.store`의 이름 해석과 Gateway HTTPS 기반 완료는 실제 Frontend/Backend Route 완료를 의미하지 않는다.
+  - `grafana.seokpan.soldesk.store`의 이름 해석 완료는 Observability 서비스 전체 정상화를 의미하지 않는다.
+- 관련:
+  - `seokpan/seokpan-infra#99`
+  - `seokpan/seokpan-infra` PR #108
+  - `seokpan/seokpan-gitops#21`
+  - `seokpan/seokpan-docs#33`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
