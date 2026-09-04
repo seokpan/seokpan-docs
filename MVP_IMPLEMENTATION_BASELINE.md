@@ -112,7 +112,9 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 - 상태 조회와 변경 명령은 `/api/v1` HTTP JSON API를 기본으로 한다.
 - WebSocket `/ws/v1`은 서버 기준 Snapshot과 상태 변경 Event 전달에 사용한다.
 - HTTP 오류는 RFC 9457 `application/problem+json`과 안정적인 Domain Error Code를 사용한다.
-- WebSocket 메시지는 Version이 있는 JSON Envelope를 사용하고 `event_id`, `room_id`, `game_id`, `state_version`을 필요한 범위에서 전달한다.
+- WebSocket 메시지는 Version이 있는 JSON Envelope를 사용하고 `event_id`, `room_id`, `game_id`, `state_version`을 필요한 범위에서 전달한다. Envelope의 `state_version`은 Lobby 전체 메시지 흐름 또는 각 Room 메시지 흐름에서 전달되는 순서를 나타내며, 메시지 흐름별로 독립적으로 증가한다.
+- Snapshot 안의 Room·Game 객체는 HTTP 상태 변경과 오래된 요청 검사에 사용하는 각자의 `state_version`을 유지한다. 상태 변경 Event가 해당 번호를 전달해야 할 때는 Payload의 `room_state_version` 또는 `game_state_version`으로 구분한다.
+- 같은 상태 변경 Event를 다시 전달할 때는 최초 발행 때 정한 `event_id`와 Envelope `state_version`을 그대로 사용한다. 클라이언트는 이미 처리한 `event_id`를 다시 적용하지 않고, Envelope Version이 건너뛰면 Snapshot을 다시 조회한다.
 - 연결과 재연결 시 Snapshot을 다시 받아 상태를 맞춘다. Event와 Redis Pub/Sub을 무제한 Replay 원본으로 사용하지 않는다.
 - Redis 서버측 Session Cookie를 HTTP와 WebSocket Upgrade에서 함께 사용하며 Token을 URL Query에 넣지 않는다.
 - 인증은 Redis 서버측 Session과 Host-only `seokpan_session` Cookie를 사용한다. Production은 `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`을 적용한다.
@@ -120,7 +122,7 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 - 상태 변경 HTTP는 허용 Origin·Referer와 `X-CSRF-Token`을 검사하고, WebSocket Upgrade는 Cookie와 Origin을 검사한다. 인증 Token을 URL Query에 넣지 않는다.
 - 비밀번호는 Argon2id로 저장하며 정확한 비용 Parameter는 Linux Application Container에서 측정한 뒤 고정한다.
 - HTTP는 Resource와 상태 전이를 드러내는 명시적 명령을 사용한다. Domain 중복 처리는 `request_id`, 오래된 상태 거부는 `expected_state_version`, Log 추적은 `X-Request-ID`로 구분한다.
-- WebSocket은 Lobby와 Room 연결을 분리하고 첫 Application 메시지로 서버 기준 Snapshot을 보낸다. Event 누락·중복·역전이 확인되면 Snapshot을 다시 받아 상태를 맞춘다.
+- WebSocket은 Lobby와 Room 연결을 분리하고 첫 Application 메시지로 서버 기준 Snapshot을 보낸다. 최초 Snapshot부터 이후 Event까지 같은 연결의 메시지 순서 번호를 사용하며, Room 상태와 Game/Vote 상태가 번갈아 바뀌어도 그 순서는 뒤로 가지 않는다. Event 누락·중복·역전이 확인되면 Snapshot을 다시 받아 상태를 맞춘다.
 - 일반 단절의 30초 Disconnect Lease는 참가자·팀·진행 중 Game 상태 복원에 사용하되 이전 Vote와 방장 권한은 자동 복원하지 않는다.
 - 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 접속 중인 가장 이른 Member에게 즉시 승계하고 모든 Ready를 해제한다.
 - 승계 가능한 Member가 없으면 Room을 종료한다. `WAITING`은 Game 처리를 만들지 않고, `PLAYING`의 기존 Game만 전적·Rating 미반영 `SYSTEM_INVALID`로 종결한다.
@@ -155,7 +157,7 @@ MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이
 - 식별자 기본 형식은 소문자 하이픈 UUIDv4이며 `game.room_id VARCHAR(64)`는 호환성을 유지한 채 신규 값에 UUIDv4를 사용한다.
 - Redis Key Prefix는 `stone:v1:`이며 Room 관련 Key는 `{room_id}` Hash Tag 아래 역할별 Hash·Set·ZSet으로 분리한다.
 - 최초 Lifecycle 기준은 Session Idle 2시간·Absolute 24시간, Disconnect Lease 30초, Resolver Lease 5초, Command 중복 결과 24시간, 종료 Room Tombstone 10분이다.
-- Ready·팀·Room 상태, 연결 세대, Vote·마감, `request_id`, `state_version`은 Version 관리 Lua 한 번의 실행에서 함께 처리하며 Redis 서버 시각으로 마감을 판정한다.
+- Ready·팀·Room 상태, 연결 세대, Vote·마감, `request_id`와 해당 Resource의 `state_version`은 Version 관리 Lua 한 번의 실행에서 함께 처리하며 Redis 서버 시각으로 마감을 판정한다. WebSocket Envelope의 메시지 순서 번호는 이 Resource Version을 대신하지 않으며 Event 발행 단계에서 별도로 관리한다.
 - 기존 `game_participant`에는 Application 생성 UUIDv4 `participant_id`와 Game 내 Participant·Member·Guest 중복 방지, 엄격한 Member/Guest 조합 제약을 최소 보완한다.
 - 기존 DB는 DDL·행 Audit 뒤 초기 Alembic Revision으로 채택하고, 빈 DB는 같은 Revision Chain으로 생성한다. 실제 DDL 적용은 Backup·Rollback·담당자 검토와 별도 승인을 거친다.
 - Game Result·Stats·Rating은 하나의 MariaDB Transaction에서 멱등하게 반영한다. D01 Elo 식과 초기 Rating 1000·K 32를 유지하며 `SYSTEM_INVALID`는 전적·Rating에 반영하지 않는다.
@@ -174,7 +176,7 @@ MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이
 | Styling | CSS Modules와 공통 CSS Token |
 
 - Browser는 MariaDB·Redis에 직접 접근하지 않으며, 게임 진행 상태의 최종 판단은 서버가 담당한다.
-- `state_version`이 연속이면 Event를 적용하고, 누락되거나 재연결되면 Snapshot을 다시 받아 상태를 맞춘다.
+- WebSocket Envelope의 `state_version`이 연속이면 Event를 적용하고, 누락되거나 재연결되면 Snapshot을 다시 받아 상태를 맞춘다. Snapshot 안의 Room·Game `state_version`은 HTTP 상태 변경 요청의 `expected_state_version`과 비교하는 값으로 사용한다.
 - Move·Vote 마감·승패·Rating을 서버 확인 전에 낙관적으로 확정 표시하지 않는다.
 - Frontend는 Nginx 정적 Application으로 제공하며 Browser History Route는 SPA Fallback을 사용한다.
 - ANALYSIS·채팅·고급 UI를 First Success의 선행조건으로 만들지 않는다.
