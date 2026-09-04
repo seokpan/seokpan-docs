@@ -532,6 +532,30 @@
   - `seokpan/seokpan-gitops#21`
   - `seokpan/seokpan-docs#33`
 
+### WebSocket 메시지 순서와 상태 변경 번호의 역할 구분
+
+- 구분: 구현 연동 규격 명확화
+- 기존 기준:
+  - WebSocket Envelope는 `event_id`, `room_id`, `game_id`, `state_version`을 필요한 범위에서 전달하고, Version 누락·중복·역전을 발견하면 Snapshot을 다시 받도록 정해져 있었다.
+  - App 구현에는 Room과 Game/Vote 상태 변경 번호가 각각 존재하지만, 한 Room WebSocket에서 두 종류의 Event가 함께 전달될 때 Envelope의 `state_version`에 어느 값을 사용할지는 명확히 구분되지 않았다.
+- 변경/확정 내용:
+  - WebSocket Envelope의 `state_version`은 Lobby 전체 메시지 흐름 또는 각 Room 메시지 흐름의 순서를 나타내며 메시지 흐름별로 독립적으로 증가한다.
+  - 같은 Lobby 또는 Room을 구독하는 연결은 같은 메시지 순서 기준을 사용하며, Socket 연결마다 별도의 순서 번호를 새로 시작하지 않는다.
+  - Snapshot 안의 Room·Game 객체는 HTTP 상태 변경과 오래된 요청 검사에 사용하는 각자의 `state_version`을 그대로 유지한다.
+  - Event Payload에서 Room 또는 Game 상태 변경 번호가 필요하면 `room_state_version` 또는 `game_state_version`으로 구분해 전달한다.
+  - 최초 Snapshot과 이후 Event는 같은 메시지 순서 흐름을 사용하며, Room 상태와 Game/Vote 상태가 번갈아 바뀌어도 Envelope Version은 뒤로 가지 않는다.
+  - 같은 상태 변경 Event를 다시 전달할 때는 최초 발행 때 정한 `event_id`와 Envelope `state_version`을 그대로 사용한다.
+  - 클라이언트는 이미 처리한 `event_id`를 다시 적용하지 않고, Envelope Version이 건너뛰거나 재연결되면 Snapshot을 다시 받아 상태를 맞춘다.
+- 영향:
+  - Room과 Game/Vote의 상태 변경 번호를 하나로 합치지 않으며 기존 WebSocket Envelope에 새 Version 필드를 추가하지 않는다.
+  - HTTP `expected_state_version`의 의미와 오래된 상태 거부 규칙은 변경하지 않는다.
+  - 실제 Redis Pub/Sub, 여러 Backend 사이의 메시지 순서 공유와 재전달 검증은 Application Provider 통합 단계에서 수행한다.
+- 관련:
+  - `seokpan/seokpan-docs#41`
+  - `seokpan/seokpan-app#3`
+  - `seokpan/seokpan-app#46`
+  - `seokpan/seokpan-app` PR #49
+
 ---
 
 ## 작성 형식
