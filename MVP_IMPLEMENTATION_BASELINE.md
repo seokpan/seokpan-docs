@@ -110,17 +110,17 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 ## 5. HTTP·WebSocket 연동 규격
 
 - 상태 조회와 변경 명령은 `/api/v1` HTTP JSON API를 기본으로 한다.
-- WebSocket `/ws/v1`은 서버 권위 Snapshot과 상태 변경 Event 전달에 사용한다.
+- WebSocket `/ws/v1`은 서버 기준 Snapshot과 상태 변경 Event 전달에 사용한다.
 - HTTP 오류는 RFC 9457 `application/problem+json`과 안정적인 Domain Error Code를 사용한다.
 - WebSocket 메시지는 Version이 있는 JSON Envelope를 사용하고 `event_id`, `room_id`, `game_id`, `state_version`을 필요한 범위에서 전달한다.
-- 연결과 재연결 시 Snapshot으로 수렴한다. Event와 Redis Pub/Sub을 무제한 Replay 원본으로 사용하지 않는다.
+- 연결과 재연결 시 Snapshot을 다시 받아 상태를 맞춘다. Event와 Redis Pub/Sub을 무제한 Replay 원본으로 사용하지 않는다.
 - Redis 서버측 Session Cookie를 HTTP와 WebSocket Upgrade에서 함께 사용하며 Token을 URL Query에 넣지 않는다.
 - 인증은 Redis 서버측 Session과 Host-only `seokpan_session` Cookie를 사용한다. Production은 `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`을 적용한다.
 - Session은 최초 기준 Idle 2시간·Absolute 24시간이며, Guest 발급·Member 로그인·권한 상승 때 식별값을 회전한다.
 - 상태 변경 HTTP는 허용 Origin·Referer와 `X-CSRF-Token`을 검사하고, WebSocket Upgrade는 Cookie와 Origin을 검사한다. 인증 Token을 URL Query에 넣지 않는다.
 - 비밀번호는 Argon2id로 저장하며 정확한 비용 Parameter는 Linux Application Container에서 측정한 뒤 고정한다.
 - HTTP는 Resource와 상태 전이를 드러내는 명시적 명령을 사용한다. Domain 중복 처리는 `request_id`, 오래된 상태 거부는 `expected_state_version`, Log 추적은 `X-Request-ID`로 구분한다.
-- WebSocket은 Lobby와 Room 연결을 분리하고 첫 Application 메시지로 권위 Snapshot을 보낸다. Event 누락·중복·역전은 Snapshot으로 수렴한다.
+- WebSocket은 Lobby와 Room 연결을 분리하고 첫 Application 메시지로 서버 기준 Snapshot을 보낸다. Event 누락·중복·역전이 확인되면 Snapshot을 다시 받아 상태를 맞춘다.
 - 일반 단절의 30초 Disconnect Lease는 참가자·팀·진행 중 Game 상태 복원에 사용하되 이전 Vote와 방장 권한은 자동 복원하지 않는다.
 - 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 접속 중인 가장 이른 Member에게 즉시 승계하고 모든 Ready를 해제한다.
 - 승계 가능한 Member가 없으면 Room을 종료한다. `WAITING`은 Game 처리를 만들지 않고, `PLAYING`의 기존 Game만 전적·Rating 미반영 `SYSTEM_INVALID`로 종결한다.
@@ -137,7 +137,7 @@ Provider Version 기준은 다음과 같다.
 MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동 Upgrade하지 않으며,
 별도 변경 작업과 회귀검증을 거쳐 적용 여부를 결정한다. 변경 근거는 [프로젝트 변경·결정 이력](PROJECT_CHANGES.md)을 따른다.
 
-| 데이터 | 권위 저장소 |
+| 데이터 | 최종 기준 저장소 |
 | --- | --- |
 | Member, MemberStats, Game, Move, GameResult, RatingHistory | MariaDB |
 | Session, Room, Participant, Ready, Game/Turn Runtime, 현재 Vote, 재접속 Snapshot | Redis |
@@ -148,12 +148,12 @@ MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동
 - `seokpan-app`이 SQLAlchemy Model과 Alembic Revision을 소유한다. 기존 DB는 DDL·Checksum 검증 후 초기 기준 Revision으로 채택하며 초기 Create를 재실행하지 않는다.
 - Migration은 Backend Replica 시작마다 실행하지 않고 사전에 확정한 단일 선행 Job 또는 운영 절차로 실행한다.
 - Backend는 시점에 따라 바뀔 수 있는 MariaDB Master IP를 고정하지 않고 MaxScale/Common Endpoint를 사용한다.
-- Redis 투표·마감은 Lua로 원자 처리하고, 공식 Move·Result·Rating 중복 방지는 MariaDB Transaction과 Constraint가 담당한다.
+- Redis 투표·마감은 하나의 Lua 실행에서 함께 처리하고, 공식 Move·Result·Rating 중복 방지는 MariaDB Transaction과 Constraint가 담당한다.
 - MariaDB Commit 후 Redis를 갱신하며, Redis 갱신 실패 시 MariaDB 확정 결과로 멱등 재동기화한다.
 - 식별자 기본 형식은 소문자 하이픈 UUIDv4이며 `game.room_id VARCHAR(64)`는 호환성을 유지한 채 신규 값에 UUIDv4를 사용한다.
 - Redis Key Prefix는 `stone:v1:`이며 Room 관련 Key는 `{room_id}` Hash Tag 아래 역할별 Hash·Set·ZSet으로 분리한다.
 - 최초 Lifecycle 기준은 Session Idle 2시간·Absolute 24시간, Disconnect Lease 30초, Resolver Lease 5초, Command 중복 결과 24시간, 종료 Room Tombstone 10분이다.
-- Ready·팀·Room 상태, 연결 세대, Vote·마감, `request_id`, `state_version`은 Version 관리 Lua에서 원자 처리하며 Redis 서버 시각으로 마감을 판정한다.
+- Ready·팀·Room 상태, 연결 세대, Vote·마감, `request_id`, `state_version`은 Version 관리 Lua 한 번의 실행에서 함께 처리하며 Redis 서버 시각으로 마감을 판정한다.
 - 기존 `game_participant`에는 Application 생성 UUIDv4 `participant_id`와 Game 내 Participant·Member·Guest 중복 방지, 엄격한 Member/Guest 조합 제약을 최소 보완한다.
 - 기존 DB는 DDL·행 Audit 뒤 초기 Alembic Revision으로 채택하고, 빈 DB는 같은 Revision Chain으로 생성한다. 실제 DDL 적용은 Backup·Rollback·담당자 검토와 별도 승인을 거친다.
 - Game Result·Stats·Rating은 하나의 MariaDB Transaction에서 멱등하게 반영한다. D01 Elo 식과 초기 Rating 1000·K 32를 유지하며 `SYSTEM_INVALID`는 전적·Rating에 반영하지 않는다.
@@ -171,8 +171,8 @@ MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동
 | 상태 | 기능 단위 Context/`useReducer`, 서버 Snapshot과 로컬 UI 상태 분리 |
 | Styling | CSS Modules와 공통 CSS Token |
 
-- Browser는 MariaDB·Redis에 직접 접근하거나 서버 권위 상태를 소유하지 않는다.
-- `state_version`이 연속이면 Event를 적용하고, 누락되거나 재연결되면 Snapshot을 다시 받아 수렴한다.
+- Browser는 MariaDB·Redis에 직접 접근하지 않으며, 게임 진행 상태의 최종 판단은 서버가 담당한다.
+- `state_version`이 연속이면 Event를 적용하고, 누락되거나 재연결되면 Snapshot을 다시 받아 상태를 맞춘다.
 - Move·Vote 마감·승패·Rating을 서버 확인 전에 낙관적으로 확정 표시하지 않는다.
 - Frontend는 Nginx 정적 Application으로 제공하며 Browser History Route는 SPA Fallback을 사용한다.
 - ANALYSIS·채팅·고급 UI를 First Success의 선행조건으로 만들지 않는다.
@@ -197,7 +197,7 @@ MaxScale `24.02.10` Package가 Community Repository에 제공되더라도 자동
   `SEOKPAN_ALLOWED_ORIGINS`, `SEOKPAN_TRUSTED_HOSTS`, `SEOKPAN_DATABASE_URL`, `SEOKPAN_REDIS_URL`, `SEOKPAN_INSTANCE_ID`를 사용한다.
   DB·Redis 연결 정보는 Kubernetes Secret 참조로 주입하며 실제 Secret 값과 CA Private Key를 Git·Image·Log에 기록하지 않는다.
 - 두 Workload는 Non-root, Capability Drop, `RuntimeDefault` seccomp와 읽기 전용 Root Filesystem을 기본으로 한다.
-- Backend는 Uvicorn 단일 Process로 실행하고 Migration·Seed를 시작 명령에 숨기지 않는다. 종료 유예는 최초 45초 기준이며 WebSocket은 재연결 후 Snapshot으로 수렴한다.
+- Backend는 Uvicorn 단일 Process로 실행하고 Migration·Seed를 시작 명령에 숨기지 않는다. 종료 유예는 최초 45초 기준이며 WebSocket은 재연결 후 Snapshot을 다시 받아 상태를 맞춘다.
 - Resource Request/Limit은 실행 측정 전 임의의 수치로 확정하지 않는다.
 
 ## 9. CI·통합·검증 단계
@@ -215,7 +215,7 @@ PR에서는 Harbor·GitOps·실제 Provider Credential을 사용하지 않고, `
 Image Scan은 CRITICAL과 수정 가능한 HIGH를 차단하며 예외는 CVE·영향·대안·만료일·예외 승인 책임자를 기록한다.
 
 MVP 완료에는 정상 흐름뿐 아니라 투표 경합, stale 요청, 중복 Move/Result 방지, DB Commit 후 Redis 재동기화,
-WebSocket 재접속과 Snapshot 수렴, 장애로 인한 오패배·Rating 감소 방지 검증이 포함된다.
+WebSocket 재접속 후 Snapshot으로 상태 재확인, 장애로 인한 오패배·Rating 감소 방지 검증이 포함된다.
 
 ## 10. Windows 개발과 Linux 실행 호환 기준
 

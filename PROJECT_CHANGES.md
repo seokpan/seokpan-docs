@@ -157,7 +157,7 @@
 - 변경/확정 내용:
   - 기존 MariaDB Schema를 재사용하고 Domain → Adapter → Headless HTTP/WebSocket → Frontend → Provider·배포 통합 순서로 점진 구현한다.
   - Backend는 CPython 3.13.15 기반 FastAPI Modular Monolith와 실용적 Ports/Adapters 구조를 사용한다.
-  - 상태 조회·변경 명령은 `/api/v1` HTTP JSON API, 실시간 권위 Snapshot·Event 전달은 `/ws/v1` WebSocket을 기본으로 한다.
+  - 상태 조회·변경 명령은 `/api/v1` HTTP JSON API, 실시간 서버 기준 Snapshot·Event 전달은 `/ws/v1` WebSocket을 기본으로 한다.
   - MariaDB 영속 데이터와 Redis 공유 Runtime State의 기존 책임을 유지하며, Application이 SQLAlchemy Model·Alembic Migration·Redis Key/Lua 처리 규격을 소유한다.
   - Frontend는 React·TypeScript·Vite 기반 정적 Application으로 구성하고 Nginx에서 제공한다.
   - Backend와 Frontend는 별도 Image·Workload로 배포하며 Jenkins Test → Harbor Image → GitOps PR → Argo CD 흐름을 유지한다.
@@ -205,10 +205,10 @@
 - 기존 기준:
   - D01은 방장이 나가거나 30초 재접속 유예가 만료된 뒤 연결 중인 Member에게 방장을 승계하는 흐름을 설명했다.
   - D07은 방장이 변경되면 모든 Ready를 해제하도록 정의했다.
-  - 인증 수명, HTTP 오류·멱등 처리, WebSocket 연결 단위, Redis Lifecycle·원자 처리와 기존 MariaDB Schema 보완 상세는 구현 전에 확정할 필요가 있었다.
+  - 인증 수명, HTTP 오류·멱등 처리, WebSocket 연결 단위, Redis Lifecycle·Lua 처리와 기존 MariaDB Schema 보완 상세는 구현 전에 확정할 필요가 있었다.
 - 변경/확정 내용:
   - 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 30초를 기다리지 않고 접속 중인 Member 가운데 입장 순서가 가장 빠른 참가자에게 즉시 승계한다.
-  - 실제 방장 변경과 모든 Ready 해제, Room 상태 Version 증가는 하나의 Redis 원자 처리로 수행한다.
+  - 실제 방장 변경과 모든 Ready 해제, Room 상태 Version 증가는 하나의 Redis Lua 실행으로 함께 처리한다.
   - 이전 방장이 30초 이내 재접속하면 참가자·팀·진행 중 Game 상태는 복원할 수 있지만 방장 권한과 단절 시점의 Vote는 자동 복원하지 않는다.
   - 승계 가능한 접속 중 Member가 없으면 Room을 종료하고 Guest에게 Room 종료를 알린 뒤 Lobby로 이동시킨다.
   - `WAITING` Room 종료에는 Game·Result·Rating 처리를 만들지 않는다. `PLAYING` Room 종료로 이미 생성된 Game을 계속할 수 없을 때만 개인 패배·전적·Rating을 반영하지 않는 `SYSTEM_INVALID`로 종결한다.
