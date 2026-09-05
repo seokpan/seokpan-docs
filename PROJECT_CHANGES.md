@@ -587,6 +587,37 @@
   - `seokpan/seokpan-infra` PR #137
   - `seokpan/seokpan-gitops#29`
 
+### MariaDB Backup 전략 변경 — 단순 Full 1일 1회 → Full+Incremental GFS 체이닝
+
+- 구분: 기존 값 변경
+- 기존 기준:
+  - 06 문서 17.1절은 MariaDB Backup을 "mariadb-backup Full 1일 1회 시작값"으로
+    정의하고, Retention은 "최근 7개"로 정의했다.
+- 변경/확정 내용:
+  - Full 백업은 주 1회(일요일)만 수행하고, 나머지 요일은 Incremental 백업으로
+    전환하는 GFS 방식 체이닝 자동화로 변경했다(이슈 #114, PR #125).
+  - Full이 GTID 미변경으로 스킵되어 체인이 없는 주에는 그 시점 Incremental을
+    Full로 자동 승격해 RPO 공백을 방지하는 로직을 추가했다(이슈 #129, PR #131).
+  - Retention은 "최근 7개(횟수 기준)"에서 "7일(기간 기준)"로 변경했다
+    (`backup_transfer_retention_days: 7`).
+  - 기존 단순 Full 전용 백업 스크립트(`backup_full.sh`)와 관련 산출물은
+    체이닝 방식으로 완전히 대체되어 제거했다(이슈 #128, PR #130).
+  - 백업 대상은 auto_failover로 역할이 바뀔 수 있는 서버 중 실행 시점에
+    Replica로 판별되는 서버로 고정한다(운영 Primary 부하 회피 목적).
+- 영향:
+  - RTO/RPO 계산 시 "1일 1회 Full" 단일 기준이 아니라 "체인 내 마지막
+    Incremental 시점"을 기준으로 재계산해야 한다.
+  - Restore 절차(DR-01)도 단일 Full Restore가 아니라 Full→Incremental
+    순서로 Roll-forward하는 `mariadb_restore_chain.yml` 기준으로 변경됐다.
+  - 이슈 #129의 자연 체인 만료(주차 롤오버) 최종 검증은 아직 진행 중이라,
+    승격 로직의 실서버 완전 검증 완료 여부는 별도로 확인한다.
+- 관련:
+  - `seokpan/seokpan-infra#55`
+  - `seokpan/seokpan-infra#114`
+  - `seokpan/seokpan-infra#128`
+  - `seokpan/seokpan-infra#129`
+  - `seokpan/seokpan-infra` PR #117, #125, #130, #131
+
 ---
 
 ## 작성 형식
