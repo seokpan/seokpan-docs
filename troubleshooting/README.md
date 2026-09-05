@@ -35,8 +35,11 @@
 14. **[TS-014 — GitOps Root 전환 중 Argo CD Bootstrap 연쇄 오류](TS-014_ArgoCD_Root_전환_kubeconfig_tmp_충돌.md)**
 15. **[TS-015 — MariaDB read_only·Auto Failover·GTID 충돌](TS-015_MariaDB_read_only_Auto_Failover_GTID_충돌.md)**
 16. **[TS-016 — Frontend Node.js 버전 실행환경 검증 결함](TS-016_Frontend_Nodejs_Version_실행환경_검증_결함.md)**
+17. **[TS-017 — Jenkins Rootless BuildKit Harbor CA Trust 미적용 문제](TS-017_buildkit-harbor-ca-trust.md)**
+18. **[TS-018 — MaxScale TLS 적용 중 인증서 권한·상위 디렉터리·SAN 검증 문제](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)**
+19. **[TS-019 — MariaDB/MaxScale repo 버전 확인 awk 로직 버그로 인한 Dry-run 신뢰성 저하](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **16건**  
-기준 시점: **2026-09-01**
+현재 게시된 해결 완료 트러블슈팅 보고서: **19건**  
+기준 시점: **2026-09-04**
