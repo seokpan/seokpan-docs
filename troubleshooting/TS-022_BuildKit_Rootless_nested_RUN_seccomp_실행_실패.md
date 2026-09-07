@@ -143,8 +143,9 @@ After
 - [TS-021 — Pod의 Project Endpoint가 CoreDNS에서 SERVFAIL로 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)
 - [TS-017 — Jenkins Rootless BuildKit Harbor CA Trust 미적용 문제](TS-017_buildkit-harbor-ca-trust.md)
 - [TS-020 — BuildKit Harbor Robot Credential 파일 계약 불일치](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)
+- [TS-028 — Dockerfile syntax directive가 외부 frontend 경로를 선택해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)
 
-TS-022는 DNS·TLS Trust·Credential이 아니라 **Rootless BuildKit의 Dockerfile ExecOp 실행 환경** 문제를 다룬다.
+TS-028의 frontend blocker가 제거된 뒤 TS-022의 첫 `RUN` blocker가 다음 단계에서 확인됐다. TS-022는 DNS·TLS Trust·Credential·Dockerfile frontend 선택이 아니라 **Rootless BuildKit의 Dockerfile ExecOp 실행 환경** 문제를 다룬다.
 
 ## 관련 근거
 
