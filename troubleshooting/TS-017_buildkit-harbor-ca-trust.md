@@ -78,6 +78,12 @@ CA Trust 문제를 해결한 뒤 Harbor 인증 단계에서 `401 Unauthorized`�
 
 해당 문제는 Harbor Robot Credential Secret의 `.dockerconfigjson` Key와 BuildKit이 요구하는 `config.json` 파일 계약이 일치하지 않은 별도 Root Cause였다. 같은 Consumer 검증 흐름에서 연속으로 발견됐지만 수정 위치와 검증 Gate가 독립적이므로 [TS-020 — BuildKit Harbor Robot Credential 파일 계약 불일치](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)에서 별도 사례로 관리한다.
 
+## 관련 독립 CA Trust 사건
+
+이후 Kubernetes에서 Harbor Image를 실제 Pull하는 단계에서는 Node/containerd가 같은 내부 CA를 신뢰하지 못하는 별도 문제가 확인됐다.
+
+BuildKit client-side CA Trust와 Kubernetes Node/containerd CA Trust는 소비 주체와 수정 지점이 다르므로 [TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](TS-024_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)에서 독립 사례로 관리한다.
+
 ## Before → After
 
 ```text

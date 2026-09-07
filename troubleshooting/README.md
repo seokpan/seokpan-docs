@@ -42,8 +42,9 @@
 21. **[TS-021 — Pod의 Project Endpoint가 CoreDNS에서 SERVFAIL로 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)**
 22. **[TS-022 — Rootless BuildKit의 Dockerfile RUN 단계가 seccomp·process sandbox 제약으로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
 23. **[TS-023 — CoreDNS 관리 Block newline escaping 결함으로 신규 Replica가 CrashLoopBackOff](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)**
+24. **[TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](TS-024_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **23건**  
+현재 게시된 해결 완료 트러블슈팅 보고서: **24건**  
 기준 시점: **2026-09-07**
