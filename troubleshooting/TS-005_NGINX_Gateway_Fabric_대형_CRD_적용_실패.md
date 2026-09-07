@@ -60,8 +60,39 @@ GitOps
 
 이 장애를 해결하면서 초기 구성 자동화(Bootstrap)와 서비스 실행 상태를 GitOps가 각각 어디까지 관리할지 경계를 명확히 했다.
 
+## 후속 적용 사례 — Observability 대형 CRD
+
+이후 Observability의 `kube-prometheus-stack` CRD 적용 과정에서도 동일한 `262144 byte` Annotation 한계가 확인됐다.
+
+이 후속 사례도 Manifest 자체 오류가 아니라 **대형 CRD를 client-side apply 방식으로 관리할 때 발생하는 동일 원인 계열**로 판단했다. 따라서 별도 Troubleshooting을 중복 생성하지 않고, 기존 TS-005의 해결 원칙을 GitOps Application 경로에 적용했다.
+
+`seokpan-gitops` PR #30에서 Observability Application에 다음 옵션을 추가했다.
+
+```yaml
+syncPolicy:
+  syncOptions:
+    - ServerSideApply=true
+```
+
+실제 Merge Commit `cefa8013993dc56b49b692ff272a2d5e32d0710b`에서도 `argocd/applications/observability.yaml`에 해당 설정이 반영된 것을 확인했다.
+
+이 후속 적용에서 주장하는 범위는 다음으로 제한한다.
+
+```text
+kube-prometheus-stack 대형 CRD
+→ client-side apply Annotation 한계 확인
+→ 기존 TS-005와 동일 원인 계열로 분류
+→ Argo CD Application에 ServerSideApply=true 적용
+```
+
+Observability 전체가 이 설정 하나로 정상화됐다는 의미는 아니다. 같은 작업 흐름에서 Loki PVC/Config와 Prometheus PV/PVC처럼 서로 다른 Root Cause의 장애가 별도로 확인됐으므로, 해당 문제들을 TS-005의 원인이나 해결 결과에 포함하지 않는다.
+
 ## 관련 근거
 
 - Infra Issue #12: https://github.com/seokpan/seokpan-infra/issues/12
 - PR #48: https://github.com/seokpan/seokpan-infra/pull/48
 - GitOps Gateway Issue #5: https://github.com/seokpan/seokpan-gitops/issues/5
+- 후속 Observability Issue #28: https://github.com/seokpan/seokpan-gitops/issues/28
+- 후속 Observability PR #30: https://github.com/seokpan/seokpan-gitops/pull/30
+- PR #30 Merge Commit: https://github.com/seokpan/seokpan-gitops/commit/cefa8013993dc56b49b692ff272a2d5e32d0710b
+- Docs Issue #67: https://github.com/seokpan/seokpan-docs/issues/67
