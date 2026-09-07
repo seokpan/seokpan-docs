@@ -43,8 +43,9 @@
 22. **[TS-022 — Rootless BuildKit의 Dockerfile RUN 단계가 seccomp·process sandbox 제약으로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
 23. **[TS-023 — CoreDNS 관리 Block newline escaping 결함으로 신규 Replica가 CrashLoopBackOff](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)**
 24. **[TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](TS-024_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)**
+25. **[TS-025 — MaxScale 설정 배포의 `--check --diff`에서 Credential 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **24건**  
+현재 게시된 해결 완료 트러블슈팅 보고서: **25건**  
 기준 시점: **2026-09-07**
