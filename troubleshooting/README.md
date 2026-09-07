@@ -38,8 +38,9 @@
 17. **[TS-017 — Jenkins Rootless BuildKit Harbor CA Trust 미적용 문제](TS-017_buildkit-harbor-ca-trust.md)**
 18. **[TS-018 — MaxScale TLS 적용 중 인증서 권한·상위 디렉터리·SAN 검증 문제](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)**
 19. **[TS-019 — MariaDB/MaxScale repo 버전 확인 awk 로직 버그로 인한 Dry-run 신뢰성 저하](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
+20. **[TS-020 — BuildKit Harbor Robot Credential 파일 계약 불일치](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **19건**  
-기준 시점: **2026-09-04**
+현재 게시된 해결 완료 트러블슈팅 보고서: **20건**  
+기준 시점: **2026-09-07**
