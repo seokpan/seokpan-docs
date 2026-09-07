@@ -40,8 +40,9 @@
 19. **[TS-019 — MariaDB/MaxScale repo 버전 확인 awk 로직 버그로 인한 Dry-run 신뢰성 저하](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
 20. **[TS-020 — BuildKit Harbor Robot Credential 파일 계약 불일치](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)**
 21. **[TS-021 — Pod의 Project Endpoint가 CoreDNS에서 SERVFAIL로 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)**
+22. **[TS-022 — Rootless BuildKit의 Dockerfile RUN 단계가 seccomp·process sandbox 제약으로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **21건**  
+현재 게시된 해결 완료 트러블슈팅 보고서: **22건**  
 기준 시점: **2026-09-07**
