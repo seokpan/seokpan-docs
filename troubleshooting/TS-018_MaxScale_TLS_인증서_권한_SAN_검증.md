@@ -136,7 +136,7 @@ SAN 변경 시 수동 인증서 삭제가 필요했던 한계
 
 MaxScale 계정 Credential을 Ansible Vault로 관리한 뒤에도 `maxscale.cnf` Template의 Diff 출력에서 민감값이 노출될 수 있었던 문제는 TLS 인증서 사건과 별도 Root Cause다. 해당 사건은 [TS-025 — MaxScale 설정 배포의 `--check --diff`에서 Credential 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)에서 독립적으로 기록한다.
 
-TS-025 재검증 과정에서 이후 MaxScale cert/key 권한 Drift가 다시 확인됐다. 이 후속 사건은 최초 TLS 적용 당시의 권한 누락과 달리, 정상화 이후 공용 `tls_deploy` 재실행으로 Consumer-specific 권한이 되돌아갈 수 있었던 Role 간 Desired State 충돌이 원인이었다. `seokpan-infra#146` / PR #148에서 공용 TLS Role에 서비스별 권한 계약을 추가하고, `#147` / PR #149에서 MaxScale이 동일 권한 계약을 사용하도록 정합화한 뒤 재실행 회귀검증까지 완료했다. 해당 사건은 [TS-026 — MaxScale TLS 권한이 공용 Role 재실행 후 root-only 상태로 되돌아간 Runtime Drift](TS-026_MaxScale_TLS_권한_Desired_State_Drift.md)에서 독립적으로 기록한다.
+TS-025 재검증 과정에서 이후 MaxScale cert/key 권한 Drift가 다시 확인됐다. 이 후속 사건은 최초 TLS 적용 당시의 권한 누락과 달리, 현재 Runtime에서 Consumer 권한 유실이 확인됐고 공용 `tls_deploy`와 MaxScale Role이 동일 파일·디렉터리에 서로 다른 Desired State를 선언해 실행 순서에 따라 최종 상태가 달라질 수 있었던 구조가 원인이었다. `seokpan-infra#146` / PR #148에서 공용 TLS Role에 서비스별 권한 계약을 추가하고, `#147` / PR #149에서 MaxScale이 동일 권한 계약을 사용하도록 정합화한 뒤 재실행 회귀검증까지 완료했다. 해당 사건은 [TS-026 — 공용 TLS Role과 MaxScale Role의 상충 Desired State로 발생한 권한 Drift](TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)에서 독립적으로 기록한다.
 
 ## 관련 근거
 
@@ -146,4 +146,4 @@ TS-025 재검증 과정에서 이후 MaxScale cert/key 권한 Drift가 다시 �
 - 후속 PR #140: https://github.com/seokpan/seokpan-infra/pull/140
 - 독립 Credential Diff 사건 TS-025: TS-025_MaxScale_check_diff_Credential_노출_방지.md
 - 후속 TLS 권한 Drift Docs Issue #63: https://github.com/seokpan/seokpan-docs/issues/63
-- 후속 TLS 권한 Drift TS-026: TS-026_MaxScale_TLS_권한_Desired_State_Drift.md
+- 후속 TLS 권한 Drift TS-026: TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md
