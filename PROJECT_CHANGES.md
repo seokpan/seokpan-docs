@@ -620,6 +620,39 @@
 
 ---
 
+## 2026-09-07
+
+### Application 구현·검증 단계 순서 정합화
+
+- 구분: 구현·검증 순서 변경 및 기존 기록 간 불일치 해소
+- 기존 기준:
+  - 공용 구현 기준 3절은 실제 MariaDB·Redis 연동 테스트를 Headless·Frontend보다 먼저 두었다.
+  - 2026-08-30의 Application MVP 구현 기준 기록과 App Roadmap은 Headless·Frontend 뒤에 Provider·배포 통합을 두었다. App README와 내부 구현 기준은 실제 Provider를 Frontend보다 먼저 두어 문서별 순서가 일치하지 않았다.
+- 변경/확정 내용:
+  - 단계 번호는 `seokpan-app` Roadmap #3을 따른다.
+  - A-07은 Fake Provider 기반 Headless HTTP/WebSocket First Success E2E로 수행한다.
+  - A-08에서 Frontend First Success를 구현하고, A-09에서 기존 Container·Jenkins 자산을 이어받아 P0~P2 검증을 마무리한다.
+  - A-10에서 실제 MariaDB·Redis 연결, 승인된 Migration, Backend 1→2 Replica와 Gateway·GitOps P3 통합을 검증한다. 실제 환경의 D07 M5 First Success와 장애·복구·대표 부하 등을 포함한 MVP P4도 이 단계에서 완료한다.
+  - D07 M5의 M3 Runtime·M4 Delivery/Observability 선행 조건은 그대로 적용한다.
+  - A-04/A-05의 실제 Provider 검증 잔여 항목은 A-10의 실행 결과로 확인한다. Fake·Scripted Provider 테스트가 실제 DB·Redis·Kubernetes 검증을 대신하지 않는다.
+- 변경 이유:
+  - A-07의 자동 테스트로 Frontend가 사용할 HTTP·WebSocket·결과 조회 규격을 먼저 확인할 수 있다.
+  - Kubernetes 통합에는 Linux Image와 Delivery 산출물이 필요하므로 Container·Jenkins 검증을 선행한다.
+  - 실제 Provider 준비 상태가 Frontend 구현을 막지 않도록 하면서 실제 통합 검증은 MVP 완료 전 필수 조건으로 유지한다.
+- 영향:
+  - MVP 기능, MariaDB·Redis 저장 책임, 기존 Schema 재사용, 보안 및 Migration 승인 조건은 유지한다.
+  - 이 순서는 Application의 완료 판정 순서이며, 준비된 Provider의 개별 검증이나 다른 담당자의 Platform·Delivery 병렬 작업을 막지 않는다.
+  - A-07·A-08·A-09 완료만으로 실제 Provider 통합, D07 M5 또는 MVP P4 완료를 선언하지 않는다.
+  - 공용 `MVP_IMPLEMENTATION_BASELINE.md` 3절을 갱신한다. App README·내부 구현 기준의 같은 순서 반영은 App #53에서 진행한다.
+- 관련:
+  - [Application Roadmap](https://github.com/seokpan/seokpan-app/issues/3)
+  - [Prototype 검증 관점 추적](https://github.com/seokpan/seokpan-app/issues/21)
+  - [Migration 실행 및 검증](https://github.com/seokpan/seokpan-app/issues/22)
+  - [MaxScale TLS 연결](https://github.com/seokpan/seokpan-app/issues/50)
+  - [A-07 Headless First Success](https://github.com/seokpan/seokpan-app/issues/53)
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
