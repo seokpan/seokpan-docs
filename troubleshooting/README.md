@@ -45,8 +45,9 @@
 24. **[TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](TS-024_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)**
 25. **[TS-025 — MaxScale 설정 배포의 `--check --diff`에서 Credential 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)**
 26. **[TS-026 — 공용 TLS Role과 MaxScale Role의 상충 Desired State로 발생한 권한 Drift](TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)**
+27. **[TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag의 Image Digest 덮어쓰기가 허용됨](TS-027_Harbor_Tag_Immutability_미적용_동일_Tag_덮어쓰기.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **26건**  
+현재 게시된 해결 완료 트러블슈팅 보고서: **27건**  
 기준 시점: **2026-09-07**
