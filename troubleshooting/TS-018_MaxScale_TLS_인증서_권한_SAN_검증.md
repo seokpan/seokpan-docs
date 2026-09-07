@@ -132,9 +132,17 @@ SAN 변경 시 수동 인증서 삭제가 필요했던 한계
 → 수동 삭제 없이 자동 재발급 및 동일 설정 수렴 검증
 ```
 
+## 관련 독립 사건
+
+MaxScale 계정 Credential을 Ansible Vault로 관리한 뒤에도 `maxscale.cnf` Template의 Diff 출력에서 민감값이 노출될 수 있었던 문제는 TLS 인증서 사건과 별도 Root Cause다. 해당 사건은 [TS-025 — MaxScale 설정 배포의 `--check --diff`에서 Credential 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)에서 독립적으로 기록한다.
+
+또한 TS-025의 재검증 과정에서 현재 MaxScale cert/key 권한 Drift가 다시 확인됐지만, 이 문제는 아직 원인 수정과 재검증이 끝나지 않아 [Docs Issue #63](https://github.com/seokpan/seokpan-docs/issues/63)에서 별도 추적한다.
+
 ## 관련 근거
 
 - Issue #102: https://github.com/seokpan/seokpan-infra/issues/102
 - PR #137: https://github.com/seokpan/seokpan-infra/pull/137
 - 후속 Issue #138: https://github.com/seokpan/seokpan-infra/issues/138
 - 후속 PR #140: https://github.com/seokpan/seokpan-infra/pull/140
+- 독립 Credential Diff 사건 TS-025: TS-025_MaxScale_check_diff_Credential_노출_방지.md
+- 현재 TLS 권한 Drift 추적 Docs Issue #63: https://github.com/seokpan/seokpan-docs/issues/63
