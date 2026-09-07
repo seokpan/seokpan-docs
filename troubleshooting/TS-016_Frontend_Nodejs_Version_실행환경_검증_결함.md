@@ -102,9 +102,60 @@ npm 12.0.2
 
 이 보고서에서 검증한 범위는 Frontend 기본 구조의 Node/npm 실행환경 계약과 설치 단계 차단 규칙이다.
 
+## 후속 운영 기준
+
+이후 `seokpan-app` PR #48의 실제 Container Build 검증에서 같은 실행환경 계약을 Container 단계에서도 직접 확인해야 한다는 추가 기준이 생겼다.
+
+당시 Frontend Dockerfile은 공식 npm Version `12.0.2`를 준비하기 위해 다음 흐름을 사용했다.
+
+```text
+corepack prepare npm@12.0.2 --activate
+→ npm ci
+```
+
+그러나 실제 Rootless BuildKit Job에서는 `npm ci`가 Node Image에 번들된 npm `11.17.0`으로 실행됐고 `EBADENGINE` 경고가 발생했다.
+
+원인은 `corepack prepare`로 Package Manager Version을 준비하는 것과 실제 `npm` 명령이 해당 Version의 Shim을 사용하도록 만드는 것이 별개였던 데 있었다.
+
+후속 조치로 Dockerfile에서 다음을 적용했다.
+
+```text
+corepack enable npm
+→ corepack prepare npm@12.0.2 --activate
+→ npm --version이 정확히 12.0.2인지 Build 단계에서 강제 확인
+→ npm ci
+```
+
+동일 Rootless BuildKit 검증 Job에서 재실행한 결과:
+
+- 실제 `npm --version` = `12.0.2`
+- `npm ci` PASS
+- 기존 `EBADENGINE` 경고 해소
+- `npm run build` PASS
+- Frontend Build/Push PASS
+
+를 확인했다.
+
+따라서 현재 Frontend 실행환경 검증 기준은 다음 두 층으로 관리한다.
+
+```text
+Source / Package Install
+→ package.json engines + .npmrc engine-strict=true
+→ 허용 범위를 벗어난 Node/npm 환경 차단
+
+Container Build
+→ Corepack으로 npm Shim을 명시적으로 활성화
+→ npm --version Exact Check
+→ 실제 Build Toolchain이 공식 Version과 일치하는지 확인
+```
+
+이 후속 사례는 TS-016과 동일한 Frontend Node/npm 실행환경 계약 범주이므로 신규 TS로 분리하지 않는다.
+
 ## 관련 근거
 
 - Application Scaffold Issue #6: https://github.com/seokpan/seokpan-app/issues/6
 - Application Scaffold PR #7: https://github.com/seokpan/seokpan-app/pull/7
 - PR #7 별도 검증 Comment: https://github.com/seokpan/seokpan-app/pull/7#issuecomment-5479225246
 - PR #7 후속 보완 Comment: https://github.com/seokpan/seokpan-app/pull/7#issuecomment-5479524358
+- 후속 운영 기준 Docs Issue #62: https://github.com/seokpan/seokpan-docs/issues/62
+- Container Build 후속 검증 App PR #48: https://github.com/seokpan/seokpan-app/pull/48
