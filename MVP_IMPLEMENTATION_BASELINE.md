@@ -78,15 +78,27 @@ NFS는 현재 Storage Backend IP 기준을 유지한다.
   → Pure Domain 규칙과 Test
   → 기존 Schema를 잇는 Migration Baseline
   → Port·Fake·Adapter 연동 규격
-  → 실제 MariaDB·Redis 연동 테스트
-  → Headless HTTP/WebSocket First Success
-  → Frontend First Success
-  → Container·Harbor·Gateway·GitOps 통합
-  → 장애·복구·재접속·멱등성·대표 부하 검증
+  → A-06 Fake Provider 기반 Headless HTTP/WebSocket 기능
+  → A-07 Fake Provider 기반 Headless First Success E2E
+  → A-08 Frontend First Success
+  → A-09 Container·Jenkins P0~P2
+  → A-10 실제 MariaDB·Redis·Migration·GitOps P3
+  → A-10 실제 환경의 D07 M5 First Success 및 MVP P4 검증
 ```
 
-UI나 실제 Provider가 준비되지 않아도 Domain·Fake·연동 규격 테스트로 진행할 수 있다.
-다만 Fake 성공은 MariaDB·Redis·Kubernetes 통합 완료를 의미하지 않는다.
+단계 번호와 작업 상태는 [Application Roadmap](https://github.com/seokpan/seokpan-app/issues/3)에서 관리한다.
+A-07은 실제 DB·Redis 없이 Application 흐름을 자동 검증하는 단계다. A-08은 그 HTTP·WebSocket·결과 조회 규격으로 Frontend를 구현한다.
+A-07·A-08의 성공을 실제 MariaDB·Redis·Kubernetes 통합이나 D07 p.8의 M5 완료로 표시하지 않는다.
+
+A-09는 기존 Container·Jenkins 자산을 이어받아 Linux 실행·빌드·Harbor Image 검증을 마무리한다.
+A-10은 승인된 Migration 뒤 Backend 1 Replica에서 실제 DB·Redis 연결을 확인하고, 이후 2 Replica·Gateway HTTPS/WSS·Frontend 통합을 검증한다.
+D07 M5는 M3 Runtime과 M4 Delivery·Observability의 선행 조건을 확인한 실제 환경에서 수행한다.
+장애·복구·재접속·멱등성·대표 부하를 포함한 MVP P4 검증까지 통과해야 서비스 완료로 판단한다.
+
+이 순서는 Application의 완료 판정 순서다. 준비된 Provider의 개별 검증과 다른 담당자의 Platform·Delivery 작업은 병렬로 진행할 수 있다.
+A-04/A-05의 실제 MariaDB·Redis 검증 잔여 항목은 A-10에서 결과를 연결하며, Fake·정적 테스트만으로 완료 처리하지 않는다.
+기존 Schema 재사용, TLS·계정 분리와 실제 Migration의 별도 승인 조건은 유지한다.
+이전 순서와 변경 이유는 [프로젝트 변경·결정 이력](PROJECT_CHANGES.md#application-구현검증-단계-순서-정합화)에 기록한다.
 
 ## 4. Backend 기준
 
