@@ -111,7 +111,7 @@ CoreDNS 전체 Corefile을 새 템플릿으로 덮어쓰지 않고, 프로젝트
 
 변경 전 자동 Backup으로 기존 Corefile을 복구한 뒤 line 구조 기반 Preflight와 rollback/recovery를 보완해 재적용했다.
 
-이 문제는 **원래 BuildKit `SERVFAIL`의 Root Cause와는 다른 구현 결함**이므로 본 보고서의 해결 원인으로 합치지 않는다. 향후 신규 Troubleshooting 감사에서 독립 사례 가치와 근거를 별도로 판단한다.
+이 문제는 **원래 BuildKit `SERVFAIL`의 Root Cause와는 다른 구현 결함**이므로 본 보고서의 해결 원인으로 합치지 않는다. 해결·재검증된 별도 사건은 [TS-023 — CoreDNS 관리 Block newline escaping 결함으로 신규 Replica가 CrashLoopBackOff](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)에서 독립적으로 기록한다.
 
 ## 검증
 
@@ -189,12 +189,13 @@ Pod에서 Project Endpoint DNS 정상
 
 ## 관련 후속 사건
 
-이 사건 해결 후 BuildKit → Harbor Consumer 검증은 다음 독립 문제로 이어졌다.
+이 사건 해결 및 구현 과정에서 다음 독립 문제가 이어졌다.
 
+- [TS-023 — CoreDNS 관리 Block newline escaping 결함으로 신규 Replica가 CrashLoopBackOff](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)
 - [TS-017 — Jenkins Rootless BuildKit Harbor CA Trust 미적용 문제](TS-017_buildkit-harbor-ca-trust.md)
 - [TS-020 — BuildKit Harbor Robot Credential 파일 계약 불일치](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)
 
-세 사건은 같은 Pipeline 검증 흐름에서 순차적으로 드러났지만 Root Cause와 수정 지점이 달라 별도 Troubleshooting으로 관리한다.
+각 사건은 같은 구현·Pipeline 흐름에서 순차적으로 드러났지만 Root Cause와 수정 지점이 달라 별도 Troubleshooting으로 관리한다.
 
 ## 관련 근거
 

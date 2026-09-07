@@ -41,8 +41,9 @@
 20. **[TS-020 — BuildKit Harbor Robot Credential 파일 계약 불일치](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)**
 21. **[TS-021 — Pod의 Project Endpoint가 CoreDNS에서 SERVFAIL로 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)**
 22. **[TS-022 — Rootless BuildKit의 Dockerfile RUN 단계가 seccomp·process sandbox 제약으로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
+23. **[TS-023 — CoreDNS 관리 Block newline escaping 결함으로 신규 Replica가 CrashLoopBackOff](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **22건**  
+현재 게시된 해결 완료 트러블슈팅 보고서: **23건**  
 기준 시점: **2026-09-07**
