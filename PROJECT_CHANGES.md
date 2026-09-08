@@ -721,6 +721,69 @@
 
 ---
 
+## 2026-09-08 — Application A-08
+
+### Application 인증 복구와 화면 상태 재조회 보완
+
+- 구분: 기존 인증 방식의 구현 상세 추가
+- 기존 기준:
+  - Redis 서버측 Session Cookie와 일반 상태 변경 HTTP의 Origin·CSRF 검사를 사용한다.
+  - 세션 발급 응답으로 받은 CSRF가 화면 메모리에서 유실되면 Cookie가 유효해도 기존 Session 조회로 복구할 수 없었다.
+- 변경/확정 내용:
+  - `POST /api/v1/session/csrf`에서 같은 세션의 난수 CSRF와 현재 신원을 반환한다. 유효 Cookie·정확한 허용 Origin·`X-CSRF-Bootstrap: 1`·JSON 요청을 요구하며 Referer만으로 허용하지 않는다. 이 조회에만 기존 CSRF를 요구하지 않고 일반 API 검사는 유지한다.
+  - 반복 복구는 CSRF·Session ID·Idle/Absolute 만료·참가 상태를 바꾸지 않는다. CSRF 포함 응답은 캐시를 금지하고 브라우저 메모리에만 보관하며 URL·로그·Socket·일반 상태 응답으로 노출하지 않는다.
+  - 로비·Room/Game 재조회는 상태와 메시지 순서 기준을 함께 제공한다. 기존 Socket을 교체하지 않고 메시지 순서 번호와 Resource 변경 검사 번호를 구분한다. 서버 시각·마감 시각은 남은 시간 표시에 사용하고 게임 판정은 서버에 둔다.
+  - 단순 창 복귀 시 인증 확인 중 조작을 막은 채 기존 화면을 유지할 수 있다. 다른 신원·만료·확인 실패에는 이전 화면을 폐기하고, 결과 불명 명령을 자동 재실행하지 않는다.
+- 영향:
+  - App Session 저장 규격·Adapter·HTTP/OpenAPI·Frontend 복구 흐름에 적용한다. Cookie 속성·Session TTL·Member/Guest 권한과 실제 게임 단절 시 방장 승계·Ready·표 처리 기준은 유지한다.
+  - 구형 자료를 요청 중 자동 변환하거나 삭제하지 않는다. 실제 배포 전 자료·실행 버전·되돌리기 방법을 확인하고 필요한 전환은 별도 승인 절차로 처리한다.
+- 관련:
+  - [MVP 구현 기준 5절](MVP_IMPLEMENTATION_BASELINE.md#5-httpwebsocket-연동-규격)
+  - [App #56](https://github.com/seokpan/seokpan-app/issues/56), [App PR #59](https://github.com/seokpan/seokpan-app/pull/59)
+  - [인증 복구 구현·시험 설명](https://github.com/seokpan/seokpan-app/blob/2fc8393241b98e842e9532b85c7a35c72ab115f3/frontend/docs/api-and-session.md)
+
+### Application 화면 완료 범위와 조회 정보 보완
+
+- 구분: 서비스 구현 범위 추가 확정·조회 정보 보완
+- 기존 기준:
+  - D07 3쪽은 핵심 게임 흐름과 Should 보조 기능을 구분했다. 공용 Frontend 기준도 채팅·고급 UI를 First Success의 선행조건으로 두지 않았다.
+  - D01 11쪽은 보드·투표 현황·채팅·게임 방법·랭킹·접속자·사용자 메뉴를, 19-21쪽은 로비·관전·채팅·재경기를 설명한다. 목업의 배치와 기능 구성을 반영하면서 A-08 화면 완료 범위를 구체화할 필요가 있었다.
+- 변경/확정 내용:
+  - 기존 가입·입장·투표·결과·다음 판 흐름에 로비/방 채팅, WAITING 방장 강퇴, 진행 중 방 관전, 공개 랭킹·Member 내 전적, 접속자 표시, 게임 방법·사용자 메뉴를 포함한다. D07의 원 분류는 이력으로 보존하되 A-08에서는 이 보조 기능을 제외하지 않는다.
+  - 보드·사이드에 서버 집계 기준 득표 수·비율을 표시한다. 분모는 해당 턴 유효 투표자 수이며 개인별 표는 공개하지 않는다. `last_move`는 마지막 공식 착수 번호·팀·좌표로 제공하고 착수 전 null, Pass 뒤 유지, 새 Game 초기화를 적용한다.
+  - 공개 누적 전적과 본인의 경기별 Rating 변동을 구분한다. D01 31쪽의 유효 경기·정렬·Guest 영구 전적 제외 기준을 유지한다.
+  - D07 4쪽의 ANALYSIS 제외는 유지한다. 화면에는 정적 미제공 안내만 두고 분석 API·모델·Workload, 공개 복기·채팅 영구 이력은 추가하지 않는다. 목업의 상이한 수치·권한은 서비스 규칙으로 채택하지 않는다.
+- 영향:
+  - App 서버·화면·회귀 시험의 완료 범위에 반영한다. 기존 게임 규칙·Member/Guest 권한·MariaDB/Redis 책임 및 A-08 → A-09 → A-10 순서는 바꾸지 않는다.
+  - 자료 형식 변경의 구·신버전 호환성과 되돌리기는 실제 배포 전에 별도로 확인한다. 화면 시험만으로 실제 DB·Redis·배포 통합 완료를 선언하지 않는다.
+- 관련:
+  - [MVP 구현 기준 7절](MVP_IMPLEMENTATION_BASELINE.md#7-frontend-기준)
+  - [App #56](https://github.com/seokpan/seokpan-app/issues/56), [App PR #59](https://github.com/seokpan/seokpan-app/pull/59)
+  - [Application Roadmap #3](https://github.com/seokpan/seokpan-app/issues/3)
+  - [App 구현 기준](https://github.com/seokpan/seokpan-app/blob/2fc8393241b98e842e9532b85c7a35c72ab115f3/docs/mvp-implementation-baseline.md)
+
+### 비영속 채팅과 사용자 단위 접속자 집계 구분
+
+- 구분: 포함 기능의 전달·집계 방식 상세화
+- 기존 기준:
+  - D01 21쪽은 로비/방 채팅 범위와 입장 이후 메시지 전달·영구 이력 미제공을 정의했다. 공용 WebSocket 설명은 Lobby/Room 상태 Snapshot·Event 복구를 중심으로 작성돼 있었다.
+  - D01 11·19쪽은 접속자 표시를 정의했으나 여러 탭·기기의 중복 집계 단위는 지정하지 않았다.
+- 변경/확정 내용:
+  - 채팅은 세션·범위·입력 검사를 거친 HTTP 전송과 별도 수신 WebSocket을 사용한다. 메시지 규격 버전·고유 ID를 사용하고 Room/Game 상태 번호나 대화 이력 Snapshot은 추가하지 않는다. 신원·참가·연결 변경 시 권한을 다시 확인한다.
+  - 접속자는 Member 계정 ID·Guest 임시 사용자 ID별로 중복을 제거한다. 한 사용자의 다른 유효 연결이 있으면 유지하며, 마지막 유효 연결이 없어졌을 때 제외한다. 서로 다른 Guest 신원은 각각 집계한다.
+  - 인증된 `/ws/v1/presence`는 접속 확인용 ping/pong만 주고받고 전체 숫자만 공개한다. 실패를 정상 0명으로 표시하지 않으며, 네트워크 단절 감지 전까지 즉시 반영된다고 보장하지 않는다.
+  - 채팅·접속자 연결은 기존 게임 상태 연결과 분리한다. 접속 확인은 인증 Idle TTL을 늘리지 않으며 채팅 장애·접속자 변동을 게임 단절·Ready 해제·표 삭제·방장 승계·승패 사유로 삼지 않는다.
+- 영향:
+  - App의 채팅·접속자 연결과 화면에 적용한다. 기존 Lobby/Room 상태 연결의 수신 전용·순서 검사·Snapshot 복구는 유지한다.
+  - 채팅 Redis 전달·접속자 Redis 공유 집계는 A-10에서 구현·검증한다. 랭킹 MariaDB 연결·다중 Replica·Gateway/WSS·자료 전환도 별도 검증하며 Memory 시험을 실제 통합 성공으로 취급하지 않는다. 시험용 시간·수용량을 운영 기본값으로 확정하지 않는다.
+  - Infra/GitOps의 Endpoint·Namespace·인증서·Secret·배포 설정과 담당 업무는 이번 문서 변경으로 수정하지 않는다.
+- 관련:
+  - [MVP 구현 기준 5.2절](MVP_IMPLEMENTATION_BASELINE.md#52-채팅접속자-연결의-구분)
+  - [App PR #59](https://github.com/seokpan/seokpan-app/pull/59)
+  - [채팅 규격·검증 범위](https://github.com/seokpan/seokpan-app/blob/2fc8393241b98e842e9532b85c7a35c72ab115f3/backend/docs/chat-delivery.md), [접속자 집계 규격·검증 범위](https://github.com/seokpan/seokpan-app/blob/2fc8393241b98e842e9532b85c7a35c72ab115f3/backend/docs/presence.md)
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목

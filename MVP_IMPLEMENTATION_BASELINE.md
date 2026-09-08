@@ -28,6 +28,7 @@
 
 실제 코드와 작업 상태는 각 구현 Repository가 기준이다. 구현이 위 요구사항과 다르면 구현 측 수정 대상으로 다루며,
 구현 상태만을 근거로 원 요구사항을 변경하지 않는다.
+PDF 이후 확정된 변경은 `PROJECT_CHANGES.md`에 명시된 항목에 한해 적용하며, 그 밖의 MVP 기준은 유지한다.
 
 | 구분 | 현재 상태 |
 | --- | --- |
@@ -122,12 +123,12 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 ## 5. HTTP·WebSocket 연동 규격
 
 - 상태 조회와 변경 명령은 `/api/v1` HTTP JSON API를 기본으로 한다.
-- WebSocket `/ws/v1`은 서버 기준 Snapshot과 상태 변경 Event 전달에 사용한다.
+- Lobby/Room 상태 WebSocket `/ws/v1`은 서버 기준 Snapshot과 상태 변경 Event 전달에 사용한다. 채팅·접속자 전용 연결은 아래 5.2절처럼 별도 규격으로 구분한다.
 - HTTP 오류는 RFC 9457 `application/problem+json`과 안정적인 Domain Error Code를 사용한다.
-- WebSocket 메시지는 Version이 있는 JSON Envelope를 사용하고 `event_id`, `room_id`, `game_id`, `state_version`을 필요한 범위에서 전달한다. Envelope의 `state_version`은 Lobby 전체 메시지 흐름 또는 각 Room 메시지 흐름에서 전달되는 순서를 나타내며, 메시지 흐름별로 독립적으로 증가한다.
+- Lobby/Room 상태 메시지는 Version이 있는 JSON Envelope를 사용하고 `event_id`, `room_id`, `game_id`, `state_version`을 필요한 범위에서 전달한다. Envelope의 `state_version`은 Lobby 전체 메시지 흐름 또는 각 Room 메시지 흐름에서 전달되는 순서를 나타내며, 메시지 흐름별로 독립적으로 증가한다.
 - Snapshot 안의 Room·Game 객체는 HTTP 상태 변경과 오래된 요청 검사에 사용하는 각자의 `state_version`을 유지한다. 상태 변경 Event가 해당 번호를 전달해야 할 때는 Payload의 `room_state_version` 또는 `game_state_version`으로 구분한다.
 - 같은 상태 변경 Event를 다시 전달할 때는 최초 발행 때 정한 `event_id`와 Envelope `state_version`을 그대로 사용한다. 클라이언트는 이미 처리한 `event_id`를 다시 적용하지 않고, Envelope Version이 건너뛰면 Snapshot을 다시 조회한다.
-- 연결과 재연결 시 Snapshot을 다시 받아 상태를 맞춘다. Event와 Redis Pub/Sub을 무제한 Replay 원본으로 사용하지 않는다.
+- Lobby/Room 상태 연결과 재연결 시 Snapshot을 다시 받아 상태를 맞춘다. Event와 Redis Pub/Sub을 무제한 Replay 원본으로 사용하지 않는다.
 - Redis 서버측 Session Cookie를 HTTP와 WebSocket Upgrade에서 함께 사용하며 Token을 URL Query에 넣지 않는다.
 - 인증은 Redis 서버측 Session과 Host-only `seokpan_session` Cookie를 사용한다. Production은 `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`을 적용한다.
 - Session은 최초 기준 Idle 2시간·Absolute 24시간이며, Guest 발급·Member 로그인·권한 상승 때 식별값을 회전한다.
@@ -138,6 +139,30 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 - 일반 단절의 30초 Disconnect Lease는 참가자·팀·진행 중 Game 상태 복원에 사용하되 이전 Vote와 방장 권한은 자동 복원하지 않는다.
 - 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 접속 중인 가장 이른 Member에게 즉시 승계하고 모든 Ready를 해제한다.
 - 승계 가능한 Member가 없으면 Room을 종료한다. `WAITING`은 Game 처리를 만들지 않고, `PLAYING`의 기존 Game만 전적·Rating 미반영 `SYSTEM_INVALID`로 종결한다.
+
+### 5.1 인증 복구와 화면 상태 재조회
+
+- 새로고침·새 탭에서 화면 메모리의 CSRF 값이 유실되면 `POST /api/v1/session/csrf`로 같은 세션의 값을 다시 받는다. 유효한 Session Cookie, 정확히 일치하는 허용 Origin, `X-CSRF-Bootstrap: 1`, JSON 요청을 요구한다. Referer만으로 허용하지 않는다. 이 복구 조회에만 기존 CSRF를 요구하지 않으며, 일반 상태 변경 API의 Origin·CSRF 검사는 유지한다.
+- CSRF는 세션별 난수로 서버에 보관한다. 반복 복구로 CSRF·Session ID·Idle/Absolute 만료·참가 상태를 변경하지 않는다. 현재 Cookie의 신원을 함께 반환하며, 일반 `GET /api/v1/session`은 CSRF를 반환하지 않는다.
+- CSRF 포함 응답은 `Cache-Control: no-store`로 처리하고 브라우저 메모리에만 보관한다. CSRF를 URL·WebSocket·로그·일반 상태 응답·브라우저 영구 저장소에 넣지 않는다. 결과가 불명확한 상태 변경 명령을 인증 복구 후 자동 재실행하지 않는다.
+- `GET /api/v1/lobby/snapshot`과 현재 참가자의 `GET /api/v1/rooms/{room_id}/state`는 상태와 메시지 순서 기준을 함께 제공한다. 조회 자체로 정상 Socket을 교체하거나 방 참여를 바꾸지 않는다. 메시지 순서 번호와 Room/Game 변경 검사 번호는 기존대로 구분한다.
+- Game의 `deadline_ms`·`server_now_ms`를 기준으로 남은 시간을 표시한다. 브라우저 시계나 화면의 0초 표시만으로 마감·Pass·착수·승패를 확정하지 않는다.
+- 단순 창 복귀에는 기존 화면을 유지하면서 인증을 재확인할 수 있으나, 확인 중에는 CSRF를 지우고 조작을 막는다. 같은 신원·방 참여가 확인되면 정상 연결과 화면을 유지하고, 다른 신원·만료·확인 실패에는 이전 화면을 폐기한다.
+- 인증 복구와 실제 게임 Socket 단절을 구분한다. 실제 단절에는 기존 방장 승계·Ready 해제·표 제거 규칙을 적용한다. 여러 탭의 CSRF 공유가 Room 연결 교체 정책이나 재접속 규칙을 우회하지 않는다.
+- 구형 Session 자료를 요청 중 자동 변환하지 않는다. 실제 배포 전 보존할 자료·실행 버전·되돌리기 방법을 확인하고, 필요한 전환은 별도 승인된 절차가 준비될 때까지 보류한다. 자료 삭제·강제 로그아웃으로 우회하지 않는다.
+
+### 5.2 채팅·접속자 연결의 구분
+
+- 로비 채팅은 로비 접속자에게, 방 채팅은 해당 방 접속자에게만 전달한다. 서버는 현재 세션·참가 범위와 앞뒤 공백 제거 후 1-200자 입력을 검사한다. 전송은 CSRF 검사를 거치는 HTTP 명령, 수신은 별도 WebSocket을 사용한다.
+- 채팅은 연결 이후 메시지만 전달하며 과거 대화 조회·영구 저장을 제공하지 않는다. 메시지 규격 버전과 고유 ID를 사용하되 Room/Game의 상태 번호나 대화 이력 Snapshot을 추가하지 않는다. 기존 상태 연결의 순서 검사·재조회 규칙은 유지한다.
+- 채팅 송수신 때 현재 권한을 확인하며 신원 변경·퇴장·강퇴·게임 연결 교체 뒤에는 새 권한으로 연결한다. 채팅 연결 장애를 게임 단절·Ready 해제·표 삭제·방장 승계로 처리하지 않는다.
+- 접속자는 Member 계정 ID와 Guest 임시 사용자 ID별로 중복을 제거한다. 같은 신원의 여러 탭·기기는 한 명이며, 별도로 발급된 Guest 신원은 각각 집계한다. IP나 기기 정보로 같은 사람인지 추정하지 않는다.
+- 인증된 로비·방·랭킹의 유효한 서비스 연결을 집계한다. 세션 만료·폐기 또는 연결 종료 확인 시 해당 연결을 제외하되 같은 사용자의 다른 유효 연결은 유지한다. 마지막 유효 연결이 없어졌을 때 그 사용자를 제외한다. 감지 전 네트워크 단절까지 즉시 반영한다고 보장하지 않는다.
+- `/ws/v1/presence`는 Cookie·Origin을 검사하고 접속 확인용 ping/pong만 주고받는다. 집계 정보로는 전체 접속자 수만 공개하며 사용자·세션·연결 식별자는 공개하지 않는다. 확인 실패는 정상 0명으로 표시하지 않는다.
+- 접속 확인은 인증 Idle TTL을 연장하지 않으며 Room 재접속 유예·Ready·투표·방장·게임 결과에 영향을 주지 않는다. 기존 Lobby/Room 상태 연결은 수신 전용을 유지한다.
+
+정확한 메시지 필드·오류·자료 버전과 시험은 [App PR #59](https://github.com/seokpan/seokpan-app/pull/59)의 구현 문서에서 관리한다.
+이 기록으로 실제 Redis 전달·공유 집계·다중 Replica 검증을 완료 처리하지 않는다.
 
 ## 6. MariaDB·Redis 기준
 
@@ -192,12 +217,27 @@ MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이
 | Styling | CSS Modules와 공통 CSS Token |
 
 - Browser는 MariaDB·Redis에 직접 접근하지 않으며, 게임 진행 상태의 최종 판단은 서버가 담당한다.
-- WebSocket Envelope의 `state_version`이 연속이면 Event를 적용하고, 누락되거나 재연결되면 Snapshot을 다시 받아 상태를 맞춘다. Snapshot 안의 Room·Game `state_version`은 HTTP 상태 변경 요청의 `expected_state_version`과 비교하는 값으로 사용한다.
+- Lobby/Room 상태 WebSocket Envelope의 `state_version`이 연속이면 Event를 적용하고, 누락되거나 재연결되면 Snapshot을 다시 받아 상태를 맞춘다. Snapshot 안의 Room·Game `state_version`은 HTTP 상태 변경 요청의 `expected_state_version`과 비교하는 값으로 사용한다. 채팅·접속자 연결에는 5.2절을 적용한다.
 - Move·Vote 마감·승패·Rating을 서버 확인 전에 낙관적으로 확정 표시하지 않는다.
 - Frontend는 Nginx 정적 Application으로 제공하며 Browser History Route는 SPA Fallback을 사용한다.
-- ANALYSIS·채팅·고급 UI를 First Success의 선행조건으로 만들지 않는다.
+- A-07 Headless 핵심 흐름과 A-08 화면 완료 범위를 구분한다. 채팅 등 아래 7.1절의 기능은 A-08에 포함하며, ANALYSIS 실행과 목업 수준의 세부 연출은 선행조건으로 추가하지 않는다.
 - Frontend 화면 골격과 시각 방향을 구체화할 때 참고 UI Mockup이 제공되면 방향성 참고자료로 활용한다.
 - 제공된 Mockup은 공식 요구사항이나 Pixel-perfect 명세가 아니다. docs MVP·확정된 구현 기준·접근성·실제 이용 흐름을 우선하며, Mockup의 자체 오류나 범위 밖 기능을 그대로 구현하지 않는다.
+
+### 7.1 A-08 화면 완료 범위
+
+D07 3쪽의 Must/Should 분류는 원 설계 이력으로 유지한다. 이후 확정한 Application 화면 완료 범위에는 아래 보조 기능도 포함한다. 목업이 시각 참고자료라는 이유로 이 기능들을 제외하지 않는다. 변경 근거는 [프로젝트 변경 이력](PROJECT_CHANGES.md#application-화면-완료-범위와-조회-정보-보완)을 따른다.
+
+- 가입·로그인·Guest 진입·로그아웃, 로비·방 생성/입장, 팀·Ready·게임 시작, 투표·착수·종료 결과·같은 방 다음 판.
+- 로비/방 채팅, WAITING에서 현재 방장의 다른 참가자 강퇴, 진행 중 방 관전, 공개 랭킹·Member 내 전적, 접속자 표시, 게임 방법·사용자 메뉴.
+- 보드와 사이드의 좌표별 득표 수·비율, 본인 표·공식 돌·마지막 착수·승리선 구분. 비율은 서버의 해당 턴 유효 투표자 수를 분모로 하므로 미투표자가 있으면 합계가 100% 미만일 수 있다. 개인별 투표 내역은 공개하지 않는다.
+- Game/Result 및 Room Snapshot의 Game에 `last_move`로 마지막 공식 착수 번호·팀·좌표를 제공한다. 착수 전은 null, Pass 뒤에는 유지, 새 Game에서는 초기화한다. 보드 좌표순으로 마지막 착수를 추정하지 않는다.
+- 랭킹은 D01 31쪽의 유효 경기·정렬 기준을 유지하고 Member/Guest가 조회한다. 공개 누적 Rating·승무패·경기 수와 본인의 경기별 Rating 변동을 구분하며, 계정 인증 정보·타인의 경기별 Rating 이력을 공개하지 않는다. Guest 개인 영구 전적은 만들지 않는다.
+- 대기·게임·결과 전환에는 보드와 정상 방 연결을 유지한다. 새 Game은 이전 돌·투표·결과·명령 초점을 초기화하고, 신원·방 참여가 바뀌면 이전 화면을 폐기한다. 이전 작업의 안내는 페이지·신원·새 작업에 맞춰 정리한다.
+- AI 판세 분석은 기존 MVP 제외를 유지하고 해당 영역에는 정적인 미제공 안내만 둔다. 분석 API·모델·Workload, 공개 복기, 채팅 영구 이력은 추가하지 않는다. 이미지 간 상이한 수치·권한은 서비스 규칙으로 채택하지 않는다.
+
+실제 작업은 [App #56](https://github.com/seokpan/seokpan-app/issues/56)과 [PR #59](https://github.com/seokpan/seokpan-app/pull/59)에서 추적한다.
+A-08의 Memory 기반 화면 시험은 실제 Provider 검증과 다르다. Linux Container·Jenkins는 A-09, 채팅 Redis 전달·접속자 공유 집계의 구현과 랭킹 MariaDB 연결·다중 Replica·Gateway/WSS·자료 버전 전환 검증은 A-10에 남긴다.
 
 ## 8. Image·실행·환경 기준
 
