@@ -1,6 +1,6 @@
 [← 트러블슈팅 목차로 돌아가기](README.md)
 
-# TS-026 — 공용 TLS Role과 MaxScale Role의 상충 Desired State로 발생한 권한 Drift
+# TS-026 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -9,13 +9,13 @@
 | **발생/발견 시기** | 2026-09-07 |
 | **상태** | **해결** |
 | **주 담당** | **김상희 — 데이터베이스·스토리지·복구** |
-| **영향 범위** | MaxScale TLS Runtime, 공용 `tls_deploy` 재실행 경로, Backend DB 접속 경로 |
+| **영향 범위** | MaxScale TLS 파일 권한, 공용 `tls_deploy` 재실행, Backend DB 접속 경로 |
 
 ## 문제 개요
 
-TS-025의 MaxScale `--check --diff` Credential 미노출 재검증 과정에서, 현재 `maxscale-01`의 TLS certificate/private key 권한이 MaxScale 서비스 계정이 읽을 수 없는 상태로 확인됐다.
+TS-025의 MaxScale `--check --diff` 인증정보 미노출 재검증 과정에서 `maxscale-01`의 TLS 인증서와 개인키 권한이 MaxScale 서비스 계정이 읽을 수 없는 상태로 확인됐다.
 
-당시 Runtime은 다음 상태였다.
+당시 실제 파일 권한은 다음과 같았다.
 
 ```text
 /etc/pki/seokpan-ca/services  root:root 0750
@@ -23,15 +23,15 @@ maxscale-01.crt               root:root 0644
 maxscale-01.key               root:root 0600
 ```
 
-`maxscale` 사용자 기준 certificate와 private key 읽기가 모두 실패했고, `maxscale --config-check`도 TLS 파일 `Permission denied`로 실패했다.
+`maxscale` 사용자로 인증서와 개인키 읽기가 모두 실패했고, `maxscale --config-check`도 TLS 파일 `Permission denied`로 실패했다.
 
-한편 실행 중인 MaxScale Service와 `Read-Write-Listener:3306`은 계속 동작하고 있었다. 기존 Process가 이미 읽은 인증서/키를 사용 중일 가능성이 있으므로 단순 Evidence 확보를 위해 임의 restart/reload하지 않고 원인과 Desired State부터 확인했다.
+한편 실행 중인 MaxScale Service와 `Read-Write-Listener:3306`은 계속 동작하고 있었다. 기존 프로세스가 이미 읽어 둔 인증서와 키를 사용 중일 가능성이 있으므로 단순 확인을 위해 임의로 restart/reload하지 않고 파일 권한이 다시 바뀐 원인부터 확인했다.
 
-## 기존 TS-018과의 사건 경계
+## 기존 TS-018과의 사건 구분
 
-[TS-018](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)은 MaxScale TLS를 **처음 적용하던 당시** 공용 `tls_deploy`의 root-only 권한과 non-root MaxScale 서비스 계정의 요구사항이 맞지 않았던 문제를 다룬다.
+[TS-018](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)은 MaxScale TLS를 **처음 적용하던 당시** 공용 `tls_deploy`가 배포한 root 전용 권한과 `maxscale` 서비스 계정이 필요로 하는 권한이 맞지 않았던 문제를 다룬다.
 
-당시에는 MaxScale Role이 후행 Task로 다음 권한을 보정해 정상화했다.
+당시에는 MaxScale Role이 나중에 실행되면서 다음 권한으로 다시 맞춰 정상화했다.
 
 ```text
 /etc/pki/seokpan-ca           root:root     0711
@@ -39,26 +39,25 @@ services                      root:maxscale 0750
 maxscale-01.key               root:maxscale 0640
 ```
 
-이번 사건에서는 그 정상화 이후 현재 Runtime에서 Consumer-specific 권한이 다시 유실된 상태를 확인했고, 코드 대조 결과 공용 `tls_deploy`와 MaxScale Role이 동일 파일·디렉터리에 서로 다른 Desired State를 선언하고 있었다.
+이번 사건은 그 이후에 같은 권한 문제가 다시 나타났다는 점이 다르다. 코드를 대조한 결과 공용 `tls_deploy`와 MaxScale Role이 동일한 파일과 디렉터리에 서로 다른 권한을 적용하고 있었다.
 
 ```text
 TS-018
-→ 최초 TLS 적용 시 Consumer 권한 설계 미비
-→ MaxScale Role이 후행 보정
-→ TLS Runtime 정상화
+→ 최초 TLS 적용 시 MaxScale 서비스 계정용 권한이 부족
+→ MaxScale Role이 나중에 권한을 다시 맞춤
+→ TLS 정상화
 
 이번 사건
-→ 이후 현재 Runtime에서 Consumer 권한 유실 확인
-→ tls_deploy와 MaxScale Role의 상충 Desired State 확인
-→ 실행 순서에 따라 최종 권한이 달라질 수 있는 구조
-→ Runtime Drift
+→ 이후 인증서/키 접근 권한이 다시 사라짐
+→ tls_deploy와 MaxScale Role이 서로 다른 권한을 적용하는 구조 확인
+→ 실행 순서에 따라 최종 권한이 달라질 수 있음
 ```
 
-따라서 동일한 MaxScale TLS 영역이지만 Root Cause와 재발 메커니즘이 달라 별도 사건으로 기록한다.
+따라서 같은 MaxScale TLS 영역이지만 최초 적용 시의 권한 누락과, 이후 두 Role의 권한 설정 충돌로 다시 발생한 문제는 원인과 재발 방식이 달라 별도 TS로 기록한다.
 
-## Root Cause
+## 원인 분석
 
-당시 공용 `tls_deploy`와 MaxScale Role이 같은 certificate directory/private key에 대해 서로 다른 Desired State를 가졌다.
+당시 공용 `tls_deploy`와 MaxScale Role이 같은 인증서 디렉터리와 개인키에 서로 다른 권한을 적용했다.
 
 ### 공용 `tls_deploy`
 
@@ -75,21 +74,21 @@ certificate directory → root:maxscale 0750
 private key           → root:maxscale 0640
 ```
 
-즉 실행 순서가:
+실행 순서가:
 
 ```text
 tls_deploy → maxscale Role
 ```
 
-이면 MaxScale Role의 후행 보정으로 정상화되지만, 공용 `tls_deploy`가 인증서 재발급 등으로 대상 권한을 다시 적용하고 MaxScale Role의 보정이 뒤따르지 않으면 Consumer-specific 권한이 유실될 수 있었다.
+이면 MaxScale Role이 마지막에 권한을 다시 맞추므로 정상 동작한다. 하지만 인증서 재발급 등으로 `tls_deploy`가 다시 실행된 뒤 MaxScale Role이 이어서 실행되지 않으면 파일 권한이 다시 `root:root` 기준으로 바뀔 수 있었다.
 
-문제의 핵심은 단순한 파일 권한 오타가 아니라 **공용 Provider Role과 Consumer Role이 동일 자원에 서로 다른 Desired State를 선언해 실행 순서에 따라 최종 상태가 달라질 수 있었던 구조**였다.
+문제의 핵심은 단순한 파일 권한 오타가 아니라 **같은 TLS 파일을 관리하는 두 Ansible Role이 서로 다른 권한을 적용해 실행 순서에 따라 최종 권한이 달라지는 구조**였다.
 
 ## 조치
 
-### 1. 공용 `tls_deploy`에 서비스별 권한 계약 추가
+### 1. 공용 `tls_deploy`에 서비스별 권한 설정 추가
 
-Infra #146 / PR #148에서 공용 Role이 다음 값을 서비스별로 override할 수 있도록 변경했다.
+Infra #146 / PR #148에서 공용 Role이 다음 값을 서비스별로 지정할 수 있도록 변경했다.
 
 ```text
 tls_service_dir_group
@@ -98,9 +97,9 @@ tls_service_key_group
 tls_service_key_mode
 ```
 
-기본값은 기존 root-only 정책을 유지해 다른 Consumer의 동작을 바꾸지 않았다.
+기본값은 기존 `root` 전용 권한을 유지해 다른 서비스의 동작은 바꾸지 않았다.
 
-### 2. MaxScale Consumer 계약 명시
+### 2. MaxScale용 권한을 명시
 
 Infra #147 / PR #149에서 `maxscale-01`에 다음 값을 지정했다.
 
@@ -111,11 +110,11 @@ tls_service_key_group: maxscale
 tls_service_key_mode: "0640"
 ```
 
-이후 공용 `tls_deploy`와 MaxScale Role이 같은 최종 권한을 사용하도록 정합화했다.
+이후 공용 `tls_deploy`와 MaxScale Role 모두 같은 최종 권한을 적용하도록 맞췄다.
 
 ## 검증
 
-PR #149에서 실제 Runtime을 다시 확인했다.
+PR #149에서 실제 서버 상태를 다시 확인했다.
 
 ### 최종 파일 권한
 
@@ -133,7 +132,7 @@ CRT=0
 KEY=0
 ```
 
-certificate/private key 모두 읽기 PASS.
+인증서와 개인키 모두 읽기 성공.
 
 ### Config 검증
 
@@ -142,7 +141,7 @@ maxscale --config-check --config=/etc/maxscale.cnf
 → Configuration was successfully verified.
 ```
 
-### Runtime
+### 서비스 상태
 
 ```text
 systemctl is-active maxscale
@@ -162,7 +161,7 @@ Connection: db.seokpan.soldesk.store via TCP/IP
 
 ### 재발 방지 검증
 
-동일 설정으로 `tls_deploy`를 다시 실행했다.
+같은 설정으로 `tls_deploy`를 다시 실행했다.
 
 ```text
 재발급 필요 = False
@@ -180,21 +179,21 @@ root:root       644  /etc/pki/seokpan-ca/services/maxscale-01.crt
 root:maxscale   640  /etc/pki/seokpan-ca/services/maxscale-01.key
 ```
 
-그리고 다시 `CRT=0`, `KEY=0`으로 MaxScale 계정 접근이 유지되는 것을 확인했다.
+그리고 다시 `CRT=0`, `KEY=0`으로 MaxScale 계정이 인증서와 개인키를 계속 읽을 수 있음을 확인했다.
 
 ## Before → Change → After
 
 ```text
 Before
-TS-018에서 MaxScale Role 후행 보정으로 정상화
-→ 공용 tls_deploy와 MaxScale Role은 서로 다른 권한 Desired State 유지
-→ 실행 순서에 따라 최종 권한이 달라질 수 있는 구조
-→ 실제 cert/key read 실패 + config-check Permission denied 상태 확인
+TS-018에서 MaxScale Role이 나중에 권한을 다시 맞춰 정상화
+→ 공용 tls_deploy와 MaxScale Role은 서로 다른 권한 설정을 계속 사용
+→ 실행 순서에 따라 최종 권한이 달라질 수 있음
+→ 실제 cert/key read 실패 + config-check Permission denied 확인
 
 Change
-공용 tls_deploy에 서비스별 directory/key 권한 계약 추가
-→ maxscale-01이 root:maxscale 권한 계약 명시
-→ Provider와 Consumer의 Desired State 일치
+공용 tls_deploy에 서비스별 directory/key 권한 설정 추가
+→ maxscale-01에 root:maxscale 권한 명시
+→ 두 Role이 같은 권한을 적용하도록 통일
 
 After
 MaxScale cert/key read PASS
@@ -202,24 +201,24 @@ MaxScale cert/key read PASS
 → Service / Listener 정상
 → VIP TLS 검증 PASS
 → tls_deploy 재실행 changed=0
-→ 재실행 후에도 권한과 Runtime 유지
+→ 재실행 후에도 파일 권한과 서비스 상태 유지
 ```
 
 ## 운영 기준
 
-MaxScale TLS 권한은 더 이상 "공용 Role 적용 후 MaxScale Role이 다시 고쳐주는 순서"에 의존하지 않는다.
+MaxScale TLS 권한은 더 이상 "공용 Role 적용 후 MaxScale Role이 다시 고쳐주는 실행 순서"에 의존하지 않는다.
 
-현재 기준은 다음과 같다.
+현재는 `tls_deploy` 단계부터 MaxScale에 필요한 디렉터리와 개인키 권한을 적용하고, MaxScale Role도 같은 값을 사용한다.
 
 ```text
 공용 tls_deploy
-→ Consumer가 지정한 directory/key 권한 계약 적용
+→ MaxScale에 필요한 root:maxscale 권한 적용
 
-MaxScale
-→ 동일한 root:maxscale Desired State 사용
+MaxScale Role
+→ 같은 권한 유지
 
-재실행 순서와 무관하게
-→ 최종 권한이 같은 상태로 수렴
+결과
+→ 어느 Role을 다시 실행해도 최종 권한이 달라지지 않음
 ```
 
 ## 관련 근거
