@@ -136,7 +136,7 @@ loki-local-pvc Bound
 
 - [TS-005 — NGINX Gateway Fabric 대형 CRD가 클라이언트 방식 적용(client-side apply) Annotation 제한에 걸림](TS-005_NGINX_Gateway_Fabric_대형_CRD_적용_실패.md)
   - Argo CD 적용 방식 문제로 본 Storage 계약 문제와 별도 Root Cause
-- Docs Issue #74 — Loki compactor CONFIG ERROR
+- [TS-030 — Loki compactor 저장소 설정 누락으로 CONFIG ERROR 발생](TS-030_Loki_compactor_CONFIG_ERROR.md)
   - 같은 PR #30에서 수정됐지만 Loki 내부 Configuration 문제로 별도 Root Cause
 
 ## 관련 근거
