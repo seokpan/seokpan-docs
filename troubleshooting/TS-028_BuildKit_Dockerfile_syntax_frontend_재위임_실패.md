@@ -150,7 +150,7 @@ TS-028
 
 TS-022
 원인: Rootless BuildKit의 /proc 권한과 process sandbox 제약
-수정: Jenkins BuildKit Agent Runtime/JCasC
+수정: Jenkins BuildKit Agent 설정(JCasC)
 실패 지점: Dockerfile 첫 RUN 단계
 ```
 
@@ -169,4 +169,4 @@ TS-028의 Dockerfile frontend 문제가 제거된 뒤 TS-022의 첫 `RUN` 문제
 - Before Commit: `bac7b785928fbbca7f462a694f7a28c5b823e707`
 - Fix Commit: `9822183ce26f37684cf2003d7489c6199f9f880a`
 - GitOps PR #34: https://github.com/seokpan/seokpan-gitops/pull/34
-- Docs Issue #68 후속 A/B Runtime Evidence
+- Docs Issue #68 후속 A/B 재현 결과
