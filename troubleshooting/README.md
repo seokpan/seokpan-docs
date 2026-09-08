@@ -48,8 +48,9 @@
 27. **[TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag의 Image Digest 덮어쓰기가 허용됨](TS-027_Harbor_Tag_Immutability_미적용_동일_Tag_덮어쓰기.md)**
 28. **[TS-028 — Dockerfile syntax directive가 외부 frontend 경로를 선택해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)**
 29. **[TS-029 — Loki Workload의 PVC 참조가 로컬 Storage Desired State와 불일치](TS-029_Loki_PVC_Desired_State_불일치.md)**
+30. **[TS-030 — Loki compactor 저장소 설정 누락으로 CONFIG ERROR 발생](TS-030_Loki_compactor_CONFIG_ERROR.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **29건**  
+현재 게시된 해결 완료 트러블슈팅 보고서: **30건**  
 기준 시점: **2026-09-08**
