@@ -47,8 +47,9 @@
 26. **[TS-026 — 공용 TLS Role과 MaxScale Role의 상충 Desired State로 발생한 권한 Drift](TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)**
 27. **[TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag의 Image Digest 덮어쓰기가 허용됨](TS-027_Harbor_Tag_Immutability_미적용_동일_Tag_덮어쓰기.md)**
 28. **[TS-028 — Dockerfile syntax directive가 외부 frontend 경로를 선택해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)**
+29. **[TS-029 — Loki Workload의 PVC 참조가 로컬 Storage Desired State와 불일치](TS-029_Loki_PVC_Desired_State_불일치.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **28건**  
+현재 게시된 해결 완료 트러블슈팅 보고서: **29건**  
 기준 시점: **2026-09-08**
