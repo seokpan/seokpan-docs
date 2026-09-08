@@ -52,7 +52,7 @@ BuildKit/Docker 인증 기능이 해당 디렉터리에서 찾는 파일명은 �
 
 즉 Robot Account의 ID나 Password 값이 잘못된 것이 아니라 **Pod에 생성된 인증 파일 이름과 BuildKit이 찾는 파일 이름이 달랐던 것**이 원인이었다.
 
-Repository 전체 검색 결과 `harbor-robot-dockerconfig`는 BuildKit Agent 전용 Secret으로 사용되고 있었고, kubelet의 `imagePullSecrets`처럼 표준 `dockerconfigjson` 형식을 요구하는 다른 용도로 함께 사용되지 않는 것도 확인했다.
+GitHub 저장소 전체 검색 결과 `harbor-robot-dockerconfig`는 BuildKit Agent 전용 Secret으로 사용되고 있었고, kubelet의 `imagePullSecrets`처럼 표준 `dockerconfigjson` 형식을 요구하는 다른 용도로 함께 사용되지 않는 것도 확인했다.
 
 ## 조치
 
@@ -76,7 +76,7 @@ JCasC의 Secret Volume은 Secret 이름만 참조하고 내부 Key 이름을 고
 
 ## 검증
 
-- Repository 전체 검색으로 `harbor-robot-dockerconfig`가 BuildKit Agent 전용이고 `imagePullSecrets` 등 다른 용도로 함께 사용되지 않음을 확인
+- GitHub 저장소 전체 검색으로 `harbor-robot-dockerconfig`가 BuildKit Agent 전용이고 `imagePullSecrets` 등 다른 용도로 함께 사용되지 않음을 확인
 - 기존 Secret Type 변경 시 `field is immutable` 오류를 확인하고 Delete/Recreate 방식으로 전환
 - 재생성 후 Secret `type: Opaque` 확인
 - Secret Data Key가 `config.json`인지 확인
