@@ -1,6 +1,6 @@
 [← 트러블슈팅 목차로 돌아가기](README.md)
 
-# TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag의 Image Digest 덮어쓰기가 허용됨
+# TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag 덮어쓰기가 허용됨
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -8,14 +8,14 @@
 |---|---|
 | **발생/발견 시기** | 2026-09-02 ~ 2026-09-03 |
 | **상태** | **해결** |
-| **주 담당** | **정태훈 — Runtime Platform·통합** |
+| **주 담당** | **정태훈 — Kubernetes 플랫폼 및 애플리케이션 통합** |
 | **영향 범위** | Harbor `seokpan` Project, Jenkins/BuildKit Image Push 경로, Git Commit 기반 Image 추적성 |
 
 ## 문제 개요
 
-Harbor `seokpan` Project는 존재하고 Private Project 정책도 적용되어 있었지만, 06 설계에서 요구한 **Tag Immutability**는 실제 자동화에 구현되지 않은 상태였다.
+Harbor `seokpan` Project는 존재하고 Private Project 정책도 적용되어 있었지만, 06 설계에서 요구한 **Tag Immutability(이미 사용한 Tag를 다른 Image로 덮어쓰지 못하게 하는 정책)**는 실제 자동화에 구현되지 않은 상태였다.
 
-실제 Consumer 검증에서 이미 사용한 Tag에 다른 Image Manifest Digest를 다시 Push했을 때 Harbor가 이를 거부하지 않고 수락할 수 있음을 확인했다.
+실제 Push 검증에서 이미 사용한 Tag에 다른 Image Manifest Digest를 다시 Push했을 때 Harbor가 이를 거부하지 않고 수락하는 것을 확인했다.
 
 ```text
 기존 Tag
@@ -26,13 +26,13 @@ seokpan/test-push:credential-file-verify
 → Harbor가 overwrite 허용
 ```
 
-이 상태에서는 Git Commit과 Image Tag를 연결해도 Registry에서 기존 Tag가 다른 Digest로 바뀔 수 있어, 동일 Tag가 항상 같은 Artifact를 가리킨다는 전제를 보장할 수 없었다.
+이 상태에서는 Git Commit과 Image Tag를 연결해도 Registry에서 기존 Tag가 다른 Digest를 가리킬 수 있어, 동일 Tag가 항상 같은 Image를 가리킨다고 보장할 수 없었다.
 
-## Root Cause
+## 원인 분석
 
-Harbor Project 자동화에는 Project 생성·Private 설정 등은 구현되어 있었지만 Tag Immutability는 TODO 상태로 남아 있었다.
+Harbor Project 자동화에는 Project 생성과 Private 설정 등은 구현되어 있었지만 Tag Immutability 설정은 TODO로 남아 있었다.
 
-즉 정책을 문서에서 요구했지만 실제 Harbor Project Desired State에 다음 규칙이 없었다.
+즉 문서에는 Tag 덮어쓰기 방지 정책이 정의되어 있었지만 실제 Harbor Project에는 다음 규칙이 적용되지 않았다.
 
 ```text
 Repository: **
@@ -40,11 +40,11 @@ Tag:        **
 Action:     immutable
 ```
 
-문제의 핵심은 Harbor 자체 오류가 아니라 **Registry 정책을 실제 자동화 Desired State에 반영하지 않은 구현 Gap**이었다.
+문제의 핵심은 Harbor 자체 오류가 아니라 **문서에서 요구한 Tag Immutability 정책이 실제 자동화에 빠져 있던 것**이었다.
 
 ## 조치
 
-Infra #109 / PR #110에서 Harbor `seokpan` Project Tag Immutability를 Ansible로 관리하도록 구현했다.
+Infra #109 / PR #110에서 Harbor `seokpan` Project의 Tag Immutability를 Ansible로 관리하도록 구현했다.
 
 ### 정책
 
@@ -57,34 +57,34 @@ Action:     immutable
 ### 자동화 동작
 
 - 기존 동일 Rule 조회
-- 동일 Rule 존재 시 중복 생성하지 않음
-- Disabled Rule이면 활성화
-- 적용 후 활성 Rule 재조회 및 검증
-- Harbor HTTPS API를 Controller-local에서 호출해 Project Policy를 SSH와 독립적으로 관리
-- Harbor API Credential을 사용하는 Task는 `no_log: true` 적용
+- 동일 Rule이 있으면 중복 생성하지 않음
+- Disabled 상태이면 활성화
+- 적용 후 활성 Rule을 다시 조회해 확인
+- Harbor HTTPS API는 Ansible Controller에서 직접 호출
+- Harbor API 인증정보를 사용하는 Task는 `no_log: true` 적용
 
-Harbor 설치·서비스 관리는 기존 SSH 기반 Role을 유지하고, Project Immutability 정책은 HTTPS API 기반 별도 자동화 경로로 분리했다.
+Harbor 설치와 서비스 관리는 기존 SSH 기반 Role을 유지하고, Project의 Tag Immutability 정책은 Harbor HTTPS API를 호출하는 별도 자동화로 관리했다.
 
-## CI/CD Tag 정책과의 정합성
+## CI/CD Tag 정책과의 관계
 
-전체 Repository/Tag 범위에 Immutability를 적용하면 `latest` 같은 부동 Tag를 계속 덮어쓰는 Pipeline과는 충돌할 수 있다.
+전체 Repository/Tag 범위에 Immutability를 적용하면 `latest`처럼 같은 Tag를 계속 덮어쓰는 Pipeline과는 충돌할 수 있다.
 
-PR #110 리뷰에서 이 점을 확인했고, 현재 CI/CD 방향은 다음과 같이 정리되어 있었다.
+PR #110 리뷰에서 이 점을 확인했고, 현재 CI/CD는 다음 방식으로 Image Tag를 만든다.
 
 ```text
 Image Tag
 → git-<commit-sha>
 → Commit마다 새 Tag 생성
-→ 기존 Tag overwrite를 운영 방식으로 사용하지 않음
+→ 기존 Tag를 덮어쓰는 방식은 사용하지 않음
 ```
 
-따라서 현재 Project의 Commit 기반 Tag 정책과 `** / **` Immutability는 충돌하지 않는 것으로 판단했다.
+따라서 현재 프로젝트의 Commit 기반 Tag 정책에서는 `** / **` Immutability를 적용해도 정상적인 Image Push 흐름과 충돌하지 않는 것으로 판단했다.
 
 ## 검증
 
-### 1. 동일 Tag overwrite 거부
+### 1. 동일 Tag 덮어쓰기 거부
 
-정책 적용 후 기존 Tag에 다른 Manifest Digest를 재Push했다.
+정책 적용 후 기존 Tag에 다른 Manifest Digest를 다시 Push했다.
 
 대상 Tag:
 
@@ -135,7 +135,7 @@ PASS — 신규 Tag Push 정상 완료
 
 ### 3. Ansible 멱등성
 
-동일 설정으로 재실행했다.
+동일 설정으로 다시 실행했다.
 
 ```text
 changed=0
@@ -143,7 +143,7 @@ failed=0
 unreachable=0
 ```
 
-동일 Immutability Rule이 중복 생성되지 않고 Desired State에 수렴함을 확인했다.
+동일한 Immutability Rule이 중복 생성되지 않고 기존 설정이 그대로 유지되는 것을 확인했다.
 
 ## Before → Change → After
 
@@ -152,7 +152,7 @@ Before
 Harbor seokpan Project 존재
 → Tag Immutability 미구현
 → 동일 Tag가 다른 Digest를 가리킬 수 있음
-→ Artifact 추적성 약화
+→ Git Commit과 Image Tag의 추적 신뢰도 저하
 
 Change
 Harbor Project Tag Immutability 자동화
@@ -163,19 +163,19 @@ After
 동일 Tag + 다른 Digest 재Push 거부
 → 신규 Tag Push 정상
 → Ansible 재실행 changed=0
-→ Git Commit 기반 immutable Tag 운영과 정합
+→ Commit마다 새 Tag를 만드는 현재 CI/CD 방식과 충돌 없음
 ```
 
-## 기존 Harbor 관련 TS와의 사건 경계
+## 기존 Harbor 관련 TS와의 사건 구분
 
-다음 사건들과 Harbor라는 공통 영역은 있지만 Root Cause가 다르다.
+다음 사건들과 Harbor라는 공통 영역은 있지만 원인은 다르다.
 
 - TS-007 — Harbor Robot API 404·멱등성 분기 오류
-- TS-017 — Jenkins Rootless BuildKit Harbor CA Trust
-- TS-020 — BuildKit Harbor Credential 파일 계약 불일치
-- TS-024 — Kubernetes containerd Harbor CA Trust
+- TS-017 — Jenkins Rootless BuildKit의 Harbor 내부 CA 신뢰 문제
+- TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못한 문제
+- TS-024 — Kubernetes containerd의 Harbor 내부 CA 신뢰 문제
 
-TS-027은 **TLS Trust·Credential·Robot API가 아니라 Registry Project의 Artifact 불변성 정책 미구현**을 다룬다.
+TS-027은 TLS 인증서나 Robot Account 인증정보 문제가 아니라 **Harbor Project에 Tag 덮어쓰기 방지 정책이 적용되지 않았던 문제**를 다룬다.
 
 ## 관련 근거
 
