@@ -53,7 +53,7 @@ alert  : MaxScale cannot be run as root.
 1. 인증서 SAN(Subject Alternative Name, 인증서가 유효한 DNS 이름과 IP 목록)에 서비스에서 실제 사용하는 공용 DB 주소 `db.seokpan.soldesk.store`가 빠져 있었다.
 2. 당시 `tls_deploy` Role은 인증서 만료 임박 여부만 확인했기 때문에 `tls_service_san`을 변경해도 기존 인증서의 SAN 변경을 감지하지 못했다.
 
-Backend는 MaxScale Host의 실제 IP가 아니라 Common VIP와 `db.seokpan.soldesk.store`를 사용하므로 hostname 검증을 활성화하려면 해당 DNS 이름이 SAN에 포함되어야 했다.
+Backend는 MaxScale Host의 실제 IP가 아니라 VIP(Virtual IP, 가상 IP) `10.1.93.90`과 `db.seokpan.soldesk.store`를 사용하므로 hostname 검증을 활성화하려면 해당 DNS 이름이 SAN에 포함되어야 했다.
 
 당시 PR #137 범위에서는 SAN을 추가한 뒤 기존 인증서를 수동 삭제하고 `tls_deploy`를 재실행해 새 인증서를 발급했다. SAN 변경 자동 감지 자체는 별도 Issue #138로 분리했다.
 
