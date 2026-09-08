@@ -37,7 +37,7 @@
 16. **[TS-016 — Frontend Node.js 버전 실행환경 검증 결함](TS-016_Frontend_Nodejs_Version_실행환경_검증_결함.md)**
 17. **[TS-017 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](TS-017_buildkit-harbor-ca-trust.md)**
 18. **[TS-018 — MaxScale TLS 적용 중 인증서 파일 권한과 SAN 검증 문제](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)**
-19. **[TS-019 — MariaDB/MaxScale Repository 버전 확인 오류로 Dry-run 결과가 실제 실행과 달라짐](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
+19. **[TS-019 — MariaDB/MaxScale 패키지 저장소 버전 확인 오류로 Dry-run 결과가 실제 실행과 달라짐](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
 20. **[TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)**
 21. **[TS-021 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)**
 22. **[TS-022 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
