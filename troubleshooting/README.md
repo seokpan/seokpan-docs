@@ -35,20 +35,20 @@
 14. **[TS-014 — GitOps Root 전환 중 Argo CD Bootstrap 연쇄 오류](TS-014_ArgoCD_Root_전환_kubeconfig_tmp_충돌.md)**
 15. **[TS-015 — MariaDB read_only·Auto Failover·GTID 충돌](TS-015_MariaDB_read_only_Auto_Failover_GTID_충돌.md)**
 16. **[TS-016 — Frontend Node.js 버전 실행환경 검증 결함](TS-016_Frontend_Nodejs_Version_실행환경_검증_결함.md)**
-17. **[TS-017 — Jenkins Rootless BuildKit Harbor CA Trust 미적용 문제](TS-017_buildkit-harbor-ca-trust.md)**
-18. **[TS-018 — MaxScale TLS 적용 중 인증서 권한·상위 디렉터리·SAN 검증 문제](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)**
-19. **[TS-019 — MariaDB/MaxScale repo 버전 확인 awk 로직 버그로 인한 Dry-run 신뢰성 저하](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
-20. **[TS-020 — BuildKit Harbor Robot Credential 파일 계약 불일치](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)**
-21. **[TS-021 — Pod의 Project Endpoint가 CoreDNS에서 SERVFAIL로 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)**
-22. **[TS-022 — Rootless BuildKit의 Dockerfile RUN 단계가 seccomp·process sandbox 제약으로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
-23. **[TS-023 — CoreDNS 관리 Block newline escaping 결함으로 신규 Replica가 CrashLoopBackOff](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)**
+17. **[TS-017 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](TS-017_buildkit-harbor-ca-trust.md)**
+18. **[TS-018 — MaxScale TLS 적용 중 인증서 파일 권한과 SAN 검증 문제](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)**
+19. **[TS-019 — MariaDB/MaxScale Repository 버전 확인 오류로 Dry-run 결과가 실제 실행과 달라짐](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
+20. **[TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)**
+21. **[TS-021 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)**
+22. **[TS-022 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
+23. **[TS-023 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)**
 24. **[TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](TS-024_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)**
-25. **[TS-025 — MaxScale 설정 배포의 `--check --diff`에서 Credential 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)**
-26. **[TS-026 — 공용 TLS Role과 MaxScale Role의 상충 Desired State로 발생한 권한 Drift](TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)**
-27. **[TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag의 Image Digest 덮어쓰기가 허용됨](TS-027_Harbor_Tag_Immutability_미적용_동일_Tag_덮어쓰기.md)**
-28. **[TS-028 — Dockerfile syntax directive가 외부 frontend 경로를 선택해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)**
-29. **[TS-029 — Loki Workload의 PVC 참조가 로컬 Storage Desired State와 불일치](TS-029_Loki_PVC_Desired_State_불일치.md)**
-30. **[TS-030 — Loki compactor 저장소 설정 누락으로 CONFIG ERROR 발생](TS-030_Loki_compactor_CONFIG_ERROR.md)**
+25. **[TS-025 — MaxScale 설정 배포의 `--check --diff`에서 인증정보 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)**
+26. **[TS-026 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)**
+27. **[TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag 덮어쓰기가 허용됨](TS-027_Harbor_Tag_Immutability_미적용_동일_Tag_덮어쓰기.md)**
+28. **[TS-028 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)**
+29. **[TS-029 — Loki Deployment가 프로젝트에서 정의한 PVC와 다른 PVC를 참조함](TS-029_Loki_PVC_Desired_State_불일치.md)**
+30. **[TS-030 — Loki compactor의 `delete_request_store` 누락으로 CONFIG ERROR 발생](TS-030_Loki_compactor_CONFIG_ERROR.md)**
 
 ---
 
