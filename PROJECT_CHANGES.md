@@ -653,6 +653,67 @@
 
 ---
 
+## 2026-09-08
+
+### DR 백업 보호 위치 전략 변경 — loadgen 격리 서버를 1차 완성 범위에서 제외
+
+- 구분: 기존 값 변경 및 기존 계획 범위 축소
+- 기존 기준:
+  - 06 문서 17.1절은 MariaDB를 "NFS Staging + loadgen Disk" 이중 저장으로,
+    etcd Snapshot을 "loadgen Disk" 단독 저장으로 정의했다.
+  - loadgen(외부 관리·부하 Server)은 DR 백업 보호 위치이자 격리된 etcd Restore
+    실행 환경으로 원 설계에 반영되어 있었다.
+  - 그러나 MVP 축소 설계 및 실제 구현(`backup_transfer` role, 이슈 #55/#114)
+    단계에서는 loadgen 저장 로직이 처음부터 구현되지 않았고, NFS 전송·검증까지만
+    구현되어 있었다. 이 차이는 문서화되지 않은 채로 진행되어 왔다.
+  - DR-02(#113) 1단계 수동 검증(Snapshot 생성·NFS 전송·무결성 검증) 진행 중
+    이 격차가 명시적으로 드러났다.
+- 변경/확정 내용:
+  - loadgen(격리 서버) 구성은 시간·리소스 제약으로 1차 프로젝트 완성 범위에서
+    제외한다. 이는 DR-01(MariaDB)·DR-02(etcd)·DR-03(Redis) 전체 DR 계획에
+    공통 적용되는 결정이다.
+  - 1차 완성 목표는 로컬 디스크 + NFS 서버(또는 NFS 서버 단독)에 백업본을
+    저장하는 것으로 한다.
+  - etcd Snapshot의 경우, NFS 서버(192.168.54.50)에 기존 `db-backup`/`k8s`
+    export와 분리된 전용 경로 `/srv/nfs/etcd-dr`를 신규 생성하여 사용한다.
+    kube-apiserver의 `encryption-provider-config` 미설정(Secret 평문 포함)을
+    고려하여, 기존 export 정책(`192.168.0.0/16`, `no_root_squash`)과 달리
+    단일 Client(cp-01) + `root_squash` + 디렉터리 소유권을 강등 대상 계정
+    (`nobody:nobody`)으로 맞추는 방식으로 접근을 좁혔다.
+  - loadgen 미구현으로 인해 격리된 3-member etcd Restore 실행 환경도 함께
+    확보되지 않은 상태이므로, DR-02의 Restore·Kubernetes Object 검증·RTO 측정
+    단계(#113 Step 4~7)는 이번 라운드에서 보류하고 후속 작업으로 분리한다.
+  - 시간이 남을 경우 별도 격리 서버(loadgen 또는 대체 환경)를 구성하여, 기존
+    로컬+NFS 백업 대상에 격리 서버 저장 경로를 추가로 편성한다. 이 경우 원
+    설계(17.1절)의 loadgen 기준으로 복귀하는 것을 목표로 한다.
+- 판단 근거:
+  - loadgen 구현 자체가 부적절해서 제외한 것이 아니라, 4인 팀·1차 프로젝트
+    일정 내에서 우선순위상 etcd/MariaDB DR 검증 완성이 격리 서버 신규 구축보다
+    선행되어야 한다고 판단했다.
+  - NFS는 13절 HA·SPOF 표에 이미 "의도적 SPOF"로 명시되어 있어, NFS 단독
+    저장은 "NFS 장애와 백업 대상 장애가 동시에 발생하면 복구 근거 자체가
+    소실되는" 리스크를 내포한다. 이 리스크는 인지한 상태로 수용한다.
+  - MariaDB Backup(이슈 #55/#114)에서도 이미 동일한 축소가 사실상 선행되어
+    있었으나 명시적으로 기록되지 않았던 것을, 이번에 etcd DR 검증을 계기로
+    전체 DR 계획 차원에서 공식화한다.
+- 영향:
+  - DR-02(#113) 완료 기준 14개 항목 중 Snapshot 생성·무결성·백업 저장 관련
+    항목만 이번 라운드에서 충족하며, 운영/복구 완전 분리·quorum·API 응답·RTO
+    측정 관련 항목은 격리 서버 확보 후 후속 이슈에서 충족한다.
+  - DR-01(MariaDB)·DR-03(Redis)도 동일 기준으로 "로컬+NFS 저장까지 1차 완성,
+    격리 서버 이중화는 스트레치 목표"로 범위를 통일한다.
+  - 상위 DR 추적 이슈(#143)의 완료 판정 시 이 범위 축소를 전제로 반영해야 한다.
+  - 포트폴리오 서술 시 "원 설계(loadgen 이중화) 대비 실제 구현 범위와 그
+    트레이드오프를 인지하고 선택한 근거"로 이 기록을 사용한다.
+- 관련:
+  - `seokpan/seokpan-infra#113`
+  - `seokpan/seokpan-infra#143`
+  - `seokpan/seokpan-infra#55`
+  - `seokpan/seokpan-infra#114`
+  - `seokpan/seokpan-infra` PR #152
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
