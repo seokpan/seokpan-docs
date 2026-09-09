@@ -784,6 +784,42 @@
 
 ---
 
+## 2026-09-09
+
+### Redis Recovery 장애 주입·최소 권한 경계 확정
+
+- 구분: 구현 단계 추가 확정
+- 기존 기준:
+  - 역할별 Kubernetes 작업 영역은 Namespace와 ServiceAccount/RBAC로 분리하고, 일상 작업에 불필요한 광범위 권한을 부여하지 않는다.
+  - 김상희의 `platform` Redis/Recovery 쓰기 권한은 실제 Recovery 작업에서 필요한 범위가 확인될 때 최소 권한으로 추가하기로 유보했다.
+  - Redis Runtime은 `platform`, NFS Provisioner 및 Storage 검증 Resource는 `storage-infra` Namespace를 사용한다.
+- 확정 내용:
+  - Redis Recovery 검증에서 실제 Runtime 장애 주입은 Data, Storage & Recovery 담당 김상희가 직접 수행한다.
+  - 기존 `platform/ksh` ServiceAccount를 재사용하며 `platform` 전체 관리자 권한은 부여하지 않는다.
+  - 실제 Redis Runtime `redis-0`에 대해서만 Pod 삭제와 Pod Log 조회에 필요한 최소 권한을 추가한다.
+  - 기존 Pod/PVC/PV/Event/StatefulSet 등의 일반 상태 조회는 기존 Cluster read-only 권한을 계속 사용한다.
+  - Container 내부에서 임의 명령 실행이 가능한 `pods/exec` 권한은 실제 Runtime 최소 권한에서 제외한다.
+  - 실제 `platform` Redis Runtime에서는 데이터나 PVC 자체를 직접 훼손하지 않는 Pod 재기동 수준의 장애 주입만 수행한다.
+  - AOF 파일 교체·변조, PVC 손상 모사 등 파괴적 Recovery 검증은 실제 Runtime PVC가 아니라 `storage-infra` Namespace의 격리된 테스트 Resource에서 수행한다.
+  - Redis Runtime Manifest와 Kubernetes Runtime 운영 책임은 기존대로 Kubernetes & Application Integration 담당이 유지하며, Redis AOF/PVC Recovery와 MariaDB 권위 데이터 기준 정합성 검증 책임은 Data, Storage & Recovery 담당이 유지한다.
+- 현재 상태:
+  - 위 운영 결정과 권한 경계는 확정됐다.
+  - 실제 RBAC Desired State 반영, Argo CD Sync, 허용·거부 권한 및 Runtime 검증은 `seokpan-gitops#47`에서 진행한다.
+  - 실제 Redis Recovery 실행 및 결과 Evidence는 `seokpan-infra#115`에서 관리한다.
+- 영향:
+  - RBAC 반영 후 Data 담당이 Recovery 검증에 필요한 Redis Pod 장애 주입을 직접 수행할 수 있도록 한다.
+  - `platform` 전체 권한을 확대하지 않고 실제 DR 검증에 필요한 작업만 허용하도록 최소 권한 경계를 유지한다.
+  - 실제 Runtime과 파괴적 Recovery 검증 환경의 장애 영향 범위를 분리한다.
+  - 이번 권한 추가는 Redis Runtime 소유 책임을 Data 담당에게 이전하는 것이 아니다.
+- 관련:
+  - `seokpan/seokpan-gitops#3`
+  - `seokpan/seokpan-gitops#25`
+  - `seokpan/seokpan-gitops#47`
+  - `seokpan/seokpan-gitops#7`
+  - `seokpan/seokpan-infra#115`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
