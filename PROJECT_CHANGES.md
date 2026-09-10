@@ -820,6 +820,48 @@
 
 ---
 
+## 2026-09-10
+
+### DB 서비스 계정 Operator Credential 소비 경로 확정
+
+- 구분: 구현 단계 운영 기준 추가 확정
+- 기존 기준:
+  - `identity_svc`, `game_svc`, `db_admin` 계정과 권한은 Ansible로 관리하고, DB Password의 Source of Truth는 Ansible Vault로 유지한다.
+  - Application Runtime은 `identity_svc`/`game_svc`, Migration은 `db_admin`을 사용하며 Kubernetes에서는 Runtime/Migration Secret을 분리해 소비한다.
+  - MaxScale 공식 Endpoint `db.seokpan.soldesk.store:3306`은 Internal CA 기반 TLS와 Server Certificate 검증을 사용한다.
+  - DB 담당자가 수동 검증·운영 작업에서 현재 회전된 Credential을 안전하게 소비하는 공식 절차는 별도로 확정되어 있지 않았다.
+- 변경/확정 내용:
+  - DB Password의 Source of Truth는 기존대로 Ansible Vault를 유지하며, 과거 공유 Password를 복원하거나 현재 DB Password를 추가 회전하지 않는다.
+  - 승인된 DB Operator는 Ansible Controller에서 `identity_svc`, `game_svc`, `db_admin` 중 필요한 계정을 선택하고 Vault-backed Operator 경로로 현재 Credential을 소비한다.
+  - 최종 Operator 실행 명령은 `./tools/db-operator-login <identity_svc|game_svc|db_admin>`으로 고정하며, 실제 작업 전 `~/work/seokpan-infra/ansible`에서 프로젝트 `.venv`를 활성화한 상태로 실행한다.
+  - DB Password 원문은 사용자에게 전달하지 않고, 실행 중에만 Git 관리 경로 밖의 예측하기 어려운 임시 MariaDB Client 설정 파일에 기록한다.
+  - 임시 Client 설정 파일은 Mode `0600`을 사용하고 정상 종료뿐 아니라 실패·Interrupt·Signal 경로에서도 삭제한다.
+  - MariaDB Client는 공식 Endpoint 계약과 기존 Database 계약을 재사용하고, `--defaults-extra-file`, Internal Root CA, Server Certificate 검증을 사용해 TCP/TLS로 접속한다.
+  - Ansible Controller에는 CA Private Key 접근 권한을 확대하지 않고, 기존 `ca_trust` Role을 재사용해 공개 Root CA 인증서만 System Trust Store에 배포한다.
+  - DB Credential 변경 완료 판정 시 Ansible Vault·MariaDB·Kubernetes Runtime/Migration Secret뿐 아니라 DB Operator 수동 소비 경로도 함께 확인한다.
+- 검증 결과:
+  - `identity_svc`, `game_svc`, `db_admin` 모두 현재 Vault Credential로 공식 DB Endpoint 인증에 성공했다.
+  - 잘못된 Synthetic CA를 사용한 Negative Control은 TLS 검증 오류로 거부되어 CA 검증 경로가 실제 적용됨을 확인했다.
+  - `game_svc`의 허용된 Member 조회와 `member.rating` UPDATE는 성공했고, `login_id`/`password_hash` 조회는 거부됐다.
+  - `identity_svc`의 Game Table 접근은 거부됐으며, 세 계정의 `SHOW GRANTS` 결과가 기존 권한 계약과 일치했다.
+  - `backend_db_secrets.yml --check`는 `changed=0`, `failed=0`으로 Runtime/Migration Secret 소비 계약의 회귀가 없음을 확인했다.
+  - Controller CA Trust 재실행은 `changed=0`이었고, 임시 Credential 파일은 검증 종료 후 잔존하지 않았다.
+  - 실제 DB 담당자 `ksh` 사용자 컨텍스트에서도 Vault 인증 후 `game_svc@%`로 `stone_game` 접속에 성공했으며, 종료 후 해당 사용자 소유 임시 Credential 파일은 0개였다.
+  - 실제 DB Password, 완성된 Credential URL, CA Private Key는 Git·Issue·PR·검증 출력에 기록하지 않는다.
+- 영향:
+  - 승인된 DB Operator는 회전 전 공유 Password를 별도로 전달받거나 기억해 사용할 필요 없이 현재 Vault 기준 Credential을 재현 가능하게 소비할 수 있다. 실제 사용자는 Ansible Controller 및 Vault 인증에 필요한 승인된 접근 권한을 별도로 보유해야 한다.
+  - Application/Migration의 Kubernetes Secret 소비 구조, 기존 DB 계정·GRANT, `mariadb_account`의 Password 관리 정책은 변경하지 않는다.
+  - 향후 Credential 회전 작업은 자동화 Consumer뿐 아니라 승인된 Operator 접근 경로까지 정상 전환됐는지 확인해야 완료 처리한다.
+- 관련:
+  - `seokpan/seokpan-infra#91`
+  - `seokpan/seokpan-infra#159`
+  - `seokpan/seokpan-infra#169`
+  - `seokpan/seokpan-infra#172`
+  - `seokpan/seokpan-infra#174`
+  - `seokpan/seokpan-infra#175`
+
+---
+
 ## 작성 형식
 
 ### 변경 또는 결정 제목
