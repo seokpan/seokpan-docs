@@ -833,6 +833,7 @@
 - 변경/확정 내용:
   - DB Password의 Source of Truth는 기존대로 Ansible Vault를 유지하며, 과거 공유 Password를 복원하거나 현재 DB Password를 추가 회전하지 않는다.
   - 승인된 DB Operator는 Ansible Controller에서 `identity_svc`, `game_svc`, `db_admin` 중 필요한 계정을 선택하고 Vault-backed Operator 경로로 현재 Credential을 소비한다.
+  - 최종 Operator 실행 명령은 `./tools/db-operator-login <identity_svc|game_svc|db_admin>`으로 고정하며, 실제 작업 전 `~/work/seokpan-infra/ansible`에서 프로젝트 `.venv`를 활성화한 상태로 실행한다.
   - DB Password 원문은 사용자에게 전달하지 않고, 실행 중에만 Git 관리 경로 밖의 예측하기 어려운 임시 MariaDB Client 설정 파일에 기록한다.
   - 임시 Client 설정 파일은 Mode `0600`을 사용하고 정상 종료뿐 아니라 실패·Interrupt·Signal 경로에서도 삭제한다.
   - MariaDB Client는 공식 Endpoint 계약과 기존 Database 계약을 재사용하고, `--defaults-extra-file`, Internal Root CA, Server Certificate 검증을 사용해 TCP/TLS로 접속한다.
