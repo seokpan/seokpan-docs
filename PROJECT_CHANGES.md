@@ -860,6 +860,39 @@
   - `seokpan/seokpan-infra#174`
   - `seokpan/seokpan-infra#175`
 
+### MariaDB 백업 체인 상태(state) authority를 NFS 공유 스토리지로 이전
+
+- 구분: 기존 구조 변경
+- 기존 기준:
+  - 2026-09-02 "MariaDB Backup 전략 변경" 기록 및 실제 구현(`backup_transfer`
+    role)에서, 백업 체인 상태 파일(`.backup_chain_state.json`)과
+    `--incremental-basedir` 참조 경로는 각 MariaDB 호스트의 로컬 디스크에
+    있었다.
+- 변경/확정 내용:
+  - `auto_failover=true` 환경에서 실제로 Master/Slave 역할이 백업 스케줄과
+    무관하게 바뀔 수 있음을 2026-09-09~10 장애 재현으로 재확인했다(수요일
+    Full을 수행한 호스트가 failover로 바뀐 뒤, 다른 호스트가 다음 Incremental
+    시도 시 직전 체인을 인식하지 못하고 불필요한 Full 승격·백업 실패 발생).
+  - 상태 파일과 `--incremental-basedir` 참조를 호스트 로컬 디스크에서 NFS
+    공유 스토리지로 이전해, 두 MariaDB 호스트가 어느 쪽이 백업을 수행하든
+    동일한 체인 상태를 참조하도록 변경했다.
+  - 상태 파일 갱신 시 임시파일을 최종 파일과 동일한 NFS 디렉터리에 생성하도록
+    변경해, 파일시스템 간 이동(`mv`)으로 인한 원자성 손상을 방지했다.
+  - NFS로 옮겨진 공유 상태에 대해 두 호스트 간 `flock` 기반 공유 lock을
+    추가해 동시 read-modify-write(lost update)를 방지했다. 실측 중 크로스
+    서브넷 NFSv4 환경에서 lock 해제 통지가 약 30초 폴링 주기로 지연되는
+    특성을 확인하고, lock 대기 시간을 이에 맞춰 조정했다.
+- 영향:
+  - 백업 체인 상태의 단일 기준(single source of truth)이 호스트 로컬에서
+    NFS 공유 스토리지로 이동했다 — 향후 DR-01 Restore 절차나 상태 조회
+    자동화는 이 NFS 경로를 기준으로 참조해야 한다.
+  - NFS 마운트 장애 시 상태 조회/갱신 자체가 실패할 수 있다는 새로운 의존성이
+    생겼다(기존에도 마운트 여부를 사전 확인 후 중단하므로 큰 회귀는 아님).
+- 관련:
+  - `seokpan/seokpan-infra#166`
+  - `seokpan/seokpan-infra#143`
+  - `seokpan/seokpan-infra` PR #168
+
 ---
 
 ## 작성 형식
