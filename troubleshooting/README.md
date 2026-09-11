@@ -49,8 +49,9 @@
 28. **[TS-028 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)**
 29. **[TS-029 — Loki Deployment가 프로젝트에서 정의한 PVC와 다른 PVC를 참조함](TS-029_Loki_PVC_Desired_State_불일치.md)**
 30. **[TS-030 — Loki compactor의 `delete_request_store` 누락으로 CONFIG ERROR 발생](TS-030_Loki_compactor_CONFIG_ERROR.md)**
+31. **[TS-033 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제](TS-033_cp03_etcd_bbolt_DB_손상_Control_Plane_복구.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **30건**  
-기준 시점: **2026-09-08**
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **31건**  
+기준 시점: **2026-09-11**
