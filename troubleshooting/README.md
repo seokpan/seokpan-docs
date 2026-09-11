@@ -10,7 +10,7 @@
 - 단순 오타나 표현 수정처럼 기술적 판단 가치가 없는 변경은 기록하지 않습니다.
 - 실제 장애와 사전 검토에서 발견해 수정한 예방형 문제를 구분합니다.
 - 판단이 추가 검증으로 바뀐 경우 변경 과정을 지우지 않고, 날짜·실제 작업·근거를 명시하여 기록합니다.
-- 각 보고서는 다른 문서나 대화를 읽지 않아도 사건의 배경·영향·원인·조치·검증 결과를 이해할 수 있어야 합니다.
+- 각 보고서는 다른 문서나 대화를 읽지 않아도 사건의 배경·영향·원인·조치와 검증 결과를 이해할 수 있어야 합니다.
 - 기술 용어가 정확한 식별에 유리할 때는 쉬운 설명과 기술 용어를 함께 표기하고, 불필요한 내부식 표현은 사용하지 않습니다.
 - GitHub Issue, Pull Request, 검토, Commit, 실제 실행 결과를 사실관계 확인 근거로 연결합니다.
 - 사건 해결 이후 동일 영역의 운영 기준이 변경된 경우에도 당시 원인·조치·검증은 현재 상태로 덮어쓰지 않습니다. 대신 `후속 운영 기준` 또는 관련 근거를 추가하여 [PROJECT_CHANGES.md](../PROJECT_CHANGES.md)와 현재 Issue/PR까지 추적할 수 있게 합니다.
@@ -49,8 +49,11 @@
 28. **[TS-028 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)**
 29. **[TS-029 — Loki Deployment가 프로젝트에서 정의한 PVC와 다른 PVC를 참조함](TS-029_Loki_PVC_Desired_State_불일치.md)**
 30. **[TS-030 — Loki compactor의 `delete_request_store` 누락으로 CONFIG ERROR 발생](TS-030_Loki_compactor_CONFIG_ERROR.md)**
+31. **[TS-031 — MariaDB 백업 체인 상태(state)가 호스트 로컬에 종속되어 auto_failover 시 체인을 인식 못 하던 문제](TS-031_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md)**
+32. **[TS-032 — 원인 불명의 immutable(chattr +i)로 백업 디렉터리 생성이 EPERM으로 실패](TS-032_backup_transfer_immutable_속성_Guard.md)**
+33. **[TS-033 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제](TS-033_cp03_etcd_bbolt_DB_손상_Control_Plane_복구.md)**
 
 ---
 
-현재 게시된 해결 완료 트러블슈팅 보고서: **30건**  
-기준 시점: **2026-09-08**
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **33건**  
+기준 시점: **2026-09-11**
