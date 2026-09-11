@@ -52,8 +52,10 @@
 31. **[TS-031 — MariaDB 백업 체인 상태(state)가 호스트 로컬에 종속되어 auto_failover 시 체인을 인식 못 하던 문제](TS-031_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md)**
 32. **[TS-032 — 원인 불명의 immutable(chattr +i)로 백업 디렉터리 생성이 EPERM으로 실패](TS-032_backup_transfer_immutable_속성_Guard.md)**
 33. **[TS-033 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제](TS-033_cp03_etcd_bbolt_DB_손상_Control_Plane_복구.md)**
+34. **[TS-034: Harbor Tag Immutability에서 Candidate Tag(scan-*) 예외 정책이 두 차례 무력화된 문제](TS-034_Harbor_Tag_Immutability-Candidate_Tag_예외정책_무력화_issue.md)**
+35. **[TS-035 — Jenkins Plugin Lock 파일 확장자(.lock)를 jenkins-plugin-cli가 인식하지 못해 Controller CrashLoopBackOff 발생](TS-035_Jenkins_Plugin_Lock_파일_확장자를_jenkins-plugin-cli가_인식하지_못해_ControllerCrashLoopBackOff_발생.md)**
 
 ---
 
-현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **33건**  
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **35건**  
 기준 시점: **2026-09-11**

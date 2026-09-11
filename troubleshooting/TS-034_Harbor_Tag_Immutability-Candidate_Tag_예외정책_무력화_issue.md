@@ -1,4 +1,4 @@
-# TS-018: Harbor Tag Immutability에서 Candidate Tag(scan-*) 예외 정책이 두 차례 무력화된 문제
+# TS-034: Harbor Tag Immutability에서 Candidate Tag(scan-*) 예외 정책이 두 차례 무력화된 문제
 
 ## 개요
 
