@@ -154,6 +154,20 @@ cp-03 etcd static Pod 중지
 → etcd static Pod 다시 시작
 ```
 
+기존 cp-03 member를 제거한 직후 `kubectl exec`로 member 목록을 다시 확인하는 과정에서 `TLS handshake timeout`이 한 차례 발생했다. 이때는 즉시 다음 membership 변경으로 진행하지 않았다.
+
+cp-01과 cp-02를 각각 직접 확인한 결과:
+
+```text
+cp-01 local API /livez   HTTP 200
+API VIP /livez           HTTP 200
+cp-01 etcd endpoint      healthy=true
+cp-02 etcd endpoint      healthy=true
+cp-02 local API /livez   HTTP 200
+```
+
+두 정상 member와 API가 동작하고 있음을 확인한 뒤 cp-03 새 member를 추가했다. 해당 `TLS handshake timeout`의 원인은 별도로 확정하지 않았으며, 이후 동일 확인 과정에서는 재발하지 않았다.
+
 새 cp-03 member가 시작된 뒤 당시 leader였던 cp-02에서 snapshot을 전달받았다.
 
 ```text
@@ -165,9 +179,12 @@ received and saved database snapshot
 restored snapshot [index: 6208598, term: 29]
 ```
 
-이후 cp-03 etcd가 client request를 제공할 수 있는 상태로 전환됐다.
+초기 member 정보 게시 과정에서 7초 timeout이 한 차례 기록됐지만 바로 다음 시도에서 정상적으로 게시됐고, 이어서 client request를 제공할 수 있는 상태로 전환됐다.
 
 ```text
+failed to publish local member to cluster through raft
+...
+published local member to cluster through raft
 ready to serve client requests
 grpc service status changed ... status="SERVING"
 ```
@@ -238,7 +255,7 @@ https://10.96.0.1:443/livez
 → ok
 ```
 
-최근 2분의 kubelet 로그에서도 추가 오류가 기록되지 않았다.
+마지막 확인에서 최근 2분의 kubelet journal을 조회했을 때 추가 로그 항목이 없었다(`-- No entries --`).
 
 ## Before → Change → After
 
