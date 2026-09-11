@@ -7,7 +7,7 @@
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-11 |
-| **상태** | **해결 / bbolt DB 손상 발생 원인은 미확정** |
+| **상태** | **해결 / DB 손상을 일으킨 원인은 미확정** |
 | **주 담당** | **정태훈 — Kubernetes 플랫폼 및 애플리케이션 통합** |
 | **영향 범위** | `cp-03` etcd, kube-apiserver, Kubernetes Control Plane 1대 |
 
@@ -26,18 +26,18 @@
 
 재부팅 후 `kubelet`과 `containerd` 서비스 자체는 실행 중이었지만, etcd와 kube-apiserver는 반복적으로 종료됐다. `2379`, `2380`, `6443` 포트도 열리지 않았다.
 
-실제 `crictl` 상태에서는 etcd와 kube-apiserver의 재시작 횟수가 계속 증가하고 있었다.
+장애 조사 시점의 `crictl` 상태에서 etcd는 attempt 111, kube-apiserver는 attempt 115까지 재시작이 반복된 상태였다.
 
 ## 직접 원인
 
-cp-03의 etcd 로그에서 `/var/lib/etcd/member/snap/db`를 여는 과정에 bbolt 오류가 발생하며 프로세스가 panic하는 것을 확인했다.
+etcd가 로컬 데이터를 저장하는 bbolt DB(`/var/lib/etcd/member/snap/db`)를 여는 과정에서 오류가 발생하며 프로세스가 panic하는 것을 확인했다.
 
 ```text
 panic: freepages: failed to get all reachable pages
 (page 1794: multiple references ...)
 ```
 
-즉 cp-03의 etcd가 사용하는 로컬 bbolt DB가 정상적으로 열리지 않았고, etcd는 시작 직후 종료됐다.
+즉 cp-03의 etcd가 로컬 DB를 정상적으로 열지 못했고 시작 직후 종료됐다.
 
 그 결과 cp-03의 kube-apiserver도 다음 로컬 etcd endpoint에 연결할 수 없었다.
 
@@ -57,11 +57,11 @@ error creating storage factory: context deadline exceeded
 cp-03 bbolt DB 손상
 → etcd 시작 실패
 → 127.0.0.1:2379 미기동
-→ kube-apiserver가 local etcd에 연결하지 못함
+→ kube-apiserver가 로컬 etcd에 연결하지 못함
 → cp-03 Control Plane 복귀 실패
 ```
 
-## 확인하지 못한 상위 원인
+## DB 손상을 일으킨 원인은 미확정
 
 bbolt DB가 손상돼 etcd가 기동하지 못한 사실은 확인했지만, **왜 DB가 손상됐는지는 확인하지 못했다.**
 
@@ -69,7 +69,7 @@ bbolt DB가 손상돼 etcd가 기동하지 못한 사실은 확인했지만, **�
 
 따라서 비정상 종료, Host 문제, VMware 문제, Storage I/O 문제 등은 가능한 원인 후보일 뿐 이번 문서에서 원인으로 확정하지 않는다.
 
-## 장애 조사 시 확인한 HA 상태
+## 장애 조사 시 확인한 Control Plane 가용성
 
 cp-03가 `NotReady`인 상태에서 조사했을 때 cp-01과 cp-02의 etcd endpoint는 정상 응답했고 cp-03 endpoint만 실패했다.
 
@@ -94,7 +94,7 @@ https://10.1.93.90:6443/livez
 
 ## 복구 전 안전조치
 
-손상 member를 수정하기 전에 정상 cp-01 etcd에서 snapshot을 확보했다.
+손상된 member를 수정하기 전에 정상 cp-01 etcd에서 snapshot을 확보했다.
 
 ```text
 Revision    4,394,087
@@ -110,11 +110,11 @@ cp-03에서는 다음 자료를 별도로 보존했다.
 - etcd panic 로그
 - 기존 `/var/lib/etcd` 전체 데이터
 
-이후 복구 실패 시 되돌릴 수 있도록 원본 데이터를 삭제하지 않고 별도 경로에 보관한 뒤 작업했다.
+복구가 실패해도 원본을 다시 확인할 수 있도록 기존 데이터를 삭제하지 않고 별도 경로에 보관한 뒤 작업했다.
 
-## 1차 복구 시도 — snapshot 영역만 분리
+## 1차 복구 시도 — snapshot 디렉터리만 분리
 
-처음에는 손상된 `member/snap`만 분리하고 기존 WAL은 유지한 채 etcd를 다시 시작했다.
+처음에는 손상된 `member/snap` 디렉터리만 분리하고 기존 WAL(Write-Ahead Log, 쓰기 내용을 먼저 기록하는 로그 파일)은 유지한 채 etcd를 다시 시작했다.
 
 새 `snap/db` 자체는 정상적으로 생성됐지만 snapshot index가 `0`인 상태에서 기존 WAL과 이어지지 못했다.
 
@@ -154,7 +154,7 @@ cp-03 etcd static Pod 중지
 → etcd static Pod 다시 시작
 ```
 
-새 cp-03 member가 시작된 뒤 현재 leader였던 cp-02에서 snapshot을 전달받았다.
+새 cp-03 member가 시작된 뒤 당시 leader였던 cp-02에서 snapshot을 전달받았다.
 
 ```text
 receiving database snapshot
@@ -184,7 +184,7 @@ grpc service status changed ... status="SERVING"
 192.168.53.20:2379   true
 ```
 
-새 cp-03 member의 Raft 상태도 정상 member와 같은 term으로 수렴했고, 확인 시점의 index 차이는 2였다.
+새 cp-03 member의 Raft 합의 상태도 정상 member와 같은 term으로 수렴했고, 확인 시점의 index 차이는 2였다.
 
 ```text
 cp-01  term 29 / index 6209122
@@ -201,7 +201,7 @@ Serving securely on [::]:6443
 Storage is ready for all registered resources
 ```
 
-로컬 health check도 정상 응답했다.
+로컬 `/livez`도 정상 응답했다.
 
 ```text
 https://127.0.0.1:6443/livez
@@ -231,7 +231,7 @@ Node Lease도 현재 시각으로 다시 갱신됐고, cp-03의 다음 구성요
 - Calico CSI
 - node-exporter
 
-Service Network도 다시 정상 응답했다.
+Kubernetes Service Network도 다시 정상 응답했다.
 
 ```text
 https://10.96.0.1:443/livez
@@ -245,13 +245,13 @@ https://10.96.0.1:443/livez
 ```text
 Before
 cp-03 etcd가 손상된 bbolt DB를 열지 못하고 panic
-→ local etcd 127.0.0.1:2379 미기동
+→ 로컬 etcd 127.0.0.1:2379 미기동
 → kube-apiserver 시작 실패
 → cp-03 NotReady
 
 Change
 정상 etcd snapshot 확보 + 손상 자료 보존
-→ snapshot 영역만 분리한 1차 복구는 WAL 불연속으로 실패
+→ snapshot 디렉터리만 분리한 1차 복구는 WAL 불연속으로 실패
 → 기존 cp-03 etcd member 제거
 → 빈 data-dir로 새 member 등록
 → 정상 member에서 snapshot 재동기화
@@ -261,7 +261,7 @@ etcd 3개 endpoint 모두 healthy
 → cp-03 kube-apiserver 자동 복구
 → kubelet·kube-proxy·Calico 재수렴
 → cp-03 Ready
-→ Service Network /livez 정상
+→ Kubernetes Service Network /livez 정상
 ```
 
 ## 시간 기록
@@ -289,6 +289,6 @@ etcd 3개 endpoint 모두 healthy
 
 ## 남은 확인 사항
 
-이번 복구로 cp-03의 etcd·kube-apiserver·Node 상태는 정상화됐지만, bbolt DB 손상을 발생시킨 상위 원인은 확인하지 못했다.
+이번 복구로 cp-03의 etcd·kube-apiserver·Node 상태는 정상화됐지만, bbolt DB 손상을 일으킨 원인은 확인하지 못했다.
 
 동일 문제가 다시 발생하면 Host/VMware 전원 이벤트, Storage I/O 오류, filesystem 상태와 비정상 종료 이력을 함께 확보해 DB 손상 이전 단계의 원인을 추적한다.
