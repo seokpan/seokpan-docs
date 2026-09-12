@@ -8,37 +8,24 @@
 
 ## 목차
 
-> 1\. 문서 목적·범위·MVP 정의
->
-> 2\. 선행 설계에서 보존할 가치와 판단 원칙
->
-> 3\. Must·Should·Could·확장 범위
->
-> 4\. 원 목표 구조와 MVP 구조 비교
->
-> 5\. MVP 물리·네트워크·Endpoint 구조
->
-> 6\. MVP 서비스 기능·상태 계약
->
-> 7\. 구성요소별 유지·단일화·제외 판단
->
-> 8\. 구현 순서와 First Success Milestone
->
-> 9\. 핵심 검증과 Evidence 설계
->
-> 10\. WBS·선후관계·Critical Path
->
-> 11\. 4인 역할·Provider·Consumer
->
-> 12\. 실행 일정·동결·Go/No-Go
->
-> 13\. MVP 완료 Gate
->
-> 14\. 원 목표 구조 확장 경로
->
-> 15\. 리스크·제약·주장 경계
->
-> 16\. 최종 기획안·실시설계 인계 및 완료 판정
+1. [문서 목적·범위·MVP 정의](#section-1)  
+2. [선행 설계에서 보존할 가치와 판단 원칙](#section-2)  
+3. [Must·Should·Could·확장 범위](#section-3)  
+4. [원 목표 구조와 MVP 구조 비교](#section-4)  
+5. [MVP 물리·네트워크·Endpoint 구조](#section-5)  
+6. [MVP 서비스 기능·상태 계약](#section-6)  
+7. [구성요소별 유지·단일화·제외 판단](#section-7)  
+8. [구현 순서와 First Success Milestone](#section-8)  
+9. [핵심 검증과 Evidence 설계](#section-9)  
+10. [WBS·선후관계·Critical Path](#section-10)  
+11. [4인 역할·Provider·Consumer](#section-11)  
+12. [실행 일정·동결·Go/No-Go](#section-12)  
+13. [MVP 완료 Gate](#section-13)  
+14. [원 목표 구조 확장 경로](#section-14)  
+15. [리스크·제약·주장 경계](#section-15)  
+16. [최종 기획안·실시설계 인계 및 완료 판정](#section-16)
+
+<a id="section-1"></a>
 
 ## 1. 문서 목적·범위·MVP 정의
 
@@ -53,6 +40,8 @@ MVP는 원 목표 구조를 대체하는 별도 아키텍처가 아니다. 최�
 
 > **핵심 결정** MVP 성공은 화면 시연만으로 판정하지 않는다. 서비스 기능, 상태·데이터, 인프라, 자동화, 검증·Evidence의 다섯 Gate가 모두 닫혀야 한다.
 
+<a id="section-2"></a>
+
 ## 2. 선행 설계에서 보존할 가치와 판단 원칙
 
 | **보존 대상**                   | **MVP에서 유지하는 이유**                                              | **축소 시 허용 범위**                                                       |
@@ -64,6 +53,8 @@ MVP는 원 목표 구조를 대체하는 별도 아키텍처가 아니다. 최�
 | Stable Endpoint                 | MVP 이후 인스턴스를 추가해도 Application 설정을 다시 바꾸지 않게 한다. | 단일 LB·MaxScale이어도 동일 주소와 Port를 사용한다.                         |
 | CI/CD·GitOps·관측성             | 구축·배포·장애 결과를 자동화하고 증거로 연결한다.                      | 도구 자체 HA와 장기 보존은 뒤로 미룬다.                                     |
 | Backup/Restore·DR               | 복제와 별개로 영속 데이터 복구 가능성을 증명한다.                      | 완전 자동 DR 대신 승인된 복구와 RTO/RPO 측정을 유지한다.                    |
+
+<a id="section-2-1"></a>
 
 ### 2.1 판단 순서
 
@@ -78,6 +69,8 @@ MVP는 원 목표 구조를 대체하는 별도 아키텍처가 아니다. 최�
 - 구성요소 버전은 자동화·테스트 설계의 안정 Release 고정값을 유지하고 RC·alpha·beta·latest를 사용하지 않는다.
 
 - 구현·측정하지 않은 성능·복구·HA 결과를 완료된 성과처럼 작성하지 않는다.
+
+<a id="section-3"></a>
 
 ## 3. Must·Should·Could·확장 범위
 
@@ -99,13 +92,19 @@ MVP는 원 목표 구조를 대체하는 별도 아키텍처가 아니다. 최�
 
 로비 채팅과 방 채팅은 서로 다른 전달 범위로 분리하며 메시지를 교차 전달하지 않는다. 진행 중 입장한 관전자는 입장한 방의 채팅만 수신한다.
 
+<a id="section-3-1"></a>
+
 ### 3.1 UI 목업의 위치
 
 UI 목업은 화면 배치와 시각 표현을 참고하기 위한 자료다. Guest·Member 권한, 방장·관전자 상태, 투표시간, 렌주, 재접속, 결과·Rating, 멱등성은 서비스 요구사항 및 기능 명세와 구현 계약을 기준으로 구현한다. 목업 이미지가 공식 묶음에 없다는 사실은 MVP 기능 범위를 변경하지 않는다.
 
+<a id="section-3-2"></a>
+
 ### 3.2 AI 개발 도구와 ANALYSIS 런타임의 경계
 
 Codex 같은 AI 개발 도구로 일반 애플리케이션 코드를 생성·수정하는 것은 허용하며, 서비스 플랫폼 담당자가 결과를 검토하고 인수·통합한다. 이는 사용자에게 판세 분석 결과를 제공하는 ANALYSIS 런타임과 다르다. MVP에서는 분석 Pod·모델/API·Redis Streams 처리·재시도·DLQ·분석 부하 시험을 구현하지 않되, 후속 확장을 위한 이벤트와 식별 계약은 보존한다.
+
+<a id="section-4"></a>
 
 ## 4. 원 목표 구조와 MVP 구조 비교
 
@@ -125,6 +124,8 @@ Codex 같은 AI 개발 도구로 일반 애플리케이션 코드를 생성·수
 | 관측성          | Prometheus·Grafana·Loki·Alloy·Alertmanager | 동일            | 검증·Timeline·E-mail 알림 유지            | 장기·HA 저장                   |
 
 > **수량 판정** Server-01 4VM + Server-02 4VM + Server-03 5VM + Server-04 3VM = MVP 서비스 VM 16개다. loadgen은 5번째 Windows Host의 외부 지원 VM이며 서비스 VM 수에 포함하지 않는다.
+
+<a id="section-5"></a>
 
 ## 5. MVP 물리·네트워크·Endpoint 구조
 
@@ -159,6 +160,8 @@ Codex 같은 AI 개발 도구로 일반 애플리케이션 코드를 생성·수
 
 Worker의 8 vCPU·28GB RAM·140GB Disk 시작값은 ANALYSIS 미배포로 여유가 생기더라도 줄이지 않는다. 남은 Worker 한 대가 필수 Runtime을 수용하는 장애 조건과 향후 원 목표 확장 여유를 보존하기 위한 값이며, 실제 requests/limits는 부하 시험 후 동결한다.
 
+<a id="section-5-1"></a>
+
 ### 5.1 Common Endpoint
 
 | **주소**          | **사용 주체**          | **전달 대상**    | **MVP 한계**                        |
@@ -168,6 +171,8 @@ Worker의 8 vCPU·28GB RAM·140GB Disk 시작값은 ANALYSIS 미배포로 여유
 | 10.1.93.90:3306   | Backend·제한 관리 경로 | MaxScale-01      | MaxScale-01 장애 시 Proxy 우회 없음 |
 
 MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다. Keepalived·VRRP 자동 전환은 구현하지 않으므로 이를 HA VIP로 과장하지 않는다. 원 목표 확장 시 같은 주소를 Keepalived 소유권 전환 대상으로 바꾸며 Application Endpoint는 유지한다.
+
+<a id="section-6"></a>
 
 ## 6. MVP 서비스 기능·상태 계약
 
@@ -186,6 +191,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 | 결과        | 승·패·무·몰수·공동 패배·시스템 무효, 결과 화면·대기방 복귀·나가기 | game_id당 Result·전적·Rating 최대 1회                         |
 | Rating      | Member 초기 1000, 팀 평균 Elo, K=32; Guest는 가상 1000            | Member만 영구 반영하고 랭킹은 Rating 기준으로 정렬            |
 
+<a id="section-6-1"></a>
+
 ### 6.1 영속성과 Runtime State
 
 - MariaDB는 Member·MemberStats·Move·GameResult·RatingHistory 등 영속 원본을 소유한다.
@@ -199,6 +206,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 - ANALYSIS는 MVP에서 실행하지 않지만 공식 Move 직후의 Board Snapshot과 game_id·move_no·MOVE_APPLIED 이벤트 계약은 원 목표 확장을 위해 보존한다.
 
 - 후속 ANALYSIS는 흑·백 예상 승률을 산출하되 game_id+move_no가 현재 보드와 일치할 때만 표시한다. stale 결과는 폐기하고 분석 지연·실패가 다음 Turn이나 게임 권위 판정을 막지 않도록 한다.
+
+<a id="section-7"></a>
 
 ## 7. 구성요소별 유지·단일화·제외 판단
 
@@ -227,6 +236,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 
 **ANALYSIS 경계.** 판세 분석은 게임 권위와 분리된 보조 Consumer이므로 MVP에서 실행하지 않아도 투표·착수·결과의 핵심 가치는 유지된다. 이벤트·Board Snapshot·game_id+move_no 계약을 먼저 보존해 두면 독립 Consumer를 추가할 수 있으며, 분석 실패·지연·stale 결과가 게임 진행을 막지 않는 원 목표 구조로 확장할 수 있다.
 
+<a id="section-8"></a>
+
 ## 8. 구현 순서와 First Success Milestone
 
 | **Milestone**             | **선행 조건**            | **완료 상태**                                                      | **다음 단계가 얻는 것**           |
@@ -239,6 +250,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 | M5 First Success          | M3·M4                    | Guest/Member → 방 → 투표 → Move → Result → 대기방 E2E 1회 성공     | 기능 안정화와 부하·장애 Baseline  |
 | M6 MVP Complete           | M5                       | Must 기능·검증·Evidence Gate 통과                                  | Go/No-Go와 Technical Freeze       |
 
+<a id="section-8-1"></a>
+
 ### 8.1 병렬화 원칙
 
 - Network와 Guest Baseline이 닫히면 Kubernetes, DB·Storage, CI/CD·관측성을 서로 기다리지 않고 병렬 진행한다.
@@ -248,6 +261,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 - 각 담당자는 자신의 Ansible Role과 Component Validation을 함께 만든다.
 
 - 통합 Gate에서만 Provider와 Consumer가 공동 확인하고, E2E·장애·복구·부하는 네 명이 함께 수행한다.
+
+<a id="section-9"></a>
 
 ## 9. 핵심 검증과 Evidence 설계
 
@@ -269,6 +284,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 
 원 목표의 F-01과 F-05는 이중 LB·MaxScale의 자동 우회를 전제로 하지만 MVP에서는 같은 성공 기준을 사용할 수 없다. MVP 변형 시험은 장애를 숨기지 않고 감지시간, 포트별 영향, 수동 복구시간과 복구 순서를 측정한다. FD-03은 LB-01·MaxScale-01·CP-03·Harbor가 함께 중단되는 MVP의 핵심 복합 장애이므로 FD-02와 함께 대표 시험으로 수행한다.
 
+<a id="section-9-1"></a>
+
 ### 9.1 Evidence 원칙
 
 - 모든 시험은 Run ID, 시작·주입·복구·완료 시각과 동일 기준시계를 사용한다.
@@ -280,6 +297,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 - 측정값은 실제 환경에서 얻은 값으로 동결하며 사전 문서의 시작값을 성과로 쓰지 않는다.
 
 - Raw Evidence는 외부 loadgen 별도 Disk에 보존하고 Git에는 요약·Checksum·위치를 기록한다.
+
+<a id="section-10"></a>
 
 ## 10. WBS·선후관계·Critical Path
 
@@ -301,6 +320,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 
 일정 연결은 W-01~03을 8월 27~30일, W-04~08을 8월 31일~9월 3일, W-09를 9월 4~10일, W-10을 9월 11~16일에 배치한다. 병렬 작업도 완료 Gate를 넘기지 못하면 합류점 이후 주 경로를 지연시키므로, “필수 작업”과 “현재 시점의 주 경로”를 구분해 관리한다.
 
+<a id="section-11"></a>
+
 ## 11. 4인 역할·Provider·Consumer
 
 | **담당자** | **Owner 영역**                                 | **주요 제공물**                                                                | **주요 소비물**                        | **수동 VM 담당** |
@@ -309,6 +330,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 | 정태훈     | Kubernetes·서비스 플랫폼·Application 인수/통합 | Cluster·Calico·Gateway·Redis Manifest·Argo CD·Application Desired State        | Network·DB Endpoint·Registry·관측 경로 | Server-01        |
 | 김상희     | DB·Storage·Backup/DR                           | MariaDB·MaxScale·NFS·Redis 영속/복구 기준·Backup/Restore                       | Network·K8s PVC 소비 계약              | Server-02        |
 | 최유준     | Observability·CI/CD·Test Support               | Jenkins·Harbor·CI·Prometheus·Grafana·Loki·Alloy·Alertmanager                   | Cluster·App Metric/Log·DB/NFS Exporter | Server-03        |
+
+<a id="section-11-1"></a>
 
 ### 11.1 검증 책임
 
@@ -329,6 +352,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 
 이 표는 시간 단위 확정치가 아니라 역할 부하의 상대 비교다. 날짜별 개인 Task와 공수는 MVP 실행·협업 실시설계에서 확정하되, 초기 Network 병목과 통합기 서비스 플랫폼 집중을 먼저 완화하도록 공동 지원 순서를 정한다.
 
+<a id="section-12"></a>
+
 ## 12. 실행 일정·동결·Go/No-Go
 
 | **기간**         | **목표**                                                                                           | **완료 기준**                                                          |
@@ -343,6 +368,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 | 9월 16일         | Technical Freeze                                                                                   | 완료·검증된 구조만 동결                                                |
 | 9월 17~23일      | 문서·발표·Demo·리허설·질의 대비                                                                    | 실제 결과와 증거 반영                                                  |
 
+<a id="section-12-1"></a>
+
 ### 12.1 협업 운영
 
 - 팀은 같은 공간에서 하루 8시간 작업하므로 매일 15분 정례 Integration 회의는 두지 않는다.
@@ -353,6 +380,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 
 - Technical Freeze 이후에는 치명적 Bug Fix 외 신규 기능·구조 변경을 중단한다.
 
+<a id="section-13"></a>
+
 ## 13. MVP 완료 Gate
 
 | **Gate**      | **필수 완료 조건**                                                       | **실패 판정**                                       |
@@ -362,6 +391,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 | 인프라        | 16VM, CP3·Worker2, LB1·MaxScale1, DB2, Redis·NFS·CI/CD·관측성 연결       | Common Endpoint 또는 핵심 Dependency 불통           |
 | 자동화        | 수동 기반 이후 주요 Role 실행, 재실행·부분 실패·Drift 복원 증거          | Playbook 0만 있고 Component/Integration Gate 미통과 |
 | 검증·Evidence | 핵심 Test 완료, 실제 측정값·Raw Evidence·Run ID·Checksum 확보            | 근거 없는 수치, 필수 시험 또는 원본 증거 누락       |
+
+<a id="section-13-1"></a>
 
 ### 13.1 Functional Freeze
 
@@ -375,6 +406,8 @@ MVP에서 10.1.93.90은 LB-01이 고정 보유하는 공통 서비스 주소다.
 
 Should와 Could 항목의 미완료는 MVP 완료를 막지 않는다. Must 기능 또는 핵심 검증이 실패하면 화면 시연이 가능해도 MVP 완료로 판정하지 않는다.
 
+<a id="section-14"></a>
+
 ## 14. 원 목표 구조 확장 경로
 
 | **확장 대상** | **MVP**                 | **원 목표**            | **추가 작업**                                                                           | **Application·Data 영향**                  |
@@ -384,6 +417,8 @@ Should와 Could 항목의 미완료는 MVP 완료를 막지 않는다. Must 기�
 | ANALYSIS      | 이벤트·식별 계약만 보존 | 독립 Consumer Workload | 분석 Pod·모델/API, Redis Streams·Consumer Group, 재시도·DLQ, stale 격리, 분석 부하 시험 | 게임 권위 변경 없음, 데이터 Migration 없음 |
 | 장애 검증     | 대표 시나리오           | 원 목표 Matrix         | LB·MaxScale Pair, ANALYSIS, 관련 Physical FD 재검증                                     | 기존 Test 확장                             |
 | 자동화        | 단일 인스턴스 Role      | HA 인스턴스 포함       | Inventory Host·Variable·Template·Validation 추가                                        | Role 전면 재작성 없음                      |
+
+<a id="section-14-1"></a>
 
 ### 14.1 Go/No-Go 기준
 
@@ -397,6 +432,8 @@ Should와 Could 항목의 미완료는 MVP 완료를 막지 않는다. Must 기�
 
 > **No-Go 원칙** 조건 하나라도 충족하지 못하면 MVP를 최종 구현 구조로 동결한다. 원 목표 구조를 일부만 추가한 상태를 전체 완료처럼 발표하지 않는다.
 
+<a id="section-15"></a>
+
 ## 15. 리스크·제약·주장 경계
 
 | **리스크·제약**                   | **영향**                                      | **완화·기록 원칙**                                                     |
@@ -409,6 +446,8 @@ Should와 Could 항목의 미완료는 MVP 완료를 막지 않는다. Must 기�
 | Windows 방화벽 비활성화           | 교육장 Host 보호 계층 제한                    | Guest Firewall·NetworkPolicy를 유지하고 환경 전제로 증적한다.          |
 | ANALYSIS 제외                     | AI 판세·분석 부하·stale 시험 미실시           | 이벤트·식별 계약을 보존하고 원 목표 확장으로 명시한다.                 |
 | 일정 지연                         | 검증·발표 기간 침식                           | Could→Should→원 목표 확장 순으로 미루고 Must·핵심 Evidence를 보호한다. |
+
+<a id="section-15-1"></a>
 
 ### 15.1 금지하는 주장
 
@@ -424,9 +463,13 @@ Should와 Could 항목의 미완료는 MVP 완료를 막지 않는다. Must 기�
 
 - 미완료 원 목표 확장과 2차 프로젝트 요소를 현재 구현 성과에 포함하지 않는다.
 
+<a id="section-16"></a>
+
 ## 16. 최종 기획안·실시설계 인계 및 완료 판정
 
 이 절은 내부 작업 번호를 넘기는 통제표가 아니라, 확장 호환형 MVP 판단을 전체 프로젝트 설명과 실제 실행 문서로 이어 주는 경계를 정의한다. 최종 프로젝트 기획안은 왜 이 범위와 구조를 선택했는지 설명하고, 실행·협업 실시설계는 누가 어떤 입력을 받아 어떤 절차와 증거로 완료할지를 작업 가능한 수준으로 구체화한다.
+
+<a id="section-16-1"></a>
 
 ### 16.1 최종 기획안으로 인계
 
@@ -438,6 +481,8 @@ Should와 Could 항목의 미완료는 MVP 완료를 막지 않는다. Must 기�
 | 일정          | Functional Freeze·Go/No-Go·Technical Freeze와 결과물 기간                       |
 | 검증          | 핵심 Test·측정값·Evidence 계획과 실제 결과 구분                                 |
 | 한계          | 단일 LB·MaxScale, NFS·Harbor·Controller SPOF, 관측 Local Storage, ANALYSIS 제외 |
+
+<a id="section-16-2"></a>
 
 ### 16.2 MVP 실행·협업 실시설계로 인계
 
@@ -452,6 +497,8 @@ Should와 Could 항목의 미완료는 MVP 완료를 막지 않는다. Must 기�
 | 협업 환경            | GitHub Organization·Repository·Project·Issue·PR·Review·CODEOWNERS를 설정하고 Notion과의 역할을 분리한다. |
 
 협업 환경에서는 GitHub를 실제 변경과 Task의 Source of Truth로 사용하고, Notion에는 설명·가이드·회의·발표 자료를 둔다. 동일한 Task를 두 곳에 중복 관리하지 않는다. Repository 개수와 Directory, Issue·PR 전문, 명령어와 상세 Checklist는 이 문서에서 미리 고정하지 않고 실행·협업 실시설계와 협업 환경 구성 단계에서 확정한다.
+
+<a id="section-16-3"></a>
 
 ### 16.3 완료 판정
 
