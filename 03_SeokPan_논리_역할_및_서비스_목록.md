@@ -36,6 +36,8 @@
 
 03의 목표는 마이크로서비스 수를 결정하는 것이 아니다. ROOM, GAME, VOTE, ANALYSIS가 서로 다른 역할로 정의되어도 1차 구현에서는 하나의 Backend 애플리케이션 안의 모듈로 구현될 수 있다. 반대로 후속 기술·물리 설계에서 구조적 필요가 확인되면 실행 단위를 분리할 수 있다.
 
+<a id="section-1-references"></a>
+
 ### 기준 문서
 
 - 01 서비스 요구사항 및 기능 명세 기준서: 사용자·Room·Game·Vote·AI 판세 분석·저장·복구 규칙의 기준
@@ -187,6 +189,7 @@ STATE는 비즈니스 결정을 내리지 않는다. 예를 들어 Team 변경 �
 
 | **상황**       | **권위 판단**                   | **상태/기록 위치**                                                        |
 |----------------|---------------------------------|---------------------------------------------------------------------------|
+| Guest 재접속   | IDENTITY + REALTIME + ROOM/GAME | GuestSession·Participant → STATE                                          |
 | Team·Ready     | ROOM                            | 활성 Room 상태 → STATE                                                   |
 | 현재 Turn      | GAME                            | 활성 Game 상태 → STATE                                                   |
 | 현재 Vote      | VOTE                            | 활성 Turn 집계 상태 → STATE                                              |
