@@ -4,16 +4,16 @@
 
 ## 목차
 
-[1. 문서 목적과 판단 범위](#section-1)  
-[2. 핵심 문제 정의](#section-2)  
-[3. 기술 선택 판단 기준](#section-3)  
-[4. 핵심 검증축과 지표](#section-4)  
-[5. 핵심 KPI와 진단 지표의 구분](#section-5)  
-[6. 성능·DR에 대한 결정](#section-6)  
-[7. Ansible로 개선할 대상](#section-7)  
-[8. 요구사항-문제-검증 추적](#section-8)  
-[9. 후속 단계 결정사항](#section-9)  
-[10. 02 완료 판정](#section-10)  
+1. [문서 목적과 판단 범위](#section-1)  
+2. [핵심 문제 정의](#section-2)  
+3. [기술 선택 판단 기준](#section-3)  
+4. [핵심 검증축과 지표](#section-4)  
+5. [핵심 KPI와 진단 지표의 구분](#section-5)  
+6. [성능·DR에 대한 결정](#section-6)  
+7. [Ansible로 개선할 대상](#section-7)  
+8. [요구사항-문제-검증 추적](#section-8)  
+9. [후속 단계 결정사항](#section-9)  
+10. [02 완료 판정](#section-10)  
 
 <a id="section-1"></a>
 
@@ -76,7 +76,7 @@ CPU 80%나 명령 수 감소 자체는 프로젝트 성공을 뜻하지 않는�
 
 | **핵심 검증지표** | **보조 진단지표** |
 | --- | --- |
-| 동시성 오류 건수<br>Vote 처리량·p95/p99 지연·오류율<br>Backend 장애 복구시간<br>RTO/RPO<br>수동 대비 Ansible 구축·재구축시간 | CPU·Memory·Disk·Network<br>Backend별 요청·연결 분포<br>동시 실시간 연결 수(예시: WebSocket 연결 수)<br>Active Room/Game 재연결 성공률<br>AI 판세 분석 처리시간·실패율<br>stale 분석 결과 현재 상태 오반영 건수<br>분석 실행 중 게임 핵심 경로 지연 변화<br>Playbook OK/Changed/Failed |
+| 동시성 오류 건수<br>Vote 처리량·p95/p99 지연·오류율<br>Backend 장애 복구시간<br>RTO/RPO<br>수동 대비 Ansible 구축·재구축시간 | CPU·Memory·Disk·Network<br>Backend별 요청·연결 분포<br>동시 실시간 연결 수(예시: WebSocket 연결 수)<br>Active Room/Game<br>재연결 성공률<br>AI 판세 분석 처리시간·실패율<br>stale 분석 결과 현재 상태 오반영 건수<br>분석 실행 중 게임 핵심 경로 지연 변화<br>Playbook OK/Changed/Failed |
 
 > **측정 원칙** 명령 수 감소율은 명령 묶음에 따라 달라지므로 보조 자료로만 사용한다. 시간, 재현성, 실패율, 직접 개입을 중심으로 비교한다.
 
@@ -113,7 +113,7 @@ Backup/Restore를 반드시 구현하는 최소선으로 둔다. 영속 저장�
 
 | **Must** | **Should** | **Could** |
 | --- | --- | --- |
-| 서버 기본환경<br>필수 Middleware 설정<br>애플리케이션 배포 기반·Health 검증<br>장애 재구축 필수 절차 | Backup·Restore 복구 후 자동 검증<br>설정 변경 배포 후 상태 확인 | 복잡한 자동 Rollback<br>CI/CD 연계 자동 장애감지 후 완전 자동복구 고도화<br>DR orchestration |
+| 서버 기본환경<br>필수 Middleware 설정<br>애플리케이션 배포 기반·Health 검증<br>장애 재구축 필수 절차 | Backup·Restore<br>복구 후 자동 검증<br>설정 변경<br>배포 후 상태 확인 | 복잡한 자동 Rollback<br>CI/CD 연계<br>자동 장애감지 후 완전 자동복구<br>고도화 DR orchestration |
 
 Idempotency는 독립 포트폴리오 KPI보다 구현 품질 검증으로 둔다. 1차 실행의 Changed와 2차 실행의 불필요한 Changed를 비교하고 Failed Host/Task를 기록한다.
 
@@ -158,4 +158,4 @@ Idempotency는 독립 포트폴리오 KPI보다 구현 품질 검증으로 둔�
 | 02-3 핵심 검증축         | 5개 확정    |
 | 02-4 Ansible 개선 대상   | 4개 축 확정 |
 
-> **다음 단계 진입 조건 본 문서와 서비스 요구사항 및 기능 명세 기준서를 기준자료로 고정한 뒤 03 논리 역할·서비스 목록 단계에서 각 문제를 담당할 역할과 책임 경계를 정의한다. 전체 논리 아키텍처와 관련 도식은 04 기술 비교·논리 아키텍처 단계에서 완성한다.**
+> **다음 단계 진입 조건** 본 문서와 서비스 요구사항 및 기능 명세 기준서를 기준자료로 고정한 뒤 03 논리 역할·서비스 목록 단계에서 각 문제를 담당할 역할과 책임 경계를 정의한다. 전체 논리 아키텍처와 관련 도식은 04 기술 비교·논리 아키텍처 단계에서 완성한다.
