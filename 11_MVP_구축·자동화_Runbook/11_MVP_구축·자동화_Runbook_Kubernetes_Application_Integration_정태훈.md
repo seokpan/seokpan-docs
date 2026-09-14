@@ -502,7 +502,9 @@ replicas: 1
 production Settings 계약 정합
 ```
 
-Image Digest pinning은 현재 Kustomize 버전의 렌더 결과를 기준으로 적용한다. 예:
+Image Digest pinning은 현재 Kustomize 버전의 렌더 결과를 기준으로 적용한다. Kustomize `images` 항목은 image name/tag뿐 아니라 digest 교체도 지원한다.
+
+예:
 
 ```yaml
 images:
@@ -658,15 +660,30 @@ Worker 분산 여부 자체를 성공 기준으로 임의 확정하지 않는다
 
 HPA는 `Deployment.spec.replicas`를 변경한다. 반면 Argo CD `selfHeal`이 정적 `replicas` 값을 계속 소유하면 HPA와 Argo CD가 같은 필드를 두고 경쟁할 수 있다.
 
-HPA를 Merge하기 전에 프로젝트는 아래 중 하나의 명시적 계약을 선택하고 실제 Diff/Sync 동작을 검증해야 한다.
+HPA를 Merge하기 전에 프로젝트는 아래 방식 중 하나를 명시적으로 선택하고 실제 Diff/Sync 동작을 검증해야 한다.
 
 ```text
-A. HPA 활성 구간에서는 Deployment Desired State에서 정적 replicas 소유를 제거
+A. HPA 활성 구간에서는 Deployment Desired State에서 정적 replicas 소유를 제거하고 실제 Render/Apply 동작을 검증
 또는
-B. Argo CD Application에서 /spec/replicas 차이를 HPA 소유 필드로 취급하도록 ignoreDifferences 등 명시적 예외 적용
+B. apps-backend Application에 /spec/replicas ignoreDifferences를 정의하고,
+   Sync 단계에서도 해당 예외를 존중하도록 RespectIgnoreDifferences=true를 함께 적용
 ```
 
-어떤 방식을 사용할지는 현재 Argo CD/Kustomize 구조와 검증 결과를 기준으로 결정한다. 계약 없이 HPA만 추가하지 않는다.
+방식 B 개념 예:
+
+```yaml
+spec:
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
+```
+
+`ignoreDifferences`만 설정하면 기본적으로 Diff 계산과 Sync 적용이 동일하게 처리된다고 가정하지 않는다. 현재 Argo CD 구조와 live Deployment 상태에서 실제 동작을 검증한 뒤 확정한다.
 
 ### 10.3 구현 순서
 
@@ -862,7 +879,7 @@ Argo CD UI에서 임의 Revision을 장기 Source of Truth로 만들지 않고 G
 
 Observability Platform 자체의 구축·운영은 Delivery / Observability 담당 영역이다. Kubernetes & Application Integration은 Application Runtime이 관측 대상이 될 수 있도록 Application 계약을 제공한다.
 
-### 14.1 현재 자산
+### 14.1 Metrics 현재 자산
 
 현재 GitOps에는 Application용 pending 자산이 존재한다.
 
@@ -874,7 +891,7 @@ observability/servicemonitor-app.yaml.pending
 
 Current-State 정합화는 `seokpan-gitops#86`에서 추적한다.
 
-### 14.2 활성화 전 실제 대조
+### 14.2 Metrics 활성화 전 실제 대조
 
 문서에 특정 과거 selector 값을 고정해서 신뢰하지 않고 실행 직전 실제 Backend Service와 pending ServiceMonitor를 대조한다.
 
@@ -900,7 +917,7 @@ observability/servicemonitor-app.yaml.pending
 - Service Port `http`와 ServiceMonitor endpoint 일치
 - Delivery / Observability 담당 Review
 
-### 14.3 활성화 순서
+### 14.3 Metrics 활성화 순서
 
 ```text
 Backend Runtime Running
@@ -915,9 +932,32 @@ Backend Runtime Running
 → Prometheus Target 확인
 ```
 
-Observability Platform Running만으로 Application Observability Integration 완료를 선언하지 않는다.
+Observability Platform Running만으로 Application Metrics Integration 완료를 선언하지 않는다.
 
-Metric Query·Dashboard·Alert Rule·로그 수집 상세·최종 Evidence는 12 또는 Delivery / Observability 역할 문서에서 관리한다.
+### 14.4 Application Log 연결
+
+현재 Alloy는 Kubernetes Pod를 discovery하고 다음 라벨을 Loki 전달 경로에 부여하도록 구성되어 있다.
+
+```text
+namespace
+pod
+container
+node_name
+```
+
+Backend/Frontend Runtime 활성화 후 최소 확인 범위:
+
+```text
+application Namespace Pod가 Alloy discovery 대상에 포함됨
+Container stdout/stderr 로그가 Loki 경로로 수집됨
+namespace / pod / container / node_name 라벨이 실제 Pod와 일치
+Backend의 SEOKPAN_INSTANCE_ID와 Pod Identity를 혼동하지 않음
+Credential / 전체 DB URL / Secret 값이 Application Log에 노출되지 않음
+```
+
+Alloy/Loki Platform Running과 실제 Application Log 수집 성공은 별도로 판정한다.
+
+Metric Query·Log Query·Dashboard·Alert Rule·최종 Evidence는 12 또는 Delivery / Observability 역할 문서에서 관리한다.
 
 ---
 
@@ -937,6 +977,7 @@ Metric Query·Dashboard·Alert Rule·로그 수집 상세·최종 Evidence는 12
 | Route 실패 | HTTPRoute Condition / Service | Route Desired State 수정 또는 Revert |
 | 2 Replica 전용 장애 | Shared State / Runner / Realtime | 검증된 1 Replica Revision으로 복귀 후 분석 |
 | Metrics 미수집 | `/metrics` / Service label / ServiceMonitor / Target | Application·Observability 경계 순차 확인 |
+| Logs 미수집 | Pod discovery / Alloy / Loki / labels | Application Pod와 수집 경로 순차 확인 |
 | HPA와 Argo 반복 Diff | Replica Ownership 계약 | HPA/Argo 소유권 설정 원복 또는 정합화 |
 
 장애 복구의 공식 측정값과 Evidence는 12에서 관리한다.
@@ -1042,6 +1083,7 @@ Log / Screenshot / Run ID
 - Frontend → HTTPRoute → HTTPS/WSS 순서가 명확하다.
 - GitOps 변경과 Cluster 직접 변경의 경계가 명확하다.
 - ConfigMap/Secret 변경 시 실행 중 Pod 반영 경계를 명확히 한다.
+- Application Metrics와 Log 연결 경계를 모두 다룬다.
 - 실패 시 중단·복구·Rollback 경로가 있다.
 - 09와 책임 중복이 없고 12의 Test/Measurement/Evidence를 침범하지 않는다.
 - Current-State stale 내용은 구현 Repository Issue/PR로 분리 추적한다.
