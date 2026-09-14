@@ -26,6 +26,8 @@
 - [`MVP_IMPLEMENTATION_BASELINE.md`](../MVP_IMPLEMENTATION_BASELINE.md)
 - `seokpan-app`, `seokpan-gitops`, `seokpan-infra`의 최신 `main`, Issue, PR, Runtime Evidence
 
+현재 상태는 계속 변하므로 실제 Test 실행 직전에는 관련 Repository의 최신 Revision과 열린 Issue/PR을 다시 확인한다.
+
 ---
 
 ## 2. 상위 검증축과 역할 연결
@@ -41,6 +43,22 @@
 | M-05 | Ansible 개선 | 수동 대비 구축·재구축 시간·직접 개입·실패 Task 비교 | Network/Infra Automation 담당과 Cross-role |
 
 본 역할은 M-04/M-05의 주 측정 Owner가 아니다. 다만 Application Consumer가 정상 복원되었는지, 복구 후 서비스가 다시 통합되는지 확인하는 Cross-role Evidence를 제공한다.
+
+### 2.1 추가 검증축
+
+02의 M-01~M-05 외에도 07/09/11에서 본 역할이 직접 소비하는 다음 실행 검증을 별도로 추적한다.
+
+```text
+Application Artifact Traceability
+GitOps Sync / Self-Heal / Rollback
+Frontend Runtime
+HTTPRoute / HTTPS / WSS
+Browser E2E
+Application Metrics / Logs
+Config / Secret / CA Consumer 반영
+```
+
+이 항목들은 M-01~M-05를 대체하지 않으며 MVP Acceptance를 구성하는 통합 Evidence다.
 
 ---
 
@@ -119,6 +137,12 @@ Loki Log ingestion
 
 CPU 80%와 같은 단일 자원 값 자체를 프로젝트 성공 기준으로 사용하지 않는다.
 
+### 3.4 현재 MVP 범위를 우선한다
+
+02에는 AI 판세 분석이 존재하는 조건의 영향을 함께 확인한다는 원칙이 있지만, 현재 1차 MVP에서는 별도 ANALYSIS Runtime을 배포하지 않는다.
+
+따라서 현재 12의 M-02 핵심 PASS/FAIL은 **Vote/Game 핵심 경로**를 기준으로 한다. 향후 ANALYSIS가 실제 Runtime에 포함되면 동일 부하 조건에서 분석 비활성/활성 Before→After를 별도 Test Run으로 추가한다.
+
 ---
 
 ## 4. Evidence 규격
@@ -138,7 +162,7 @@ Kubernetes Context / Namespace
 관련 Issue / PR
 선행조건 상태
 실행 결과
-PASS / FAIL / BLOCKED
+PASS / FAIL / BLOCKED / NOT TESTED
 실패 원인 또는 중단 이유
 수동 개입 단계
 후속 조치
@@ -147,6 +171,7 @@ PASS / FAIL / BLOCKED
 가능하면 다음 Evidence를 함께 저장한다.
 
 ```text
+실행 명령 또는 Runbook 참조
 명령 출력
 Kubernetes Object Snapshot
 Argo CD Sync / Health
@@ -154,6 +179,7 @@ Metric Export
 Log Query 결과
 Load Generator 결과
 Screenshot
+Export 파일 경로
 Checksum
 DB Revision
 Replication 상태
@@ -161,6 +187,7 @@ Redis 상태
 HTTP / WSS 결과
 Browser E2E 결과
 Recovery Timeline
+RTO / RPO — 해당 Test에서 측정하는 경우
 ```
 
 ### 4.1 Evidence 금지 항목
@@ -192,6 +219,17 @@ KAI-RUN-01-20260914-2030-a1b2c3d
 
 Run ID는 Evidence 디렉터리, Issue Comment, 측정 결과 파일에서 동일하게 사용한다.
 
+### 4.3 실패 Run 보존
+
+FAIL/BLOCKED Run을 수정하여 PASS 결과로 덮어쓰지 않는다.
+
+```text
+실패 Run 보존
+→ 원인/조치 기록
+→ 새 Run ID 발급
+→ 동일 Test Case 재실행
+```
+
 ---
 
 ## 5. Dependency Evidence 재사용 기준
@@ -218,7 +256,7 @@ Secret / CA 변경
 Cluster 재구축
 장애/복구 후
 실제 Consumer 연결 최초 수행
-이전 Evidence의 대상 Revision과 현재 Revision 불일치
+이전 Evidence 대상 Revision과 현재 Revision 불일치
 ```
 
 Dependency Evidence 재사용은 “현재 Application Integration까지 검증됨”을 의미하지 않는다.
@@ -254,11 +292,12 @@ Dependency Evidence 재사용은 “현재 Application Integration까지 검증�
 
 ## 7. Test Case Traceability Matrix
 
-| Test Case | 상위 검증축 | 09 Gate | 11 연결 | 현재 상태 |
+| Test Case | 상위 검증축/목적 | 09 Gate | 11 연결 | 현재 상태 |
 | --- | --- | --- | --- | --- |
 | KAI-PRE-01 Dependency Snapshot | 공통 | A~C | 4~6 | Defined |
-| KAI-MIG-01 Migration Gate | M-04 연계 / Runtime 선행 | C→D | 7 | Not Tested |
-| KAI-RUN-01 Backend 1 Replica Provider Runtime | 공통 / M-03 선행 | D | 8 | Blocked |
+| KAI-DEL-01 Artifact→GitOps→Argo Traceability | CI/CD Integration | B~D | 5 / 8 / 13 | Blocked |
+| KAI-MIG-01 Migration Gate | Runtime/Data Integrity 선행 | C→D | 7 | Not Tested |
+| KAI-RUN-01 Backend 1 Replica Provider Runtime | M-03 선행 / Runtime | D | 8 | Blocked |
 | KAI-RUN-02 Backend 2 Replica Shared Runtime | M-01 / M-03 | E | 9 | Blocked |
 | KAI-CON-01 동시성 정확성 | M-01 | E~G | 9 | Blocked |
 | KAI-PERF-01 Vote 단계 부하 | M-02 | E~G | 9~10 | Blocked |
@@ -267,8 +306,8 @@ Dependency Evidence 재사용은 “현재 Application Integration까지 검증�
 | KAI-FE-01 Frontend Runtime | 통합 | E | 11 | Blocked |
 | KAI-RT-01 HTTPRoute / HTTPS / WSS | 통합 / M-03 | F | 12 | Not Implemented |
 | KAI-E2E-01 Browser First Success | M-01 / M-03 | F~G | 11~12 | Blocked |
-| KAI-CD-01 Argo Self-Heal | 공통 | G | 13 | Planned |
-| KAI-CD-02 Git Revert Rollback | M-03 | G | 13 / 17 | Planned |
+| KAI-CD-01 Argo Self-Heal | GitOps | G | 13 | Planned |
+| KAI-CD-02 Git Revert Rollback | M-03 / GitOps | G | 13 / 17 | Planned |
 | KAI-OBS-01 Application Metrics | C-06 | G | 14 | Blocked |
 | KAI-OBS-02 Application Logs | C-06 | G | 14 | Blocked |
 | KAI-CFG-01 Config / Secret / CA Consumer 반영 | 공통 | D~G | 16~17 | Planned |
@@ -316,11 +355,74 @@ Application Runtime 시험 전에 선행 Platform과 작업 대상 Revision을 �
 
 ---
 
+## KAI-DEL-01 — Application Artifact → GitOps → Argo Traceability
+
+### 목적
+
+Application Source Commit에서 생성된 Image가 Harbor Digest로 식별되고, GitOps Desired State 변경을 거쳐 Argo CD와 실제 Pod까지 같은 Artifact로 연결되는지 검증한다.
+
+Jenkins/Harbor의 구축 Owner는 Delivery 영역이지만, 정태훈 역할은 Application Consumer와 GitOps Desired State의 연결을 검증한다.
+
+### Traceability Chain
+
+```text
+App main Commit
+→ Jenkins Run
+→ Harbor Tag
+→ Harbor Digest
+→ GitOps PR
+→ GitOps main Revision
+→ Argo Sync
+→ Deployment
+→ Pod ImageID
+```
+
+### 측정/기록
+
+- App Commit SHA
+- Jenkins Run ID/시작/종료
+- Build/Push 소요시간 — 제공 가능한 경우
+- Harbor Tag/Digest
+- GitOps PR 번호/Commit
+- PR Merge 시각
+- Argo Sync/Healthy 시각
+- Pod Ready 시각
+- Pod ImageID
+
+### PASS
+
+- App Commit과 Jenkins Run이 연결된다.
+- Harbor Digest가 확인된다.
+- GitOps Desired State가 해당 Digest를 고정한다.
+- Argo CD가 해당 GitOps Revision을 Sync한다.
+- 실제 Pod ImageID가 승인된 Digest와 일치한다.
+- `latest` 또는 `git-pending`을 실제 Runtime Artifact로 사용하지 않는다.
+
+### FAIL
+
+- Commit→Digest 연결 불가
+- GitOps가 다른 Digest를 사용
+- Argo Sync 후 Pod가 다른 Image 실행
+- Artifact Evidence 누락으로 실행 Image를 식별할 수 없음
+
+### Evidence
+
+- Jenkins Run link
+- Harbor digest evidence
+- GitOps PR/Commit
+- Argo Sync/Health
+- Pod ImageID
+- Build/Push/Sync/Ready Timeline
+
+---
+
 ## KAI-MIG-01 — 승인형 Migration Gate
 
 ### 목적
 
 Backend Runtime을 시작하기 전에 실제 DB Revision과 승인된 Migration Action이 일치하고, 수행 후 데이터/복제 상태가 정상인지 검증한다.
+
+이 Test Case는 **Schema Migration Runtime Gate**이며 M-04 DR 자체를 대신하지 않는다.
 
 ### 선행조건
 
@@ -385,7 +487,7 @@ Production Backend가 Memory Provider 없이 실제 MariaDB·Redis Provider를 �
 ### 선행조건
 
 - A-10 Production Provider Integration 완료
-- A-10 새 main Image Acceptance 완료
+- KAI-DEL-01의 Backend Artifact Traceability 성립
 - KAI-MIG-01 PASS
 - GitOps #90 Origin JSON 계약 완료
 - Runtime Secret / CA / Redis 준비
@@ -573,15 +675,12 @@ PASS 조건:
 - 단계별 처리량·p95/p99·오류율이 누락 없이 측정된다.
 - M-01 정확성 조건을 깨지 않는다.
 - 병목이 발생한 단계와 진단 지표를 식별할 수 있다.
-- AI/비핵심 작업이 존재하는 조건에서도 게임 핵심 경로 영향이 측정된다.
 
-사전에 특정 개선률을 약속하지 않는다.
+현재 1차 MVP에서 별도 ANALYSIS Runtime은 배포하지 않으므로 AI 판세 분석 조건을 현재 PASS의 필수 전제로 두지 않는다. 향후 ANALYSIS가 실제 Runtime에 포함되면 동일 부하 Before→After를 별도 추가한다.
 
 ### Before/After
 
 구조 변경이 실제로 발생한 경우에만 동일 조건으로 비교한다.
-
-예:
 
 ```text
 Static Replica Baseline
@@ -705,9 +804,12 @@ CPU Target·Replica 범위 자체의 적절성은 실제 단계 부하 결과를
 
 ### 선행조건
 
+- 09의 Critical Path 기준 Backend Scale-out / HPA·Workload Distribution 단계 판정 완료
 - Frontend Image Digest 확보
-- Container Runtime Smoke PASS
+- Container Runtime Smoke 확인
 - `apps-frontend` Child Application 정상
+
+HPA가 일정상 Deferred되는 경우에는 이를 PASS로 가장하지 않고 별도 Go/No-Go 결정과 근거를 남긴 뒤 Frontend 단계로 진행한다.
 
 ### 측정/기록
 
@@ -860,7 +962,7 @@ DB Schema Migration은 단순 Git Revert 대상이 아니다. 이 Test Case는 A
 
 ```text
 문제 Revision 인지 시각
-Revert PR 생성/승인/merge 시각
+Revert PR 생성/승인/Merge 시각
 Argo Sync 시각
 Pod Ready 시각
 서비스 정상화 시각
@@ -895,7 +997,7 @@ Application ServiceMonitor는 현재 `.pending`이며 GitOps #91에서 Runtime �
 
 ```text
 ServiceMonitor 존재
-Service label / selector
+Service metadata.labels / ServiceMonitor selector
 Prometheus Target State
 Target scrape error
 Application metric sample
@@ -905,14 +1007,14 @@ Pod/instance label
 ### PASS
 
 - Prometheus Target = UP.
-- ServiceMonitor가 의도한 Backend Service를 선택한다.
+- ServiceMonitor가 의도한 Backend Service의 `metadata.labels`를 선택한다.
 - 실제 Application Metric이 조회된다.
 - Platform Prometheus Running을 Application Metrics 성공으로 대신하지 않는다.
 
 ### FAIL
 
 - Target 미생성
-- selector 불일치
+- selector/metadata.labels 불일치
 - Target Down
 - `/metrics` 미제공
 
@@ -1081,38 +1183,63 @@ Pod Ready
 서비스 정상화
 ```
 
+## 9.4 Artifact Delivery
+
+```text
+Before: App Commit 확정
+Change: Build / Push / GitOps Update
+After: Argo Sync / Pod Ready
+```
+
+비교/기록:
+
+```text
+Build 시간
+Push 시간
+GitOps PR/Merge 시간
+Argo Sync 시간
+Pod Ready 시간
+Commit → Digest → Pod Traceability
+```
+
 ---
 
 # 10. Test 실행 순서
 
-현재 Critical Path에 맞춘 권장 순서:
+09의 Critical Path를 우선한다.
 
 ```text
 KAI-PRE-01
+→ KAI-DEL-01 Backend Artifact
 → KAI-MIG-01
-→ KAI-RUN-01
-→ KAI-FE-01
-→ KAI-RUN-02
+→ KAI-RUN-01 Backend 1 Replica
+→ KAI-RUN-02 Backend 2 Replica
 → KAI-CON-01
 → KAI-PERF-01
 → KAI-REC-01
-→ KAI-HPA-01
-→ KAI-RT-01
-→ KAI-E2E-01
+→ KAI-HPA-01 HPA / Workload Distribution
+→ KAI-DEL-01 Frontend Artifact
+→ KAI-FE-01 Frontend Runtime
+→ KAI-RT-01 HTTPRoute / HTTPS / WSS
+→ KAI-E2E-01 Browser First Success
 → KAI-CD-01 / KAI-CD-02
 → KAI-OBS-01 / KAI-OBS-02
-→ Cross-role DR/Recovery
+→ KAI-CFG-01
+→ Cross-role KAI-DR-01
 ```
 
-실제 기능 구현 의존성에 따라 일부 비파괴 Test는 병행할 수 있지만 다음 순서는 깨지 않는다.
+실제 기능 구현 의존성에 따라 일부 비파괴 Test는 병행할 수 있다. 다만 다음 Gate는 깨지 않는다.
 
 ```text
 A-10 미완료 → Backend Runtime 실행 금지
 Backend 1 Replica 미검증 → 2 Replica/HPA 진행 금지
-2 Replica 공유 상태 미검증 → M-01/M-03 최종 판정 금지
+Backend 2 Replica Shared Runtime 미검증 → M-01/M-03 최종 판정 금지
+HPA가 미구현/Deferred인데 이를 PASS로 표시 금지
 Frontend/Backend Service 미준비 → Application HTTPRoute E2E 진행 금지
-Metrics Endpoint/Service label 미정 → ServiceMonitor 활성화 금지
+Metrics Endpoint/Service metadata label 미정 → ServiceMonitor 활성화 금지
 ```
+
+HPA가 일정/Go-No-Go 결정으로 Deferred되는 경우에는 해당 상태와 근거를 명시하고 Frontend 단계 진행 여부를 별도 결정한다. Deferred를 PASS로 기록하지 않는다.
 
 ---
 
@@ -1172,12 +1299,16 @@ PASS/FAIL Basis:
 
 Evidence:
 - Issue/PR:
+- Command/Runbook:
 - Log:
-- Metric:
+- Metric/Export:
 - Screenshot:
 - Snapshot/Checksum:
 
 Failure/Exception:
+- ...
+
+Manual Steps:
 - ...
 
 Cleanup/Rollback:
@@ -1203,8 +1334,9 @@ Kubernetes/Application Integration Evidence
 + Browser/E2E Evidence
 ```
 
-본 문서의 역할별 핵심 완료 조건:
+본 역할의 핵심 완료 조건:
 
+- Application Artifact `Commit → Digest → GitOps → Argo → Pod` Traceability
 - Migration Gate Evidence 존재
 - Backend 1 Replica 실제 Provider First Runtime PASS
 - Backend 2 Replica Shared Runtime PASS
@@ -1216,7 +1348,7 @@ Kubernetes/Application Integration Evidence
 - Browser E2E PASS
 - GitOps Self-Heal/Rollback Evidence
 - Application Metrics/Logs 실제 수집 Evidence
-- HPA는 구현되면 PASS Evidence, 미구현이면 명확한 Not Implemented/Not Tested 상태 유지
+- HPA는 구현되면 PASS Evidence, 미구현/Deferred면 명확한 상태와 근거 유지
 
 ---
 
@@ -1225,10 +1357,13 @@ Kubernetes/Application Integration Evidence
 본 12 문서 자체의 완료 기준:
 
 - 02의 M-01~M-05와 Traceability가 있다.
-- 09 Gate와 11 Runbook을 반복하지 않고 Test/Measurement/Evidence로 연결한다.
+- 07의 Commit→Digest→Healthy 및 Metric/Log/Evidence 원칙과 충돌하지 않는다.
+- 09 Critical Path와 Gate를 유지한다.
+- 11 Runbook을 반복하지 않고 Test/Measurement/Evidence로 연결한다.
 - 각 핵심 Test Case에 목적·측정값·PASS/FAIL·Evidence가 있다.
 - 실제 실행하지 않은 항목은 결과처럼 작성하지 않는다.
 - 성능 목표값·HPA 임계값·RTO/RPO를 근거 없이 만들지 않는다.
+- 현재 MVP에서 제외된 ANALYSIS Runtime을 현재 PASS의 필수조건으로 만들지 않는다.
 - Dependency Evidence 재사용과 Consumer 검증을 구분한다.
 - Cross-role Owner 경계가 명확하다.
 - Secret/Token/Private Key가 Evidence에 포함되지 않는다.
