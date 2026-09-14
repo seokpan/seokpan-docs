@@ -96,7 +96,7 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 - 현재 Release Image Digest 미확정
 - 필요한 Secret / ConfigMap 부재
 - Active Migration Job 존재
-- Migration 실패 또는 후검증 미완료
+- Migration Gate 실패 또는 후검증 미완료
 - Backend 1 Replica First Runtime 실패
 - Provider readiness 실패
 - GitOps Desired State와 실제 작업 대상 Revision 불일치
@@ -119,7 +119,7 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 | Backend → Redis Consumer | Not Tested |
 | DB Runtime/Migration Secret 공급 구조 | Implemented / Validated |
 | One-shot Migration 자산 | Implemented / Merged / Static+API Validated |
-| 실제 Migration | Not Tested |
+| 실제 Migration Gate 실행 | Not Tested |
 | A-10 Production Provider Integration | In Progress |
 | Backend `SEOKPAN_ALLOWED_ORIGINS` JSON 배열 계약 | Runtime 활성화 전 정합화 필요 (`seokpan-gitops#90`) |
 | Application HTTPRoute | Not Implemented |
@@ -319,7 +319,7 @@ Env:       SEOKPAN_DATABASE_CA_FILE=/etc/seokpan/pki/ca.crt
 
 CA 파일 존재·지문·서버 인증서 검증과 실제 Backend→MaxScale TLS 연결 성공은 서로 다른 결과로 본다.
 
-### 6.3 Migration 선행조건
+### 6.3 Migration Gate 선행조건
 
 Mutation Migration 전에 최소 다음이 충족되어야 한다.
 
@@ -359,7 +359,19 @@ kubectl get jobs -n application \
 
 `ACTIVE` 값이 있는 Job이 존재하면 새 Mutation Job을 생성하지 않는다.
 
-### 7.3 Read-only current Render
+### 7.3 DB Audit와 Action 선택
+
+Migration Action을 항상 `upgrade-head`로 가정하지 않는다.
+
+```text
+current        → Read-only Revision 확인
+stamp-baseline → 기존 Baseline Schema를 승인된 Revision으로 Stamp
+upgrade-head   → 승인된 Migration을 Head까지 적용
+```
+
+어떤 Action을 사용할지는 App #22의 DB Audit, 승인, 현재 Revision 결과를 기준으로 결정한다.
+
+### 7.4 Read-only current Render
 
 ```bash
 python3 apps/backend/migration/render-job.py \
@@ -368,14 +380,7 @@ python3 apps/backend/migration/render-job.py \
   --output /tmp/backend-migration-current.yaml
 ```
 
-### 7.4 Mutation Render
-
-지원 Mutation:
-
-```text
-stamp-baseline
-upgrade-head
-```
+### 7.5 Mutation Render
 
 예:
 
@@ -389,7 +394,7 @@ python3 apps/backend/migration/render-job.py \
 
 Approval Reference에는 Credential·DB URL·Secret Value를 기록하지 않는다.
 
-### 7.5 Kubernetes API Dry-run
+### 7.6 Kubernetes API Dry-run
 
 생성된 실행 파일을 변수로 지정한다.
 
@@ -398,9 +403,11 @@ RUN_YAML=/tmp/backend-migration-upgrade.yaml
 kubectl create --dry-run=server -f "$RUN_YAML"
 ```
 
+`current` Action을 실행하는 경우 `RUN_YAML`을 해당 Read-only Render 파일로 지정한다.
+
 Dry-run 성공은 실제 DB Migration 성공을 의미하지 않는다.
 
-### 7.6 실제 실행
+### 7.7 실제 실행
 
 모든 Gate가 충족된 경우에만 새 Job을 생성한다.
 
@@ -419,7 +426,7 @@ kubectl get jobs -n application \
 
 필요한 경우 해당 Job의 Pod/Log를 조회하되 Credential·전체 URL이 노출되지 않는지 주의한다.
 
-### 7.7 실행 후 확인
+### 7.8 실행 후 확인
 
 최소 확인 대상:
 
@@ -431,9 +438,11 @@ MaxScale Read/Write
 기존 데이터 보존
 ```
 
+Backend Runtime으로 넘어가기 위한 조건은 **승인된 Migration Gate 수행과 후검증 완료**다. 실제 Mutation이 필요한지 여부는 DB Audit 결과를 따른다.
+
 구체 PASS/FAIL 기준과 Evidence 형식은 12에서 관리한다.
 
-### 7.8 실패
+### 7.9 실패
 
 ```text
 Migration Failed
@@ -459,8 +468,8 @@ Backend 1 Replica는 실제 Provider Integration의 첫 Runtime Gate다.
 ### 8.1 선행조건
 
 - A-10 Production Provider Integration 완료
-- 현재 `main` 기준 Backend Image Digest 확보
-- 실제 Migration 완료 및 후검증
+- A-10 변경을 포함한 새 `main` Backend Image Acceptance 완료
+- 승인된 Migration Gate 수행 및 후검증 완료
 - `backend-db-runtime` Secret 준비
 - `seokpan-internal-ca` 준비
 - Redis Runtime 준비
@@ -503,8 +512,6 @@ images:
 ```
 
 ### 8.3 Merge 전 Render / API 검증
-
-`seokpan-gitops` Root에서 실행한다.
 
 ```bash
 cd <seokpan-gitops-repo-root>
@@ -580,7 +587,7 @@ Provider-aware Readiness
 
 - Backend 1 Replica Running
 - DB/Redis Provider 연결 정상
-- Migration 후검증 완료
+- Migration Gate 후검증 완료
 - Realtime/Runner가 Process-local Authority에 의존하지 않는 A-10 상태
 
 ### 9.2 GitOps Scale-out
@@ -637,30 +644,48 @@ Worker 분산 여부 자체를 성공 기준으로 임의 확정하지 않는다
 
 현재 Backend HPA와 Metrics Server 연계 Application 자산은 구현 완료 상태로 확인되지 않는다. 아래는 **Planned Runbook**이다.
 
+09에서 정한 순서를 유지하여, **Backend 2 Replica 수동 Scale-out 경로가 먼저 성립한 뒤 HPA로 넘어간다.**
+
 ### 10.1 선행조건
 
 - Backend 1 Replica 통합 성공
-- 가능하면 2 Replica 수동 Scale-out 경로 확인
+- Backend 2 Replica 수동 Scale-out 경로 검증 완료
 - Container Resource Request / Limit 결정
 - Metrics Server 또는 Resource Metrics 경로 준비
+- HPA와 Argo CD 사이의 `replicas` ownership 계약 확정
 
-### 10.2 구현 순서
+### 10.2 HPA / Argo CD Replica Ownership
+
+HPA는 `Deployment.spec.replicas`를 변경한다. 반면 Argo CD `selfHeal`이 정적 `replicas` 값을 계속 소유하면 HPA와 Argo CD가 같은 필드를 두고 경쟁할 수 있다.
+
+HPA를 Merge하기 전에 프로젝트는 아래 중 하나의 명시적 계약을 선택하고 실제 Diff/Sync 동작을 검증해야 한다.
+
+```text
+A. HPA 활성 구간에서는 Deployment Desired State에서 정적 replicas 소유를 제거
+또는
+B. Argo CD Application에서 /spec/replicas 차이를 HPA 소유 필드로 취급하도록 ignoreDifferences 등 명시적 예외 적용
+```
+
+어떤 방식을 사용할지는 현재 Argo CD/Kustomize 구조와 검증 결과를 기준으로 결정한다. 계약 없이 HPA만 추가하지 않는다.
+
+### 10.3 구현 순서
 
 ```text
 Resource Request / Limit 정의
 → Resource Metrics 경로 준비
+→ Replica Ownership 계약 확정
 → HPA Desired State 작성
-→ Kustomize 포함
+→ Kustomize / Argo Application 정합화
 → 정적/API 검증
 → GitOps PR
-→ Merge
+→ Review / Merge
 → Argo CD Sync
 → HPA 상태 확인
 ```
 
 CPU/Memory Target, `minReplicas`, `maxReplicas`는 근거 없이 본 문서에서 임의 확정하지 않는다.
 
-### 10.3 Runtime 확인 예
+### 10.4 Runtime 확인 예
 
 Metrics API 준비 후에만 실행한다.
 
@@ -671,9 +696,16 @@ kubectl top pods -n application
 kubectl top nodes
 ```
 
-### 10.4 Rollback
+### 10.5 Rollback
 
-HPA 정책이 문제를 만들면 Git에서 HPA Desired State를 제거 또는 이전 정상 정책으로 Revert하고, 필요하면 검증된 Static Replica Desired State를 함께 복구한다.
+HPA 정책이 문제를 만들면:
+
+```text
+HPA Desired State Revert/제거
+→ HPA용 Replica Ownership 예외도 함께 원복
+→ 검증된 Static Replica Desired State 복구
+→ Argo CD Sync
+```
 
 수동 Scale과 HPA가 동시에 Desired State를 경쟁하도록 운영하지 않는다.
 
@@ -905,6 +937,7 @@ Metric Query·Dashboard·Alert Rule·로그 수집 상세·최종 Evidence는 12
 | Route 실패 | HTTPRoute Condition / Service | Route Desired State 수정 또는 Revert |
 | 2 Replica 전용 장애 | Shared State / Runner / Realtime | 검증된 1 Replica Revision으로 복귀 후 분석 |
 | Metrics 미수집 | `/metrics` / Service label / ServiceMonitor / Target | Application·Observability 경계 순차 확인 |
+| HPA와 Argo 반복 Diff | Replica Ownership 계약 | HPA/Argo 소유권 설정 원복 또는 정합화 |
 
 장애 복구의 공식 측정값과 Evidence는 12에서 관리한다.
 
@@ -933,9 +966,28 @@ Metric Query·Dashboard·Alert Rule·로그 수집 상세·최종 Evidence는 12
 
 Secret 실제 공급은 `seokpan-infra`의 Ansible + Vault 경로를 사용한다. GitOps Manifest에 실제 Secret 값을 직접 기록하지 않는다.
 
-### 16.4 GitOps / Argo 재실행
+Secret을 환경변수로 소비하는 실행 중 Pod는 Secret Object 변경만으로 기존 프로세스 환경변수가 갱신되지 않는다. 실제 적용이 필요한 경우 소비 Pod의 안전한 Rollout 경로를 별도 GitOps 변경과 함께 검토한다.
 
-Argo Sync 문제가 발생했을 때 먼저 Git Revision·Application Source·Diff를 확인한다. 단순히 Sync 버튼을 반복하여 원인을 덮지 않는다.
+### 16.4 ConfigMap 공급
+
+`envFrom`으로 읽은 ConfigMap 환경변수도 실행 중 프로세스에 자동 재주입되지 않는다. 또한 `subPath`로 Mount한 CA 파일은 ConfigMap 변경만으로 실행 중 컨테이너의 파일이 갱신되지 않는다.
+
+따라서 ConfigMap/CA 변경 시:
+
+```text
+Git Desired State 변경
+→ 변경 대상 확인
+→ 소비 Pod 재기동 필요성 판단
+→ 필요하면 Pod Template 변경을 Git에 반영해 Rollout 유도
+→ Argo CD Sync
+→ 새 Pod에서 반영 확인
+```
+
+직접 `kubectl rollout restart`만 수행하여 Git에 남지 않는 운영 변경을 기본 방식으로 삼지 않는다.
+
+### 16.5 Argo Sync
+
+Argo Sync 문제가 발생했을 때 먼저 Git Revision·Application Source·Diff를 확인한다. Sync 버튼을 반복하여 원인을 덮지 않는다.
 
 ---
 
@@ -945,11 +997,11 @@ Argo Sync 문제가 발생했을 때 먼저 Git Revision·Application Source·Di
 | --- | --- | --- |
 | Backend Image / Replica / Config | 정상 Git Revision으로 Revert | DB Schema와 App 호환성 확인 |
 | Frontend Image / Replica | 정상 Git Revision으로 Revert | Backend API 계약 호환 확인 |
-| HPA | HPA 정책 Revert/제거 + 필요 시 Static Replica 복구 | 수동 Scale과 경쟁 금지 |
+| HPA | HPA 정책 + Replica Ownership 계약 Revert | Static Replica Desired State도 함께 복구 |
 | HTTPRoute | Route Revert | Gateway Platform 재구축 불필요 여부 확인 |
-| ConfigMap | Git Revert 후 소비 Pod 반영 방식 확인 | `subPath` Mount는 재기동 필요 가능 |
+| ConfigMap / CA | Git Revert + 소비 Pod 반영 경로 확인 | `envFrom`, `subPath`는 기존 Pod에 자동 반영되지 않음 |
 | Migration | DB 상태 기반 Restore/보정 판단 | 단순 Git Revert로 Schema 복구 가정 금지 |
-| Secret | Infra Ansible/Vault로 이전 값 복구 | Secret 값을 Git에 저장하지 않음 |
+| Secret | Infra Ansible/Vault로 이전 값 복구 + 소비 Pod 반영 확인 | Secret 값을 Git에 저장하지 않음 |
 | ServiceMonitor | Pending/이전 정상 Desired State로 Revert | Application Metrics와 Platform 상태 분리 |
 
 ---
@@ -986,8 +1038,10 @@ Log / Screenshot / Run ID
 - 현재 없는 자산을 존재한다고 표현하지 않는다.
 - Migration의 승인형 One-shot 경계를 보존한다.
 - Backend 1 Replica → 2 Replica → HPA 순서를 유지한다.
+- HPA와 Argo CD의 Replica Ownership 충돌을 사전에 방지한다.
 - Frontend → HTTPRoute → HTTPS/WSS 순서가 명확하다.
 - GitOps 변경과 Cluster 직접 변경의 경계가 명확하다.
+- ConfigMap/Secret 변경 시 실행 중 Pod 반영 경계를 명확히 한다.
 - 실패 시 중단·복구·Rollback 경로가 있다.
 - 09와 책임 중복이 없고 12의 Test/Measurement/Evidence를 침범하지 않는다.
 - Current-State stale 내용은 구현 Repository Issue/PR로 분리 추적한다.
