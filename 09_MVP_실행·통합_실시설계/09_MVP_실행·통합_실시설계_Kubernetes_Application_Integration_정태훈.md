@@ -9,18 +9,18 @@
 
 - 상세 실행 명령·적용·복구·Rollback 절차: 11 구축·자동화 Runbook
 - 공식 Test Case·측정·PASS/FAIL·Evidence 상세: 12 검증·측정 계획
-- Repository·Directory·Issue·Branch·PR·Review Governance: [`10_GitHub_협업_및_Repository_운영.md`](../10_GitHub_협업_및_Repository_운영.md)
+- Repository·Directory·Issue·Branch·PR·Review Governance: [`10_GitHub_협업_및_Repository_운영.md`](../10_GitHub_협업_및_Repository_운영/10_GitHub_협업_및_Repository_운영.md)
 
 ## 2. 선행 기준과 상태 판정
 
 직접 상위 기준은 다음 문서다.
 
-- [`03_SeokPan_논리_역할_및_서비스_목록.md`](../03_SeokPan_논리_역할_및_서비스_목록.md)
-- [`04_SeokPan_기술_비교_및_논리_아키텍처.md`](../04_SeokPan_기술_비교_및_논리_아키텍처.md)
-- [`05_SeokPan_물리_아키텍처.md`](../05_SeokPan_물리_아키텍처.md)
-- [`06_SeokPan_Ansible_자동화_테스트_설계.md`](../06_SeokPan_Ansible_자동화_테스트_설계.md)
-- [`07_SeokPan_확장_호환형_MVP_도출.md`](../07_SeokPan_확장_호환형_MVP_도출.md)
-- [`08_SeokPan_1차_프로젝트_기획안.md`](../08_SeokPan_1차_프로젝트_기획안.md)
+- [`03_SeokPan_논리_역할_및_서비스_목록.md`](../01-08_기획·설계_Baseline/03_SeokPan_논리_역할_및_서비스_목록.md)
+- [`04_SeokPan_기술_비교_및_논리_아키텍처.md`](../01-08_기획·설계_Baseline/04_SeokPan_기술_비교_및_논리_아키텍처.md)
+- [`05_SeokPan_물리_아키텍처.md`](../01-08_기획·설계_Baseline/05_SeokPan_물리_아키텍처.md)
+- [`06_SeokPan_Ansible_자동화_테스트_설계.md`](../01-08_기획·설계_Baseline/06_SeokPan_Ansible_자동화_테스트_설계.md)
+- [`07_SeokPan_확장_호환형_MVP_도출.md`](../01-08_기획·설계_Baseline/07_SeokPan_확장_호환형_MVP_도출.md)
+- [`08_SeokPan_1차_프로젝트_기획안.md`](../01-08_기획·설계_Baseline/08_SeokPan_1차_프로젝트_기획안.md)
 
 특히 07의 역할·Provider/Consumer와 실행·협업 실시설계 인계를 직접 기준으로 사용한다.
 
