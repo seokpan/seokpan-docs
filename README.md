@@ -6,18 +6,18 @@
 
 ## Planning & Design
 
-01~08 문서는 1차 프로젝트의 기획·설계 기준입니다. 기본 탐색과 참조에는 Markdown을 사용하며, 확정 당시 PDF는 [`baseline-pdf/`](baseline-pdf/)에 동일 Baseline의 고정 Snapshot으로 보존합니다.
+01~08 문서는 1차 프로젝트의 기획·설계 기준입니다. 기본 탐색과 참조에는 Markdown을 사용하며, Markdown Reference Mirror는 [`01-08_기획·설계_Baseline/`](01-08_기획·설계_Baseline/)에서 관리합니다. 확정 당시 PDF는 [`baseline-pdf/`](baseline-pdf/)에 동일 Baseline의 고정 Snapshot으로 보존합니다.
 
 | 순서 | 문서 |
 | --- | --- |
-| 01 | [서비스 요구사항 및 기능 명세 통합](01_SeokPan_서비스_요구사항_및_기능_명세_통합.md) |
-| 02 | [핵심 문제 및 검증 목표](02_SeokPan_핵심_문제_및_검증_목표.md) |
-| 03 | [논리 역할 및 서비스 목록](03_SeokPan_논리_역할_및_서비스_목록.md) |
-| 04 | [기술 비교 및 논리 아키텍처](04_SeokPan_기술_비교_및_논리_아키텍처.md) |
-| 05 | [물리 아키텍처](05_SeokPan_물리_아키텍처.md) |
-| 06 | [Ansible 자동화·테스트 설계](06_SeokPan_Ansible_자동화_테스트_설계.md) |
-| 07 | [확장 호환형 MVP 도출](07_SeokPan_확장_호환형_MVP_도출.md) |
-| 08 | [1차 프로젝트 기획안](08_SeokPan_1차_프로젝트_기획안.md) |
+| 01 | [서비스 요구사항 및 기능 명세 통합](01-08_기획·설계_Baseline/01_SeokPan_서비스_요구사항_및_기능_명세_통합.md) |
+| 02 | [핵심 문제 및 검증 목표](01-08_기획·설계_Baseline/02_SeokPan_핵심_문제_및_검증_목표.md) |
+| 03 | [논리 역할 및 서비스 목록](01-08_기획·설계_Baseline/03_SeokPan_논리_역할_및_서비스_목록.md) |
+| 04 | [기술 비교 및 논리 아키텍처](01-08_기획·설계_Baseline/04_SeokPan_기술_비교_및_논리_아키텍처.md) |
+| 05 | [물리 아키텍처](01-08_기획·설계_Baseline/05_SeokPan_물리_아키텍처.md) |
+| 06 | [Ansible 자동화·테스트 설계](01-08_기획·설계_Baseline/06_SeokPan_Ansible_자동화_테스트_설계.md) |
+| 07 | [확장 호환형 MVP 도출](01-08_기획·설계_Baseline/07_SeokPan_확장_호환형_MVP_도출.md) |
+| 08 | [1차 프로젝트 기획안](01-08_기획·설계_Baseline/08_SeokPan_1차_프로젝트_기획안.md) |
 
 ## Implementation Baseline
 
@@ -39,7 +39,7 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 | 순서 | 문서 | 역할 |
 | --- | --- | --- |
 | 09 | [MVP 실행·통합 실시설계 — Kubernetes & Application Integration](09_MVP_실행·통합_실시설계/09_MVP_실행·통합_실시설계_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration 책임, Current State, Provider/Consumer, Integration Gate와 Gap |
-| 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영.md) | Repository·Directory 책임, GitHub 작업 흐름, Cross-Repository 변경, Evidence·Traceability 운영 기준 |
+| 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영/10_GitHub_협업_및_Repository_운영.md) | Repository·Directory 책임, GitHub 작업 흐름, Cross-Repository 변경, Evidence·Traceability 운영 기준 |
 | 11 | [MVP 구축·자동화 Runbook — Kubernetes & Application Integration](11_MVP_구축·자동화_Runbook/11_MVP_구축·자동화_Runbook_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration의 Pre-check, 실행, 재실행, Recovery, Rollback 절차 |
 | 12 | [MVP 검증·측정 계획 — Kubernetes & Application Integration](12_MVP_검증·측정_계획/12_MVP_검증·측정_계획_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration의 Test Case, Measurement, PASS·FAIL, Evidence 계획 |
 
@@ -88,6 +88,11 @@ Historical record
 
 ```text
 seokpan-docs/
+├─ 01-08_기획·설계_Baseline/
+├─ 09_MVP_실행·통합_실시설계/
+├─ 10_GitHub_협업_및_Repository_운영/
+├─ 11_MVP_구축·자동화_Runbook/
+├─ 12_MVP_검증·측정_계획/
 ├─ logical-architecture/
 └─ physical-architecture/
 ```
