@@ -13,7 +13,7 @@
 
 ## 아키텍처
 
-![01. 전체 논리 아키텍처](logical-architecture/01_SeokPan_전체 논리 아키텍처.png)
+![01. 전체 논리 아키텍처](../logical-architecture/01_SeokPan_전체 논리 아키텍처.png)
 
 <a id="logical-architecture-key-design-points"></a>
 
@@ -34,7 +34,7 @@
 
 ## 물리 아키텍처
 
-![01. 전체 물리 아키텍처](physical-architecture/01_SeokPan_전체 물리 아키텍처.png)
+![01. 전체 물리 아키텍처](../physical-architecture/01_SeokPan_전체 물리 아키텍처.png)
 
 <a id="physical-architecture-key-design-points"></a>
 
