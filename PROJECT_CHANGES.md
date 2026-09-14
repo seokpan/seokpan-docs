@@ -893,6 +893,31 @@
   - `seokpan/seokpan-infra#143`
   - `seokpan/seokpan-infra` PR #168
 
+## 2026-09-11: DR-02 격리 검증 환경의 TLS/인증 방식 결정
+
+**배경**: 이슈 #156 전제 조건 중 "격리 환경의 kube-apiserver/etcd 인증서 준비
+방식(신규 발급 vs internal_ca 재사용)"이 cyj200115-prog와의 사전 협의 없이
+남아있었음. 관련 설계 문서(`06_SeokPan_Ansible_자동화·테스트 설계.pdf`) 확인
+결과 "Internal Root CA와 Kubernetes Cluster CA는 분리한다"는 원칙만 있고,
+격리 DR 테스트용 인증서를 어떻게 준비할지의 명시적 결정은 없었음.
+
+**결정**: 운영 internal_ca/kubeadm CA와 완전히 무관한, 이 격리 테스트 전용
+일회성 self-signed 구성으로 진행.
+- etcd peer/client: TLS 없이 plain HTTP (격리망 내부, 운영 데이터 유출 위험 없음)
+- kube-apiserver 서빙 인증서: `--cert-dir` 지정 시 자동 생성되는 self-signed 사용
+- kubectl 인증: 별도 self-signed CA로 서명한 client certificate 1개 발급
+  (`--anonymous-auth=true` + `--authorization-mode=AlwaysAllow` 조합은 apiserver가
+  기동 시 AnonymousAuth를 강제로 false로 리셋해버려 사용 불가 — TS-0XX 참고)
+
+**적용 범위**: 이번 DR-02 1회성 격리 검증 한정. 향후 격리 DR 테스트를 정기화할
+경우(Ansible 자동화 별도 이슈) internal_ca 재사용 여부를 다시 협의 필요.
+
+**영향**: 운영 CA/인증서 체계에는 어떠한 변경도 없음. 격리 VM은 검증 완료 후
+전량 폐기(프로세스 종료 + 데이터/바이너리 삭제)하여 잔존 인증서 없음.
+
+- 관련:
+  - `seokpan/seokpan-infra#156`
+
 ---
 
 ## 작성 형식
