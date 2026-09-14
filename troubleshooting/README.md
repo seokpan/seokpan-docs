@@ -54,8 +54,11 @@
 33. **[TS-033 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제](TS-033_cp03_etcd_bbolt_DB_손상_Control_Plane_복구.md)**
 34. **[TS-034: Harbor Tag Immutability에서 Candidate Tag(scan-*) 예외 정책이 두 차례 무력화된 문제](TS-034_Harbor_Tag_Immutability-Candidate_Tag_예외정책_무력화_issue.md)**
 35. **[TS-035 — Jenkins Plugin Lock 파일 확장자(.lock)를 jenkins-plugin-cli가 인식하지 못해 Controller CrashLoopBackOff 발생](TS-035_Jenkins_Plugin_Lock_파일_확장자를_jenkins-plugin-cli가_인식하지_못해_ControllerCrashLoopBackOff_발생.md)**
+36. **[TS-036 — DR-02 격리 etcd 3-member 간 Peer 통신 실패(firewalld 신규 포트 차단)](TS-036_DR-02 격리 etcd 3-member 간 Peer 통신 실패 (firewalld 신규 포트 차단).md)**
+37. **[TS-037 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)](TS-037_DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존).md)**
+38. **[TS-038 — kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized](TS-038_kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized.md)**
 
 ---
 
-현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **35건**  
-기준 시점: **2026-09-11**
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **38건**  
+기준 시점: **2026-09-14**
