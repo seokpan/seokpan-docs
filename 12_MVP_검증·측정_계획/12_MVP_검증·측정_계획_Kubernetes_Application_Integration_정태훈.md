@@ -48,6 +48,7 @@ M-01~M-05 외에도 07/09/11에서 요구하는 다음 통합 Evidence를 추적
 
 ```text
 Application Artifact Traceability
+Runtime Registry Pull / imagePullSecret Consumer
 GitOps Sync / Self-Heal / Rollback
 Frontend Runtime
 HTTPRoute / HTTPS / WSS
@@ -82,6 +83,7 @@ Failed
 Manifest 존재 ≠ Runtime Running
 Runtime Running ≠ Integration Validated
 Image Pushed ≠ GitOps Updated ≠ Argo Synced ≠ Pod Ready
+Registry Pull Capability ≠ Actual Workload Pull
 Platform Running ≠ Application Consumer Validated
 ```
 
@@ -238,6 +240,9 @@ FAIL Run을 수정해 PASS로 덮어쓰지 않는다.
 - MaxScale TLS Listener / CA 계약
 - One-shot Migration 자산의 정적/API 검증
 - Gateway Platform HTTPS/TLS
+- Infra #180/PR #185의 Runtime pull-only Robot·`application/harbor-pull-secret` 공급 및 **임시 Pod Digest Pull** Evidence — 해당 Revision이 확정된 경우
+
+다만 Registry Capability Evidence를 실제 Backend/Frontend Deployment Pull 성공으로 대신하지 않는다.
 
 재검증 조건:
 
@@ -245,13 +250,12 @@ FAIL Run을 수정해 PASS로 덮어쓰지 않는다.
 관련 Manifest / Playbook / Image 변경
 Version 변경
 Secret / CA 변경
+Registry Credential 변경
 Cluster 재구축
 장애/복구 후
 실제 Consumer 연결 최초 수행
 Evidence 대상 Revision과 현재 Revision 불일치
 ```
-
-Dependency Evidence 재사용은 Application Integration 성공을 의미하지 않는다.
 
 ---
 
@@ -268,6 +272,10 @@ Dependency Evidence 재사용은 Application Integration 성공을 의미하지 
 | Frontend Runtime | `replicas: 0`, `git-pending` | Not Tested |
 | A-10 Production Provider Integration | In Progress | Blocker |
 | Backend Origin JSON 계약 | GitOps #90 Open | Blocker |
+| Runtime Pull-only Robot / Vault / `application/harbor-pull-secret` | Infra PR #185 Open, 임시 Pod Digest Pull PASS | Partial / Merge 대기 |
+| Backend/Frontend Deployment `imagePullSecrets` | GitOps #57 후속 | Not Yet Wired / Not Tested |
+| Actual Backend/Frontend Workload Pull | GitOps #57 후속 | Not Tested |
+| Infra #180 | Open | Actual Workload 소비 확인 후 종료 |
 | One-shot Migration 자산 | Implemented / Static+API Validated | 실제 DB Gate Not Tested |
 | 실제 Migration Gate | Not Tested | Planned |
 | HPA | Not Implemented | Planned |
@@ -283,7 +291,7 @@ Dependency Evidence 재사용은 Application Integration 성공을 의미하지 
 | Test Case | 상위 검증축/목적 | 09 Gate | 11 연결 | 현재 상태 |
 | --- | --- | --- | --- | --- |
 | KAI-PRE-01 Dependency Snapshot | 공통 | A~C | 4~6 | Defined |
-| KAI-DEL-01 Artifact→GitOps→Argo Traceability | CI/CD Integration | B~D/E | 5 / 8 / 11 / 13 | Blocked |
+| KAI-DEL-01 Artifact/Registry/GitOps/Argo Traceability | CI/CD Integration | B~D/E | 5 / 8 / 11 / 13 | Partial / Blocked |
 | KAI-MIG-01 Migration Gate | Runtime/Data Integrity 선행 | C→D | 7 | Not Tested |
 | KAI-RUN-01 Backend 1 Replica Provider Runtime | Runtime / M-03 선행 | D | 8 | Blocked |
 | KAI-RUN-02 Backend 2 Replica Shared Runtime | M-01 / M-03 | E | 9 | Blocked |
@@ -319,6 +327,7 @@ Application Runtime 시험 전에 선행 Platform과 작업 대상 Revision을 �
 - Redis Runtime
 - Secret Object 및 Key 이름
 - CA ConfigMap
+- Registry Pull Secret Metadata
 - Image Digest
 - App/GitOps/Infra Commit SHA
 
@@ -328,65 +337,117 @@ Application Runtime 시험 전에 선행 Platform과 작업 대상 Revision을 �
 - 시험 Revision과 Evidence Metadata 일치.
 - Blocker가 있으면 다음 Gate로 진행하지 않음.
 
-### BLOCKED
-
-- Required Dependency 부재
-- Revision 불일치
-- Secret/CA/Endpoint 부재
-- A-10 완료 전 Backend Runtime 강제 시험
-
 ---
 
-## KAI-DEL-01 — Application Artifact → GitOps → Argo Traceability
+## KAI-DEL-01 — Artifact / Registry Pull / GitOps / Argo Traceability
 
 ### 목적
 
-Application Source Commit에서 생성된 Image가 Harbor Digest로 식별되고 GitOps와 Argo CD를 거쳐 실제 Pod까지 동일 Artifact로 연결되는지 검증한다.
+Application Source Commit에서 생성된 Image가 Harbor Digest로 식별되고, Runtime 전용 최소권한 Registry Credential을 통해 Kubernetes가 해당 Digest를 Pull하며, GitOps/Argo CD를 거쳐 **실제 Backend/Frontend Workload**까지 같은 Artifact로 연결되는지 검증한다.
 
-Jenkins/Harbor 구축 Owner는 Delivery 영역이지만 정태훈 역할은 Application Consumer와 GitOps Desired State 연결을 검증한다.
+Jenkins/Harbor/Robot 공급 자체는 Delivery/Infra 영역과 Cross-role이며, 정태훈 역할은 Application Workload Consumer 및 GitOps Desired State 연결을 검증한다.
 
-### Chain
+### 8.2.1 Traceability Chain
 
 ```text
 App main Commit
 → Jenkins Run
-→ Harbor Tag
-→ Harbor Digest
-→ GitOps PR
-→ GitOps main Revision
+→ Harbor Tag / Digest
+→ Runtime Pull-only Robot
+→ application/harbor-pull-secret
+→ GitOps imagePullSecrets + Digest
+→ GitOps PR / Merge
 → Argo Sync
-→ Deployment
+→ Actual Backend/Frontend Pod Pull
 → Pod ImageID
+→ Workload Running / Ready
 ```
 
-### 기록
+### 8.2.2 Capability와 Consumer를 구분한다
+
+**Registry Pull Capability**:
+
+```text
+pull-only Robot
+→ Vault 등록
+→ application/harbor-pull-secret
+→ 임시 Pod의 검증된 Digest Pull
+```
+
+Infra PR #185에서 이 범위의 Evidence가 준비되어 있다. 단 PR이 Merge되기 전에는 `main`의 확정 Capability로 승격하지 않는다.
+
+**Actual Workload Consumption**:
+
+```text
+Backend/Frontend Deployment
+→ imagePullSecrets: harbor-pull-secret
+→ 검증된 Digest
+→ Argo Sync
+→ 실제 Application Pod Pull / Start / Ready
+```
+
+이 범위는 GitOps #57 후속이며 아직 완료로 판정하지 않는다.
+
+### 8.2.3 기록
 
 - Artifact Target: backend / frontend
 - App Commit
 - Jenkins Run ID/시간
-- Build/Push 시간 — 제공 가능한 경우
 - Harbor Tag/Digest
-- GitOps PR/Commit/Merge 시각
+- Infra PR/Commit
+- Runtime Robot 이름/권한 Metadata — Secret 제외
+- `application/harbor-pull-secret` 이름/Namespace/Type — Data 제외
+- 임시 Pod Digest Pull Evidence — Capability
+- GitOps PR/Commit/Merge
+- Deployment `imagePullSecrets`
+- Deployment Image Digest
 - Argo Sync/Healthy 시각
-- Pod Ready 시각
+- Pod Pull/Start/Ready 시각
 - Pod ImageID
 
 ### PASS
 
-- Commit→Jenkins Run→Digest 연결 가능.
-- GitOps가 해당 Digest 고정.
+전체 KAI-DEL-01 PASS는 다음을 모두 만족해야 한다.
+
+- App Commit→Jenkins→Harbor Digest 연결 가능.
+- Runtime Robot 권한이 pull-only.
+- `application/harbor-pull-secret`이 Runtime 전용 Credential을 사용.
+- Backend/Frontend Deployment가 Secret을 명시적으로 소비.
+- GitOps가 검증된 Digest를 고정.
 - Argo가 해당 Revision Sync.
+- 실제 Workload가 Private Image Pull 성공.
 - Pod ImageID가 승인 Digest와 일치.
 - Runtime에 `latest`/`git-pending` 미사용.
+
+### Partial
+
+Infra #180/PR #185의 임시 Pod Pull만 PASS한 경우:
+
+```text
+Registry Capability = Validated/Review Pending
+Actual Workload Consumption = Not Tested
+KAI-DEL-01 전체 = Partial / Blocked
+```
+
+### FAIL
+
+- Runtime에 CI Push 권한 Credential 사용
+- Deployment `imagePullSecrets` 누락
+- `ErrImagePull` / `ImagePullBackOff`
+- GitOps Digest와 Pod ImageID 불일치
+- Commit→Digest 연결 불가
 
 ### Evidence
 
 - Jenkins Run
 - Harbor Digest
-- GitOps PR/Commit
+- Robot 권한 Metadata
+- Secret Metadata
+- Infra #180 / PR #185
+- GitOps #57 PR/Commit
 - Argo Sync/Health
-- Pod ImageID
-- Build/Push/Sync/Ready Timeline
+- Pod Event / ImageID
+- Pull/Start/Ready Timeline
 
 ---
 
@@ -409,55 +470,26 @@ Backend Runtime 전 실제 DB Revision을 Audit하고 필요한 Action만 승인
 - CA
 - Active Migration Job 없음
 
-Mutation(`stamp-baseline`, `upgrade-head`)을 수행하는 경우에만 추가로 **실행 승인 Reference**를 요구한다. Read-only `current` 확인 자체에 Mutation 승인 Reference가 필요하다고 가정하지 않는다.
+Mutation(`stamp-baseline`, `upgrade-head`)을 수행하는 경우에만 실행 승인 Reference를 요구한다. Read-only `current` 확인 자체에 Mutation 승인 Reference가 필요하다고 가정하지 않는다.
 
 ### 기록
 
-- 실행 전 Alembic Revision
+- 실행 전/후 Alembic Revision
 - 선택 Action
 - Mutation Approval Reference — 해당 시
-- Job 이름/시작/종료
-- terminal status
-- 실행 후 Revision
+- Job 이름/상태/시간
 - Replication
 - MaxScale Read/Write
 - 표본 데이터 보존
 
 ### PASS
 
-공통:
-
-- Audit 결과와 선택 Action 일치.
-- 기대 Revision 확인.
+- Audit와 Action 일치.
+- 기대 Revision.
 - Replication 정상.
 - 표본 데이터 보존.
 - Runtime/Migration Credential 경계 유지.
-
-Mutation 수행 시:
-
-- 승인된 Job만 실행.
-- Job 성공 종료.
-- 동일 Mutation Job 중복 실행 없음.
-
-### FAIL
-
-- Active Mutation 중복
-- 승인 없는 Mutation
-- Job Failed
-- Revision 불일치
-- Replication 오류
-- 데이터 손실/변형
-- Backend가 Migration Credential 소비
-
-### Evidence
-
-- Audit 결과
-- Approval Reference — 해당 시
-- Rendered Job checksum
-- Job status/log
-- Revision Before/After
-- Replication snapshot
-- 표본 데이터 비교
+- Mutation 시 승인된 Job만 1회 수행.
 
 ---
 
@@ -465,16 +497,15 @@ Mutation 수행 시:
 
 ### 목적
 
-Production Backend가 Memory Provider 없이 실제 MariaDB·Redis Provider로 1 Replica 기동하고 Provider-aware readiness를 통과하는지 검증한다.
+Production Backend가 실제 MariaDB·Redis Provider로 1 Replica 기동하고 Provider-aware readiness를 통과하는지 검증한다.
 
 ### 선행조건
 
 - A-10 완료
-- Backend KAI-DEL-01 PASS
+- Backend KAI-DEL-01의 **실제 Backend Workload Pull** PASS
 - KAI-MIG-01 PASS
 - GitOps #90 Origin JSON 계약 완료
-- Runtime Secret / CA / Redis 준비
-- Digest Pinning
+- Runtime Secret / CA / Redis
 - `replicas: 1`
 
 ### 기록
@@ -487,15 +518,12 @@ Production Backend가 Memory Provider 없이 실제 MariaDB·Redis Provider로 1
 - Identity/Game DB
 - Redis
 - Provider readiness
-- 최소 Backend First Runtime 결과
 
 ### PASS
 
 - Backend Pod 1 Ready.
 - 승인 Digest 일치.
-- Startup/Live/Ready 정상.
-- Identity/Game DB TLS 연결 성공.
-- Redis Consumer 성공.
+- DB TLS/Redis Consumer 성공.
 - Migration Credential 미소비.
 - production 경로에 Memory Provider fallback 없음.
 
@@ -503,32 +531,18 @@ Production Backend가 Memory Provider 없이 실제 MariaDB·Redis Provider로 1
 
 ## KAI-RUN-02 — Backend 2 Replica Shared Runtime
 
-### 목적
-
-2 Replica에서 권위 상태가 Pod-local Memory로 분리되지 않고 Redis/DB 공유 상태를 통해 수렴하는지 확인한다.
-
 ### 선행조건
 
 - KAI-RUN-01 PASS
 - A-10 Shared State/Realtime/Presence/Runner 완료
 - 동일 Image Digest
 
-### 기록
-
-- Pod 2 Ready
-- Instance ID
-- Worker 배치
-- Replica 간 동일 Room/Game 결과
-- Redis shared state
-- Pub/Sub
-- Reconnect
-- Runner Lease/중복 실행
-
 ### PASS
 
-- 두 Replica 권위 상태 수렴.
+- Pod 2 Ready.
+- 권위 상태 Replica 간 수렴.
 - Process-local Memory가 권위 상태 아님.
-- Pub/Sub 누락/재연결 시 Snapshot으로 수렴.
+- Pub/Sub 누락/재연결 시 Snapshot 수렴.
 - Runner 중복 마감 없음.
 
 ---
@@ -541,35 +555,19 @@ Production Backend가 Memory Provider 없이 실제 MariaDB·Redis Provider로 1
 
 ### 선행조건
 
-- KAI-RUN-01 PASS
 - KAI-RUN-02 PASS
 - Resource Request/Limit
 - Resource Metrics
 - HPA ↔ Argo Replica Ownership 계약
 - HPA Manifest Merge
 
-### 측정값
-
-```text
-부하 단계
-HPA target/current metric
-Desired / Current Replica
-Scale-out/in 시작·완료 시각
-p95/p99
-Error rate
-Pod Ready
-Argo Diff/Sync
-```
-
 ### PASS
 
-- HPA Metrics 정상.
-- 설정 범위 안에서 Replica 변화.
+- Metrics 정상.
+- 설정 범위 안 Replica 변화.
 - Scale 중 가용성 유지.
 - Argo와 `spec.replicas` 경쟁 없음.
-- M-01 정확성 오류 없음.
-
-임계값 자체의 적절성은 단계 부하 결과로 판단한다.
+- M-01 오류 없음.
 
 ---
 
@@ -577,26 +575,17 @@ Argo Diff/Sync
 
 ### 선행조건
 
-- 09 Critical Path의 Backend Scale-out / HPA·Workload Distribution 단계 판정 완료
-- Frontend KAI-DEL-01 PASS
-- Container Runtime Smoke
+- Backend Scale-out / HPA·Workload Distribution 단계 판정
+- Frontend KAI-DEL-01의 **실제 Frontend Workload Pull** PASS
+- Container Smoke
 - `apps-frontend` 정상
 
-HPA가 일정상 Deferred되면 PASS로 가장하지 않고 별도 Go/No-Go 근거를 남긴 뒤 Frontend 진행 여부를 결정한다.
-
-### 기록
-
-- GitOps Revision
-- Image Digest
-- Deployment desired/ready
-- Pod/Service
-- SPA fallback
-- Container health
+HPA가 Deferred되면 PASS로 가장하지 않고 Go/No-Go 근거를 남긴다.
 
 ### PASS
 
 - 승인 Digest 실행.
-- Pod/Service 정상.
+- Frontend Pod/Service 정상.
 - SPA 기본 경로 정상.
 - Browser E2E와 구분.
 
@@ -616,31 +605,13 @@ HPA가 일정상 Deferred되면 PASS로 가장하지 않고 별도 Go/No-Go 근�
 /ws/v1  → backend:8000
 ```
 
-### 선행조건
-
-- Backend Runtime
-- Frontend Runtime
-- Gateway Platform
-- HTTPRoute Merge
-
-### 기록
-
-- HTTPRoute `Accepted` / `ResolvedRefs`
-- HTTPS
-- API
-- WSS handshake/message
-- Forwarded Header
-- Cookie/CORS
-- DELETE Body
-- 내부 Endpoint 비공개
-
 ### PASS
 
-- Route Condition 정상.
+- HTTPRoute `Accepted` / `ResolvedRefs` 정상.
 - HTTPS Frontend 성공.
 - `/api/v1` Backend 전달.
 - `/ws/v1` WSS 성공.
-- Browser 조건의 CORS/Cookie/Forwarded Header 정상.
+- CORS/Cookie/Forwarded Header 정상.
 - 내부 Health/Metric 의도치 않은 외부 공개 없음.
 
 ---
@@ -651,29 +622,12 @@ HPA가 일정상 Deferred되면 PASS로 가장하지 않고 별도 Go/No-Go 근�
 
 ServiceMonitor는 `.pending`, GitOps #91 추적.
 
-### 선행조건
-
-- Backend Runtime Running
-- `/metrics` 제공
-- Backend Service `metadata.labels` 계약
-- ServiceMonitor selector 정합
-- `.pending` 제거/Merge
-
-### 기록
-
-- ServiceMonitor
-- Service `metadata.labels`
-- ServiceMonitor selector
-- Prometheus Target
-- scrape error
-- metric sample
-
 ### PASS
 
-- Target `UP`.
-- ServiceMonitor가 의도한 Service 선택.
+- Backend Runtime이 `/metrics` 제공.
+- Service `metadata.labels`와 ServiceMonitor selector 정합.
+- Prometheus Target `UP`.
 - 실제 Application Metric 조회.
-- Platform Running과 Application Metrics 성공 분리.
 
 ---
 
@@ -681,35 +635,15 @@ ServiceMonitor는 `.pending`, GitOps #91 추적.
 
 ### 목적
 
-Backend/Frontend stdout/stderr가 Alloy→Loki로 수집되고 Pod Identity를 추적할 수 있는지 확인한다.
-
-### Platform label
-
-```text
-namespace
-pod
-container
-node_name
-```
-
-### 기록
-
-- Pod/Container/Node
-- 기준 Log Event 시각
-- Loki 조회
-- label 일치
-- 수집 지연
+Backend/Frontend stdout/stderr가 Alloy→Loki로 수집되고 Pod Identity를 추적할 수 있는지 검증한다.
 
 ### PASS
 
-- Application Pod Log가 Loki에서 조회됨.
-- label이 실제 Pod와 일치.
+- Application Pod Log Loki 조회.
+- `namespace/pod/container/node_name` 실제 Pod와 일치.
 - 민감정보 Raw Log 노출 없음.
-- Platform Running과 실제 App Log 수집 성공 분리.
 
-### Cross-role Alert
-
-Alertmanager Rule·firing/resolved·E-mail 통보 검증은 Delivery/Observability 담당이 주 Owner다. 최종 MVP Acceptance에서는 해당 Evidence를 같은 장애/측정 Run과 연결한다.
+Alert firing/resolved·E-mail 통보는 Delivery/Observability 담당이 주 Owner이며 최종 Acceptance에서 동일 Run과 연결한다.
 
 ---
 
@@ -721,16 +655,17 @@ M3 Runtime과 M4 Delivery/Observability 선행조건 이후 실제 공개 Hostna
 
 ### 선행조건
 
+- Backend/Frontend Actual Workload Pull PASS
 - Backend Runtime PASS
 - Frontend Runtime PASS
 - HTTPRoute/HTTPS/WSS PASS
-- 실제 Provider 사용
-- Delivery Artifact Traceability 확보
-- Application Metrics/Logs 또는 현재 M4에서 요구하는 Delivery/Observability 선행 Evidence 확보
+- 실제 Provider
+- Artifact Traceability
+- Application Metrics/Logs 또는 현재 M4 선행 Evidence
 
 ### 사용자 흐름
 
-실행 시점의 최신 `MVP_IMPLEMENTATION_BASELINE`과 A-10/M5 정의를 기준으로 **구현 완료된 M5 핵심 흐름**을 사용한다. 문서가 미구현 기능을 임의로 First Success 필수조건으로 추가하지 않는다.
+실행 시점 최신 `MVP_IMPLEMENTATION_BASELINE`과 A-10/M5 정의를 기준으로 구현 완료된 M5 핵심 흐름을 사용한다.
 
 대표 흐름:
 
@@ -747,39 +682,15 @@ Frontend 접속
 
 ### PASS
 
-- 실제 Browser HTTPS/WSS.
+- 팀원 PC의 실제 URL에서 HTTPS/WSS 사용.
 - Same-Origin 계약 유지.
-- Backend/Redis/DB 실제 Provider 사용.
-- 핵심 상태 일관성 유지.
+- Backend/Redis/DB 실제 Provider.
+- 실제 데이터 UX/UI가 기능 계약과 정합.
 - Fake/Memory E2E와 구분.
-
-### Evidence
-
-- Browser timestamp/screenshot
-- Network trace 요약
-- Backend Instance ID
-- Application logs
-- Result/Move state
-- 관련 Metric/Log Evidence
 
 ---
 
 ## KAI-CON-01 — M-01 동시성 정확성 / P4
-
-### 목적
-
-Vote 등록·변경·삭제·마감·재시도와 stale 요청이 겹쳐도 Move/Result/Rating이 중복·유실되지 않는지 검증한다.
-
-### 측정값
-
-```text
-정상 Turn 확정 Move 수
-Pass Turn 확정 Move 수
-중복 GameResult
-중복 Rating
-stale 요청 상태 변경
-idempotency 중복 반영
-```
 
 ### PASS
 
@@ -791,72 +702,40 @@ Pass Turn Move = 0
 stale 잘못된 상태 변경 = 0
 ```
 
-동일 idempotency request의 권위 반영도 1회여야 한다.
+동일 idempotency request 권위 반영도 1회.
 
-Backend-only 단계에서 사전 결함 탐지용으로 실행할 수 있지만 **최종 P4 판정은 M5 First Success 이후 실제 MVP Runtime Revision으로 다시 실행**한다.
+Backend-only 사전 시험은 가능하지만 최종 P4는 M5 이후 실제 MVP Runtime Revision에서 재실행한다.
 
 ---
 
 ## KAI-PERF-01 — M-02 Vote 단계 부하 / P4
 
-### 측정값
+### 측정
 
 ```text
 Vote events/s
-p50 / p95 / p99
+p50/p95/p99
 Error rate
 Timeout
-CPU / Memory
+CPU/Memory
 Replica
 Redis/DB 진단
 WebSocket connection
 Active Room/Game
 ```
 
-### 부하 방식
-
-```text
-낮은 Baseline
-→ 단계 증가
-→ 안정 구간 측정
-→ p95/p99·오류·자원 관찰
-→ 급격한 악화 지점 확인
-→ 병목 추적
-```
-
 ### PASS/판정
 
-- 단계별 처리량·p95/p99·오류율 측정 완료.
+- 단계별 지표 측정 완료.
 - M-01 오류 없음.
-- 병목 단계와 원인 진단 가능.
-- 근거 없는 고정 목표값/개선률을 만들지 않음.
+- 병목 단계/원인 식별 가능.
+- 근거 없는 목표/개선률 미생성.
 
-현재 MVP에서 ANALYSIS Runtime은 제외되어 있으므로 AI 분석 조건은 현재 PASS 필수조건이 아니다.
-
-Backend-only 사전 부하는 가능하지만 **P4 Baseline은 M5 First Success 이후 실제 MVP Runtime Revision에서 측정**한다.
+ANALYSIS Runtime은 현재 PASS 필수조건이 아니다.
 
 ---
 
 ## KAI-REC-01 — M-03 Backend 장애 복구 / P4
-
-### 선행조건
-
-- KAI-RUN-02 PASS
-- Reconnect/Snapshot 복구 구현
-- 장애 범위/중단조건 합의
-
-### 측정값
-
-```text
-장애 시각
-첫 실패 요청
-재연결 성공
-서비스 복구
-상태 복구 완료
-실패 요청 수
-잘못된 사용자 패배 판정
-Room/Game/Turn/Board Before/After
-```
 
 ### PASS
 
@@ -865,7 +744,7 @@ Room/Game/Turn/Board Before/After
 - 권위 상태 복원.
 - 복구시간 측정 가능.
 
-Backend-only 사전 장애 시험은 가능하지만 **최종 P4 장애/복구 Evidence는 M5 First Success 이후 실제 MVP Runtime Revision으로 다시 확보**한다.
+최종 P4 Evidence는 M5 이후 실제 MVP Runtime Revision으로 확보한다.
 
 ---
 
@@ -876,21 +755,10 @@ Backend-only 사전 장애 시험은 가능하지만 **최종 P4 장애/복구 E
 - Production 데이터 미변경.
 - 복구 가능한 비영속/무해 필드 사용.
 - 정상 Git Revision 고정.
-- 11에서 허용한 명시적 검증용 Live Drift로만 수행.
-
-### 측정
-
-```text
-Drift 주입
-OutOfSync 감지
-Self-Heal 시작/완료
-최종 Sync/Health
-Live Before/After
-```
 
 ### PASS
 
-- Drift 감지.
+- Live Drift 감지.
 - Self-Heal 후 Git Desired State와 일치.
 - 불필요한 가용성 영향 없음.
 
@@ -900,46 +768,21 @@ Live Before/After
 
 DB Schema Migration은 대상이 아니다.
 
-### 측정
-
-```text
-문제 Revision 인지
-Revert PR 생성/승인/Merge
-Argo Sync
-Pod Ready
-서비스 정상화
-총 Recovery 시간
-수동 단계
-```
-
 ### PASS
 
-- Git main Known-Good로 복귀.
+- Git main Known-Good 복귀.
 - Argo Sync.
 - Known-Good Runtime 복구.
 - 장기 Cluster patch 잔존 없음.
+- Recovery time / Manual steps 측정.
 
 ---
 
 ## KAI-CFG-01 — Config / Secret / CA Consumer 반영
 
-### 핵심 경계
-
-- Secret env는 기존 프로세스에 자동 재주입되지 않음.
-- ConfigMap `envFrom`도 기존 프로세스에 자동 재주입되지 않음.
-- `subPath` CA는 ConfigMap 변경만으로 기존 Container 파일 갱신 안 됨.
-
 ### 안전 원칙
 
-이 Test만을 위해 운영 Credential이나 CA를 임의 회전하지 않는다. 실제 승인된 변경 이벤트가 있으면 해당 Run에서 검증하거나, 비밀이 아닌 Config 변경으로 Pod 반영 경계를 검증한다.
-
-### 기록
-
-- 변경 전/후 Pod UID
-- Git/Infra Revision
-- Rollout 여부
-- non-secret Config 또는 CA fingerprint
-- Readiness
+이 Test만을 위해 운영 Credential이나 CA를 임의 회전하지 않는다. 실제 승인된 변경 이벤트가 있으면 해당 Run에서 검증하거나 비밀이 아닌 Config 변경으로 Pod 반영 경계를 검증한다.
 
 ### PASS
 
@@ -954,40 +797,40 @@ Pod Ready
 
 M-04 Backup/Restore·RTO/RPO는 Data/Storage Recovery 담당이 주 Owner다.
 
-본 역할 확인:
-
-- 복원 DB Endpoint 연결
-- Redis/DB 상태 경계
-- Member/MemberStats/GameResult/Move/RatingHistory 표본 조회
-- Readiness
-- Browser/API 핵심 흐름
-
 ### PASS
 
 - Restore Evidence와 Application Consumer Evidence가 같은 Run/Revision으로 연결.
-- 표본 무결성 PASS.
+- 표본 데이터 무결성 PASS.
 - Application 정상화.
-
-다른 역할의 RTO/RPO를 본 문서에서 재정의하지 않는다.
 
 ---
 
 # 9. 검증 Phase와 실행 순서
 
-## Phase 0 — Dependency / Artifact
+## Phase 0 — Runtime Registry / Artifact 선행
+
+현재 최신 선행 흐름:
 
 ```text
-KAI-PRE-01
-→ KAI-DEL-01 Backend Artifact
-→ KAI-MIG-01
+Infra PR #185 리뷰/승인/Merge
+→ Runtime pull-only Robot/Vault/Secret을 main 기준 Capability로 확정
+→ GitOps #57에서 Backend/Frontend imagePullSecrets + 검증 Digest 반영
+→ Argo CD Sync
+→ 실제 Backend/Frontend Workload Pull·기동 확인
+→ Infra #180 종료
 ```
+
+이 단계에서 임시 Pod Pull 성공을 실제 Workload Pull 성공으로 대체하지 않는다.
 
 ## Phase 1 — Backend First Runtime
 
 ```text
-KAI-RUN-01 Backend 1 Replica
-→ Backend-only 기능/정확성 사전 검증 가능
+A-10 Provider 구현
+→ KAI-MIG-01
+→ KAI-RUN-01 Backend 1 Replica
 ```
+
+실제 일정에서는 GitOps #57의 Digest/imagePullSecrets 준비를 A-10과 병렬로 준비할 수 있지만, Provider First Runtime PASS는 Migration과 실제 Backend Consumer 연결까지 필요하다.
 
 ## Phase 2 — Scale / HPA
 
@@ -996,29 +839,32 @@ KAI-RUN-02 Backend 2 Replica
 → KAI-HPA-01
 ```
 
-HPA가 Deferred되면 PASS로 기록하지 않고 Go/No-Go 근거와 상태를 남긴다.
+HPA가 Deferred되면 PASS로 기록하지 않고 근거를 남긴다.
 
-## Phase 3 — Frontend / External / Delivery-Observability
+## Phase 3 — Frontend / Gateway / Public Access
 
 ```text
-KAI-DEL-01 Frontend Artifact
-→ KAI-FE-01
-→ KAI-RT-01
+KAI-FE-01 Frontend Runtime
+→ KAI-RT-01 HTTPRoute / HTTPS / WSS
+→ DNS / 공개 TLS 통합 확인
 → KAI-OBS-01 / KAI-OBS-02
-→ Delivery/Observability Cross-role prerequisite 확인
 ```
+
+Gateway Platform의 기존 HTTPS/TLS PASS를 실제 Application Route 성공으로 대신하지 않는다.
 
 ## Phase 4 — M5 First Success
 
 ```text
-KAI-E2E-01
+팀원 PC에서 실제 URL 접속
+→ KAI-E2E-01
+→ 실제 데이터 UX/UI 검증
 ```
 
-09 기준 M3 Runtime과 M4 Delivery/Observability 선행조건을 충족한 뒤 수행한다.
+M3 Runtime과 M4 Delivery/Observability 선행조건 이후 수행한다.
 
 ## Phase 5 — MVP P4
 
-M5 First Success가 성립한 **동일한 MVP Runtime 계열**에서 대표 부하·동시성·장애/복구를 최종 수행한다.
+M5 First Success가 성립한 동일 MVP Runtime 계열에서:
 
 ```text
 KAI-CON-01
@@ -1029,17 +875,20 @@ KAI-CFG-01 — 실제 변경 시나리오가 있을 때
 Cross-role KAI-DR-01
 ```
 
-Backend-only 단계에서 동일 유형 Test를 사전 수행한 결과는 결함 탐지 Evidence로 보존할 수 있으나 P4 최종 결과를 대신하지 않는다.
+Backend-only 사전 시험은 결함 탐지 Evidence로 보존할 수 있으나 P4 최종 결과를 대신하지 않는다.
 
 ### 절대 Gate
 
 ```text
-A-10 미완료 → Backend Runtime 금지
+Infra PR #185 미확정 → Registry Capability를 main 완료로 표시 금지
+Deployment imagePullSecrets 미반영 → Actual Workload Pull PASS 금지
+Actual Workload Pull 미검증 → Infra #180 완료 금지
+A-10 미완료 → Provider Runtime PASS 금지
 Backend 1 Replica 미검증 → 2 Replica/HPA 금지
 2 Replica Shared Runtime 미검증 → M-01/M-03 최종 판정 금지
 Frontend/Backend Service 미준비 → HTTPRoute E2E 금지
 Metrics Endpoint/Service metadata label 미정 → ServiceMonitor 활성화 금지
-M3/M4 선행조건 미충족 → M5 First Success 최종 판정 금지
+M3/M4 선행조건 미충족 → M5 최종 판정 금지
 M5 미성립 → P4 최종 판정 금지
 ```
 
@@ -1055,16 +904,7 @@ Change: Scale-out 또는 HPA
 After: 동일 부하
 ```
 
-비교:
-
-```text
-Vote events/s
-p95/p99
-Error
-Resource
-Replica
-M-01 오류
-```
+비교: Vote events/s, p95/p99, Error, Resource, Replica, M-01 오류.
 
 ## 10.2 장애 복구
 
@@ -1074,14 +914,7 @@ Change: 통제 Backend 장애
 After: 재연결/복구 Snapshot
 ```
 
-비교:
-
-```text
-상태 일관성
-복구시간
-실패 요청
-잘못된 패배 판정
-```
+비교: 상태 일관성, 복구시간, 실패 요청, 잘못된 패배 판정.
 
 ## 10.3 GitOps Rollback
 
@@ -1091,36 +924,20 @@ Change: 검증 가능한 Revision/Drift
 After: Revert + Argo Sync
 ```
 
-비교:
+비교: Recovery time, Manual steps, Sync/Health, Pod Ready, 서비스 정상화.
 
-```text
-Recovery time
-Manual steps
-Sync/Health
-Pod Ready
-서비스 정상화
-```
-
-## 10.4 Artifact Delivery
+## 10.4 Artifact / Registry Delivery
 
 ```text
 App Commit
 → Build / Push
-→ GitOps Update
+→ Runtime Pull Credential
+→ GitOps Digest/imagePullSecrets
 → Argo Sync
-→ Pod Ready
+→ Actual Pod Pull / Ready
 ```
 
-기록:
-
-```text
-Build 시간
-Push 시간
-GitOps PR/Merge 시간
-Argo Sync 시간
-Pod Ready 시간
-Commit → Digest → Pod Traceability
-```
+기록: Build/Push 시간, PR/Merge, Argo Sync, Pull, Pod Ready, Commit→Digest→Pod Traceability.
 
 ---
 
@@ -1132,11 +949,12 @@ Commit → Digest → Pod Traceability
 - 예상 외 DB Revision
 - Replication 오류
 - Secret/Token/Password 노출
-- 잘못된 GameResult/Rating 반영
-- M-01 정확성 오류
+- Runtime에 CI Push Credential 사용
+- 의도하지 않은 Image Digest
+- 잘못된 GameResult/Rating
+- M-01 오류
 - Backend 장애가 사용자 패배로 잘못 확정
 - HPA/Argo Replica ownership 지속 경쟁
-- 의도한 Revision과 다른 Image/Manifest 사용
 
 ```text
 Run = FAILED 또는 BLOCKED
@@ -1210,22 +1028,22 @@ Kubernetes/Application Integration Evidence
 
 본 역할 Acceptance 핵심:
 
-- Commit→Digest→GitOps→Argo→Pod Traceability
+- Commit→Digest→Runtime Pull Secret→GitOps→Argo→Actual Pod Traceability
 - Migration Gate Evidence
 - Backend 1 Replica Provider Runtime PASS
 - Backend 2 Replica Shared Runtime PASS
 - Scale/HPA 상태 명확화
 - Frontend Runtime PASS
-- HTTPRoute/HTTPS/WSS PASS
+- HTTPRoute/HTTPS/WSS/DNS/Public TLS PASS
 - Application Metrics/Logs Consumer Evidence
-- Browser M5 First Success PASS
+- Browser M5 First Success 및 실제 데이터 UX/UI PASS
 - M-01 P4 PASS
-- M-02 P4 Baseline 확보
-- M-03 P4 PASS + 복구시간 측정
+- M-02 P4 Baseline
+- M-03 P4 PASS + 복구시간
 - GitOps Self-Heal/Rollback Evidence
-- HPA 미구현/Deferred 시 이를 PASS로 가장하지 않고 근거 유지
+- HPA 미구현/Deferred 시 상태와 근거 유지
 
-Delivery/Observability 담당의 Alert firing/resolved/E-mail Evidence와 Data/Storage Recovery의 DR Evidence는 동일 Acceptance Run과 연결한다.
+Delivery/Observability의 Alert Evidence와 Data/Storage Recovery의 DR Evidence를 동일 Acceptance Run과 연결한다.
 
 ---
 
@@ -1235,11 +1053,12 @@ Delivery/Observability 담당의 Alert firing/resolved/E-mail Evidence와 Data/S
 - 07 Commit→Digest→Healthy 및 Metric/Log/Evidence 원칙과 정합.
 - 09 Critical Path, M5 First Success, P4 순서 유지.
 - 11 실행절차 반복 없이 Test/Measurement/Evidence 연결.
+- Infra #180/PR #185와 GitOps #57의 Runtime Pull 경계를 실제 상태대로 반영.
+- Registry Capability와 Actual Workload Consumer 검증 구분.
 - 각 핵심 Test에 목적·측정값·PASS/FAIL·Evidence 존재.
 - 미실행 항목을 결과처럼 작성하지 않음.
 - 성능 목표/HPA 임계/RTO/RPO 임의 생성 금지.
 - ANALYSIS Runtime을 현재 MVP PASS 필수조건으로 만들지 않음.
-- Dependency Evidence와 Consumer 검증 구분.
 - Cross-role Owner 경계 명확.
 - Secret/Token/Private Key Evidence 금지.
 - 실패 Run 보존, 재실행은 새 Run ID.
