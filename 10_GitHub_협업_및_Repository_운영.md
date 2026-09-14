@@ -42,6 +42,8 @@ Jenkins Build/Test
 
 [07 확장 호환형 MVP](./07_SeokPan_확장_호환형_MVP_도출.md#section-16-2)는 후속 실행·협업 실시설계에서 `Repository·Directory`, Provider/Consumer Integration Contract, GitHub 협업 환경을 구체화하도록 인계한다.
 
+[08 1차 프로젝트 기획안의 논리 아키텍처 핵심 설계 포인트](./08_SeokPan_1차_프로젝트_기획안.md#logical-architecture-key-design-points)는 Kubernetes 내부 역할 분리와 Ansible·Jenkins·Harbor·Argo CD의 자동화·배포 책임 분리를 최종 기획안 수준에서 다시 확인한다.
+
 따라서 현재 Repository 구조는 선행 설계의 책임 경계를 구현 단계의 파일 소유권과 변경 경계로 구체화한 구조로 본다.
 
 단, 현재 구조의 모든 세부 Directory가 처음부터 정확히 같은 이유로 설계되었다고 소급해 단정하지 않는다. 이 문서는 Baseline의 책임 분리와 현재 실제 Repository 구조가 만드는 운영 경계를 기준으로 설명한다.
