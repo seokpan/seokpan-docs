@@ -918,6 +918,33 @@
 - 관련:
   - `seokpan/seokpan-infra#156`
 
+## 2026-09-11 — Jenkins Image Pipeline과 GitOps 변경 자동화 책임 경계 확정
+
+- 구분: 구현 단계 추가 확정 및 자동화 책임 경계 구체화
+- 기존 기준:
+  - 06은 `Source Commit → Jenkins Test/Build → Harbor Push → GitOps Branch/PR → Review/Merge → Argo CD Sync`의 Delivery 흐름을 정의하고, GitOps 변경은 별도 Branch·PR·Review/Merge를 사용하도록 했다.
+  - 2026-08-30 Application MVP 구현 기준도 `Jenkins Test → Harbor Image → GitOps PR → Argo CD` 흐름을 유지한다고 기록했다.
+  - 다만 구현 착수 시 `seokpan-app#40`의 초기 계획에서는 Jenkins가 GitOps Branch 생성·Manifest 수정·Commit/Push·PR 생성까지 자동화하는 방안을 포함했다.
+- 변경/확정 내용:
+  - PR 검증 Jenkinsfile은 Application Test/검증까지만 수행하고 Harbor Push나 GitOps 변경을 하지 않는다.
+  - main Image Pipeline은 main Commit 재검증 → Rootless BuildKit Image Build → SBOM/Provenance → Vulnerability Scan → Candidate Health Smoke → Harbor Final Tag/Digest → Evidence 생성까지 책임진다.
+  - Jenkins는 검증된 Image Tag/Digest/Evidence 생성에서 책임을 종료한다.
+  - Jenkins는 GitOps Branch 생성, Manifest 수정, Commit/Push, Pull Request 생성, `kubectl`/`helm`/`argocd`를 통한 Cluster 직접 변경을 자동 수행하지 않는다.
+  - 실제 GitOps Desired State 변경은 `seokpan-gitops`의 별도 Branch/PR/Review/Merge로 수행하고, Merge 후 Argo CD가 Sync한다.
+  - 따라서 전체 Delivery 흐름(`Jenkins → Harbor → GitOps PR → Argo CD`)은 유지하되, Jenkins가 GitOps PR 생성까지 자동화하는 구조는 현재 MVP 책임 경계에서 제외한다.
+- 영향:
+  - Application Image Pipeline Credential과 GitOps Repository write/PR 권한을 분리하여 Source of Truth와 Review Gate를 유지한다.
+  - CI 결과는 `Commit → Jenkins Run → Image Tag/Digest/Evidence`까지, CD 결과는 `GitOps Revision → Argo CD Sync → Kubernetes Runtime`으로 분리해 추적한다.
+  - 향후 Jenkins가 GitOps PR을 자동 생성하도록 다시 확장하려면 별도 변경 결정으로 Credential 범위, Repository write 권한, 승인/Review Gate, 실패/재시도 경계를 다시 검토한다.
+  - 이 기록은 자동화 책임 경계의 확정을 의미하며, `seokpan-gitops#57`의 실제 Workload 배포 검증 완료를 의미하지 않는다.
+- 관련:
+  - `seokpan/seokpan-app#40`
+  - `seokpan/seokpan-app#58`
+  - `seokpan/seokpan-app` PR #68
+  - `seokpan/seokpan-app/Jenkinsfile.image-pipeline`
+  - `seokpan/seokpan-gitops#57`
+  - `seokpan/seokpan-docs#114`
+
 ---
 
 ## 작성 형식
