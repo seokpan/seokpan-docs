@@ -41,8 +41,9 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 | 09 | [MVP 실행·통합 실시설계 — Kubernetes & Application Integration](09_MVP_실행·통합_실시설계/09_MVP_실행·통합_실시설계_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration 책임, Current State, Provider/Consumer, Integration Gate와 Gap |
 | 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영.md) | Repository·Directory 책임, GitHub 작업 흐름, Cross-Repository 변경, Evidence·Traceability 운영 기준 |
 | 11 | [MVP 구축·자동화 Runbook — Kubernetes & Application Integration](11_MVP_구축·자동화_Runbook/11_MVP_구축·자동화_Runbook_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration의 Pre-check, 실행, 재실행, Recovery, Rollback 절차 |
+| 12 | [MVP 검증·측정 계획 — Kubernetes & Application Integration](12_MVP_검증·측정_계획/12_MVP_검증·측정_계획_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration의 Test Case, Measurement, PASS·FAIL, Evidence 계획 |
 
-09의 다른 역할 문서와 11의 다른 역할 문서, 12 역할별 후속 문서는 각 작업이 완료되는 시점에 이 탐색 구조에 추가합니다.
+09·11·12의 다른 역할 문서는 각 작업이 완료되는 시점에 이 탐색 구조에 추가합니다.
 
 ## Historical Record → Current State Traceability
 
