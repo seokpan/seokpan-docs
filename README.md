@@ -34,13 +34,14 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 
 ## Execution & Collaboration
 
-01~08 Baseline 이후의 실행·협업 단계에서 사용하는 공통 운영 문서는 아래에서 확인합니다.
+01~08 Baseline 이후의 실행·협업 단계에서 사용하는 후속 문서는 아래에서 확인합니다.
 
 | 순서 | 문서 | 역할 |
 | --- | --- | --- |
+| 09 | [MVP 실행·통합 실시설계 — Kubernetes & Application Integration](09_MVP_실행·통합_실시설계/09_MVP_실행·통합_실시설계_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration 책임, Current State, Provider/Consumer, Integration Gate와 Gap |
 | 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영.md) | Repository·Directory 책임, GitHub 작업 흐름, Cross-Repository 변경, Evidence·Traceability 운영 기준 |
 
-09·11·12 역할별 후속 문서는 해당 작업이 완료되는 시점에 이 탐색 구조에 추가합니다.
+09의 다른 역할 문서와 11·12 역할별 후속 문서는 각 작업이 완료되는 시점에 이 탐색 구조에 추가합니다.
 
 ## Historical Record → Current State Traceability
 
@@ -75,7 +76,7 @@ Historical record
 멘토링에서 받은 프로젝트 리뷰와 실제 반영 과정을 회차별로 기록합니다.
 
 - [멘토링 기록 목차](mentoring/README.md)
-- 1차 멘토링: 2026-09-01, 레드햇 김명환 멘토님
+- 1차 멘토링: 2026-09-01
 - 멘토 의견, 해당 시점의 GitHub 실제 상태, 다음 멘토링까지의 반영 추적과 변화 기록을 함께 관리합니다.
 - 단순 회의록이 아니라 `피드백 → 판단 → 구현/조치 → 검증 → 변화`를 연결해 팀 공유 및 포트폴리오 근거로 활용합니다.
 
