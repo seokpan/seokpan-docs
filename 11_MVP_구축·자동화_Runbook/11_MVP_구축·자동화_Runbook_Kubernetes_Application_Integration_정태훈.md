@@ -665,23 +665,60 @@ Argo CD UI에서 임의 Revision을 장기 운영 기준으로 만들지 않고 
 
 Observability Platform 자체의 구축·운영은 Delivery / Observability 담당 영역이다. Kubernetes & Application Integration은 Application Runtime이 관측 대상이 될 수 있도록 계약을 제공한다.
 
-### 14.1 연결 대상
+### 14.1 현재 자산과 상태
+
+현재 `seokpan-gitops`에는 다음 pending 자산이 존재한다.
+
+```text
+observability/servicemonitor-app.yaml.pending
+```
+
+이 파일은 Argo CD 동기화 대상에서 제외된 상태다. 현재 파일에는 다음 값이 들어 있다.
+
+```text
+Namespace: application
+Service Port: http
+Metrics Path: /metrics
+```
+
+다만 selector는 아직 과거 가정값인 `app.kubernetes.io/part-of: seokpan`을 사용한다. 현재 실제 Backend Service selector는 `app.kubernetes.io/name: backend`이므로 `.pending` 확장자만 제거해서는 안 된다.
+
+또한 Backend가 실제 `/metrics`를 제공하는지와 Application Runtime이 활성화되어 있는지를 별도로 확인해야 한다.
+
+관련 Current-State 정합화는 `seokpan-gitops#86`에서 추적한다.
+
+### 14.2 활성화 순서
+
+```text
+Backend Runtime Running
+→ Backend Service 실제 Label 확인
+→ Backend /metrics 제공 여부 확인
+→ servicemonitor-app selector 정합화
+→ Service Port http 확인
+→ pending 제거 / 정식 YAML 편입
+→ GitOps PR
+→ Delivery / Observability 담당 Review
+→ Merge
+→ Argo CD Sync
+→ Prometheus Target 확인
+```
+
+Observability Platform이 Running이라는 사실만으로 Application Observability Integration을 완료로 판정하지 않는다.
+
+### 14.3 역할 경계
+
+Kubernetes & Application Integration은 다음을 확인한다.
 
 ```text
 Health Endpoint
-Application Metrics
+Application Metrics Endpoint
+Backend Service Label / Port
 Container / Application Log
 Pod / Replica Identity
 Deployment / Service Metadata
 ```
 
-### 14.2 실행 경계
-
-Backend/Frontend가 실제 Running이 된 뒤 ServiceMonitor 등 Application-specific 관측 자산의 활성화 조건을 다시 확인한다.
-
-Observability Platform이 Running이라는 사실만으로 Application Observability Integration을 완료로 판정하지 않는다.
-
-상세 Metric Query, Dashboard, Alert Rule, 수집 Evidence는 12 또는 Delivery/Observability 역할 문서에서 관리한다.
+Prometheus Target·Metric Query·Dashboard·Alert Rule·로그 수집 상세와 최종 Evidence는 12 또는 Delivery / Observability 역할 문서에서 관리한다.
 
 ## 15. 장애 유형별 Recovery
 
