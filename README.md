@@ -32,6 +32,16 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 구현 기준 문서는 원 기획·설계의 범위를 임의로 확대하거나 대체하지 않습니다.
 실제 코드·Manifest·자동화와 작업 상태는 각 구현 Repository에서 관리합니다.
 
+## Execution & Collaboration
+
+01~08 Baseline 이후의 실행·협업 단계에서 사용하는 공통 운영 문서는 아래에서 확인합니다.
+
+| 순서 | 문서 | 역할 |
+| --- | --- | --- |
+| 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영.md) | Repository·Directory 책임, GitHub 작업 흐름, Cross-Repository 변경, Evidence·Traceability 운영 기준 |
+
+09·11·12 역할별 후속 문서는 해당 작업이 완료되는 시점에 이 탐색 구조에 추가합니다.
+
 ## Historical Record → Current State Traceability
 
 멘토링 Baseline, Troubleshooting, 회고·검증 기록처럼 **특정 시점의 사실을 보존하는 역사성 문서**는 이후 상태가 바뀌더라도 당시 내용을 현재 상태로 덮어쓰지 않습니다.
