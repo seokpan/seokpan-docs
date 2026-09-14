@@ -23,11 +23,11 @@
 
 ### 2.1 Baseline에서 정의된 책임 분리
 
-[03 논리 역할 및 서비스 목록](./03_SeokPan_논리_역할_및_서비스_목록.md#section-2)은 기술이나 물리 배치보다 책임·상태 소유권·운영 책임을 먼저 분리한다.
+[03 논리 역할 및 서비스 목록](../01-08_기획·설계_Baseline/03_SeokPan_논리_역할_및_서비스_목록.md#section-2)은 기술이나 물리 배치보다 책임·상태 소유권·운영 책임을 먼저 분리한다.
 
-[04 기술 비교 및 논리 아키텍처](./04_SeokPan_기술_비교_및_논리_아키텍처.md#section-10)는 CI/CD·GitOps와 Image Delivery를 독립된 책임으로 두고, [Infrastructure Automation](./04_SeokPan_기술_비교_및_논리_아키텍처.md#section-11) 역시 Application Runtime과 구분한다.
+[04 기술 비교 및 논리 아키텍처](../01-08_기획·설계_Baseline/04_SeokPan_기술_비교_및_논리_아키텍처.md#section-10)는 CI/CD·GitOps와 Image Delivery를 독립된 책임으로 두고, [Infrastructure Automation](../01-08_기획·설계_Baseline/04_SeokPan_기술_비교_및_논리_아키텍처.md#section-11) 역시 Application Runtime과 구분한다.
 
-[06 Ansible 자동화·테스트 설계](./06_SeokPan_Ansible_자동화_테스트_설계.md#section-2)은 관리 책임 경계를 다음과 같이 구분한다.
+[06 Ansible 자동화·테스트 설계](../01-08_기획·설계_Baseline/06_SeokPan_Ansible_자동화_테스트_설계.md#section-2)은 관리 책임 경계를 다음과 같이 구분한다.
 
 ```text
 Ansible Bootstrap
@@ -40,9 +40,9 @@ Jenkins Build/Test
 → Argo CD Sync
 ```
 
-[07 확장 호환형 MVP](./07_SeokPan_확장_호환형_MVP_도출.md#section-16-2)는 후속 실행·협업 실시설계에서 `Repository·Directory`, Provider/Consumer Integration Contract, GitHub 협업 환경을 구체화하도록 인계한다.
+[07 확장 호환형 MVP](../01-08_기획·설계_Baseline/07_SeokPan_확장_호환형_MVP_도출.md#section-16-2)는 후속 실행·협업 실시설계에서 `Repository·Directory`, Provider/Consumer Integration Contract, GitHub 협업 환경을 구체화하도록 인계한다.
 
-[08 1차 프로젝트 기획안의 논리 아키텍처 핵심 설계 포인트](./08_SeokPan_1차_프로젝트_기획안.md#logical-architecture-key-design-points)는 Kubernetes 내부 역할 분리와 Ansible·Jenkins·Harbor·Argo CD의 자동화·배포 책임 분리를 최종 기획안 수준에서 다시 확인한다.
+[08 1차 프로젝트 기획안의 논리 아키텍처 핵심 설계 포인트](../01-08_기획·설계_Baseline/08_SeokPan_1차_프로젝트_기획안.md#logical-architecture-key-design-points)는 Kubernetes 내부 역할 분리와 Ansible·Jenkins·Harbor·Argo CD의 자동화·배포 책임 분리를 최종 기획안 수준에서 다시 확인한다.
 
 따라서 현재 Repository 구조는 선행 설계의 책임 경계를 구현 단계의 파일 소유권과 변경 경계로 구체화한 구조로 본다.
 
@@ -172,7 +172,7 @@ Infrastructure 자동화에서는 “대상”, “재사용 가능한 설정 �
 
 Role 하나가 전체 인프라를 소유하거나 Playbook 안에 모든 설정을 직접 누적하는 구조를 피한다.
 
-[06의 Ansible 프로젝트 구조](./06_SeokPan_Ansible_자동화_테스트_설계.md#section-6)를 Baseline으로 참고하되, 실제 구현 상태는 `seokpan-infra/main`을 우선한다.
+[06의 Ansible 프로젝트 구조](../01-08_기획·설계_Baseline/06_SeokPan_Ansible_자동화_테스트_설계.md#section-6)를 Baseline으로 참고하되, 실제 구현 상태는 `seokpan-infra/main`을 우선한다.
 
 ### 5.2 `seokpan-gitops`
 
@@ -255,7 +255,11 @@ Application 자체의 재현 가능한 Build·Test에 필요한 자산은 Applic
 
 ```text
 seokpan-docs/
-├─ 01~08 Markdown Reference Mirror
+├─ 01-08_기획·설계_Baseline/
+├─ 09_MVP_실행·통합_실시설계/
+├─ 10_GitHub_협업_및_Repository_운영/
+├─ 11_MVP_구축·자동화_Runbook/
+├─ 12_MVP_검증·측정_계획/
 ├─ PROJECT_CHANGES.md
 ├─ MVP_IMPLEMENTATION_BASELINE.md
 ├─ troubleshooting/
@@ -265,7 +269,7 @@ seokpan-docs/
 └─ baseline-pdf/
 ```
 
-01~08 Markdown은 Baseline의 탐색·Anchor 참조용 Reference Mirror다.
+01~08 Markdown은 `01-08_기획·설계_Baseline/`에서 Baseline의 탐색·Anchor 참조용 Reference Mirror로 관리한다.
 
 `baseline-pdf/`는 해당 Baseline의 확정 당시 PDF Snapshot을 보존한다.
 
@@ -280,22 +284,23 @@ seokpan-docs/
 09~12에서는 다음 구조를 사용한다.
 
 ```text
-09/
+09_MVP_실행·통합_실시설계/
   역할별 MVP 실행·통합 실시설계
 
-10_GitHub_협업_및_Repository_운영.md
+10_GitHub_협업_및_Repository_운영/
+  팀 공통 GitHub 협업 및 Repository 운영 기준
 
-11/
+11_MVP_구축·자동화_Runbook/
   역할별 구축·자동화 Runbook
 
-12/
+12_MVP_검증·측정_계획/
   역할별 검증·측정 계획
 
 baseline-pdf/
   기존 01~08 PDF Baseline
 ```
 
-09·11·12는 역할별 문서가 여러 개이므로 Directory를 사용하고, 10은 팀 공통 운영 기준이므로 주요 문서 위치에 단일 파일로 둔다.
+09·11·12는 역할별 문서가 여러 개일 수 있어 Directory를 사용하고, 10도 실행·협업 문서 번호 체계를 맞추기 위해 전용 Directory에서 팀 공통 운영 기준을 관리한다.
 
 ---
 
@@ -369,7 +374,7 @@ Provider Ready
 ≠ Integration Validated
 ```
 
-[07의 역할·Provider·Consumer](./07_SeokPan_확장_호환형_MVP_도출.md#section-11)를 상위 기준으로 사용한다.
+[07의 역할·Provider·Consumer](../01-08_기획·설계_Baseline/07_SeokPan_확장_호환형_MVP_도출.md#section-11)를 상위 기준으로 사용한다.
 
 ---
 
@@ -606,7 +611,7 @@ Cross-Repository 작업에서는 다음을 명시한다.
 
 “설치했다”, “안정적이다”, “복구된다”와 같은 설명만으로 검증 완료 처리하지 않는다.
 
-[06의 Evidence 설계](./06_SeokPan_Ansible_자동화_테스트_설계.md#section-17) 및 [07의 핵심 검증과 Evidence 설계](./07_SeokPan_확장_호환형_MVP_도출.md#section-9)를 연결 기준으로 사용한다.
+[06의 Evidence 설계](../01-08_기획·설계_Baseline/06_SeokPan_Ansible_자동화_테스트_설계.md#section-17) 및 [07의 핵심 검증과 Evidence 설계](../01-08_기획·설계_Baseline/07_SeokPan_확장_호환형_MVP_도출.md#section-9)를 연결 기준으로 사용한다.
 
 ---
 
@@ -716,13 +721,13 @@ Repository 실제 구조를 확인하지 않은 상태에서 대규모 파일·D
 
 기존 Issue·PR·코드와 충돌하는 경우 실제 Repository 상태를 우선한다.
 
-[07의 AI 개발 도구와 ANALYSIS Runtime 경계](./07_SeokPan_확장_호환형_MVP_도출.md#section-3-2)를 따른다.
+[07의 AI 개발 도구와 ANALYSIS Runtime 경계](../01-08_기획·설계_Baseline/07_SeokPan_확장_호환형_MVP_도출.md#section-3-2)를 따른다.
 
 ---
 
 ## 23. Baseline 계획과 현재 적용 상태의 구분
 
-[07 실행·협업 실시설계 인계](./07_SeokPan_확장_호환형_MVP_도출.md#section-16-2)는 GitHub Organization·Repository·Project·Issue·PR·Review·CODEOWNERS 등을 후속 협업환경 구성 대상으로 제시했다.
+[07 실행·협업 실시설계 인계](../01-08_기획·설계_Baseline/07_SeokPan_확장_호환형_MVP_도출.md#section-16-2)는 GitHub Organization·Repository·Project·Issue·PR·Review·CODEOWNERS 등을 후속 협업환경 구성 대상으로 제시했다.
 
 그러나 Baseline에서 설정 대상으로 제시된 항목을 실제 현재 운영 완료 상태와 동일시하지 않는다.
 
