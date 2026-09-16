@@ -945,6 +945,44 @@
   - `seokpan/seokpan-gitops#57`
   - `seokpan/seokpan-docs#114`
 
+## 2026-09-15
+
+### DR-02 etcd Snapshot Restore 자동화 구현 및 loadgen 격리 환경 실사용
+
+- 구분: 기존 계획 실행 방식 변경(범위 확장) 및 Runtime 검증으로 기존 가정 보완
+- 기존 기준:
+  - 2026-09-08 "DR 백업 보호 위치 전략 변경" 항목에서, loadgen(격리 서버)
+    구축은 프로젝트 기간 내 필수 작업 대비 후순위로 조정하고, 시간이
+    허락하지 않으면 NFS 서버만으로 DR-02 1차 완성 범위를 채택하기로
+    결정했다. 격리 Restore 검증이 필요한 경우 loadgen 전체가 아닌 소형
+    VM 3개(`restore-etcd-01/02/03`)를 신규로 최소 구성하는 방향을 제시했다.
+- 변경/확정 내용:
+  - 실제로는 격리 검증 VM 3대(loadgen/loadgen2/loadgen3, bridged
+    10.1.93.95~97/24)를 구성해 사용했으며, 09-08 결정문의 "후순위/최소
+    구성" 방향과 달리 이번 라운드에서 DR-02 전체 E2E(Snapshot→3-member
+    Restore→kube-apiserver→Object 검증→RTO)를 이슈 #176/PR #191로
+    자동화·검증까지 완료했다.
+  - Safety Guard(실행 대상 안전성 검증) + Restore Decision Gate(Restore
+    필요성 판단) 2단 안전장치를 도입해, 향후 실제 운영 장애 복구에도
+    사용 가능한 절차로 설계 범위를 확장했다(기존에는 "검증용 1회성
+    절차"에 가까웠음).
+  - E2E 실측: etcd 3-member quorum PASS, Kubernetes API 인증 PASS,
+    Namespace/Deployment/Secret Object diff 0, RTO 52초.
+- 영향:
+  - 09-08 결정문의 "DR-02는 이번 프로젝트 기간 내 Restore 이후 단계를
+    후속 이슈로 분리한다"는 범위 제한이 실질적으로 조기 해소됨. 상위
+    이슈 #143 진행률 재계산 시 반영 필요.
+  - 격리 검증 환경(loadgen 계열)은 "운영 Restore 대상"이 아니라 "운영
+    절차를 안전하게 검증하는 테스트/훈련 환경"으로 정의를 명확히 함 —
+    향후 동일 환경을 재사용할 때 이 경계를 유지할 것.
+  - PR #191은 2026-09-15 기준 리뷰 승인(비차단 권장사항 3건 포함) 완료,
+    머지 전 상태. 머지 이후 troubleshooting/ 신규 게시 여부를 별도 확인.
+- 관련:
+  - `seokpan/seokpan-infra#113`
+  - `seokpan/seokpan-infra#176`
+  - `seokpan/seokpan-infra` PR #191
+  - `seokpan/seokpan-infra#143`
+
 ---
 
 ## 작성 형식
