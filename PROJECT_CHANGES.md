@@ -983,6 +983,30 @@
   - `seokpan/seokpan-infra` PR #191
   - `seokpan/seokpan-infra#143`
 
+## 2026-09-16
+
+### DR-01(MariaDB) RTO/RPO 실측 완료 — 스트레치 목표 범위까지 검증 수행
+
+- 구분: 기존 계획 실행 범위 확장 및 Runtime 검증으로 기존 가정 보완
+- 기존 기준:
+  - 2026-09-08 "DR 백업 보호 위치 전략 변경" 항목에서 DR-01(MariaDB)은 "로컬+NFS 저장까지 1차 완성, 격리 서버 이중화는 스트레치 목표"로 범위를 통일했다. 즉 이번 프로젝트 기간 내 필수 완료 기준에는 실제 RTO/RPO 수치 실측이 포함되지 않았다.
+- 변경/확정 내용:
+  - 이슈 #194로 스트레치 목표였던 DR-01 실측을 수행했다.
+  - Isolated 모드(Full-only 체인, mariadb-02 대상) RTO 27.376초를 확인했다.
+  - Production 모드 실측: 더미데이터 삽입 → Incremental 백업 → 추가 더미데이터 삽입(미백업) → mariadb-01/02 양쪽 서비스 동시 정지 → `mariadb_dr_recovery.yml` 4단계(restore→replication→maxscale_verify→checklist)를 양쪽 각각 완주하는 "양쪽 다 유실" 최악 시나리오를 재현했다.
+  - 실측 RPO = 3건(Incremental 백업 이후 발생한 미백업 데이터 전량 손실, 설계 의도대로 정확히 재현됨).
+  - 실측 RTO(단일 노드 서비스 재개) = 1분 29초, RTO(양쪽 이중화 완전 정상화) = 4분 0초.
+  - 이슈 #119(9-4절)에서 설계만 하고 실측 검증까지 가지 않았던 Split-brain 방지 안전장치(비정상 노드에 read_only 강제 배포)의 최초 실측 검증을 완료했다 — 정상 노드가 Replica로 재편입되는 시점에 안전장치가 자동 해제됨을 확인했다.
+- 영향:
+  - DR-01은 "자동화 코드 구현 완료" 단계에서 "실측 RTO/RPO 수치 확보" 단계로 상향됐다. etcd DR-02(RTO 52초, 2026-09-15 기록)와 대칭되는 정량 지표를 확보했다.
+  - 상위 이슈 #143 진행률 재계산이 필요하다.
+  - 실측 과정에서 `roles/backup_transfer/tasks/replication_setup.yml`의 `backup_restore_role=master` 경로 버그를 발견했다(PR #197). 별도 트러블슈팅 보고서는 PR 머지·재검증 완료 후 게시 예정이다.
+- 관련:
+  - `seokpan/seokpan-infra#194`
+  - `seokpan/seokpan-infra#143`
+  - `seokpan/seokpan-infra#119`
+  - `seokpan/seokpan-infra` PR #197
+
 ---
 
 ## 작성 형식
