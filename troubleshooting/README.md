@@ -57,8 +57,11 @@
 36. **[TS-036 — DR-02 격리 etcd 3-member 간 Peer 통신 실패(firewalld 신규 포트 차단)](TS-036_DR-02 격리 etcd 3-member 간 Peer 통신 실패 (firewalld 신규 포트 차단).md)**
 37. **[TS-037 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)](TS-037_DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존).md)**
 38. **[TS-038 — kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized](TS-038_kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized.md)**
+39. **[TS-039 — Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌](TS-039_Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌.md)**
+40. **[TS-040 — Jinja2에서 `.items`가 dict의 `.items()` 메서드로 오인되는 버그](TS-040_Jinja2에서 .items가 dict의 .items() 메서드로 오인되는 버그.md)**
+41. **[TS-041 — etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포](TS-041_etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포.md)**
 
 ---
 
-현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **38건**  
-기준 시점: **2026-09-14**
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **41건**  
+기준 시점: **2026-09-15**
