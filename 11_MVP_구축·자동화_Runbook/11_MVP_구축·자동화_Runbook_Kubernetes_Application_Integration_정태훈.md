@@ -13,7 +13,7 @@
 12 = Test Case / Measurement / PASS·FAIL / Evidence
 ```
 
-본 문서는 현재 구현 상태와 Repository 자산을 기준으로 작성한다. 아직 구현되지 않은 HPA, Application HTTPRoute 등은 완료된 실행 절차처럼 표현하지 않고, 구현 전제와 실행 순서를 분리한다.
+본 문서는 현재 구현 상태와 Repository 자산을 기준으로 작성한다. Application HTTPRoute와 Backend/Frontend Runtime은 A-10에서 검증 완료됐으며, 아직 구현되지 않은 HPA 등은 완료된 실행 절차처럼 표현하지 않고 구현 전제와 실행 순서를 분리한다.
 
 직접 기준:
 
@@ -32,7 +32,7 @@
 
 ## 2. 실행 원칙
 
-### 2.1 Source of Truth와 Working Directory
+### 2.1 Source of Truth (현재 값을 최종 관리하는 기준 저장소)와 Working Directory
 
 실행 명령은 해당 자산을 소유하는 Repository 기준으로 수행한다.
 
@@ -80,7 +80,7 @@ Issue
 ```text
 Implemented ≠ Merged ≠ Running ≠ Validated
 Image Pushed ≠ GitOps Updated ≠ Argo Synced ≠ Pod Ready
-Provider Ready ≠ Consumer Wired ≠ Integration Validated
+Provider 준비 완료 ≠ Application의 실제 연결 완료 ≠ 통합 검증 완료
 ```
 
 ### 2.4 Secret 비노출
@@ -100,35 +100,37 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 - Backend 1 Replica First Runtime 실패
 - Provider readiness 실패
 - GitOps Desired State와 실제 작업 대상 Revision 불일치
-- A-10 Production Provider Integration 미완료 상태에서 Runtime 강제 활성화
 
 ---
 
 ## 3. 현재 실행 기준 상태
 
-현재 기준 상태는 다음과 같다.
+현재 A-10 완료 기준 상태는 다음과 같다.
 
 | 영역 | 상태 |
 | --- | --- |
 | Kubernetes Cluster / Calico / CoreDNS | Validated |
 | Namespace / RBAC / Argo CD | Validated |
-| `apps-backend`, `apps-frontend` Child Application | Root 편입 완료 |
-| Backend Deployment | `replicas: 0`, `git-pending` |
-| Frontend Deployment | `replicas: 0`, `git-pending` |
+| `apps-backend`, `apps-frontend` Child Application | Root 편입 / `Synced` / `Healthy` |
+| Backend Deployment | `replicas: 2`, verified Digest, worker-01 / worker-02 분산 |
+| Frontend Deployment | `replicas: 2`, verified Digest |
 | Redis Runtime / Persistence | Validated |
-| Backend → Redis Consumer | Not Tested |
+| Backend → Redis Consumer | Validated |
 | DB Runtime/Migration Secret 공급 구조 | Implemented / Validated |
-| One-shot Migration 자산 | Implemented / Merged / Static+API Validated |
-| 실제 Migration Gate 실행 | Not Tested |
-| A-10 Production Provider Integration | In Progress |
-| Backend `SEOKPAN_ALLOWED_ORIGINS` JSON 배열 계약 | Runtime 활성화 전 정합화 필요 (`seokpan-gitops#90`) |
-| Application HTTPRoute | Not Implemented |
-| HPA | Not Implemented |
-| Application ServiceMonitor | `.pending`, Runtime Metrics 미검증 |
+| One-shot Migration 자산 | Implemented / Merged / Validated |
+| 실제 Migration Gate | Validated |
+| A-10 Production Provider Integration | Completed |
+| Backend `SEOKPAN_ALLOWED_ORIGINS` | JSON 배열 형식으로 Runtime 반영 완료 |
+| Application HTTPRoute | Running / Validated |
+| Gateway Production TLS | Let's Encrypt Production 인증서 적용 / Validated |
+| HPA | Not Implemented / Not Tested |
+| Application ServiceMonitor | Running, Prometheus Target 2개 `UP` |
+| Application Metrics | Runtime Query Validated |
+| P4 Stabilization / Acceptance | In Progress |
 
-이 표는 12의 공식 PASS/FAIL Evidence를 대체하지 않는다.
+이 표는 재실행·장애 대응 시 사용할 Current State 기준점이다.
 
----
+12 문서의 Test Case별 PASS/FAIL Evidence를 대신하지 않으며, A-10 완료 뒤 확인 중인 Game/Realtime 안정화 문제는 `seokpan-app#76`에서 별도로 추적한다.
 
 ## 4. 공통 Pre-check
 
@@ -190,7 +192,7 @@ Health Status
 kubectl -n application get deploy,svc
 ```
 
-현재 Runtime 활성화 전에는 Backend/Frontend가 `0/0`이어도 정상이다.
+현재 A-10 기준 Backend와 Frontend는 각각 2 Replica Runtime이다. 재구축·장애 복구 시에는 현재 정상 Baseline과 작업 대상 Git Revision을 함께 확인한다.
 
 ### 4.5 Redis
 
@@ -238,9 +240,9 @@ ca.crt
 
 Secret 실제 값의 Source of Truth는 `seokpan-infra`의 Ansible + Vault다.
 
-### 4.7 Backend ConfigMap 계약 확인
+### 4.7 Backend ConfigMap 설정 형식과 값 확인
 
-Backend Runtime 활성화 전 `apps/backend/configmap.yaml`의 Application Settings 계약을 현재 `seokpan-app`과 대조한다.
+Backend Runtime 재배포 또는 Settings 변경 전 `apps/backend/configmap.yaml`의 Application Settings를 현재 `seokpan-app`과 대조한다.
 
 특히 A-10 기준 `SEOKPAN_ALLOWED_ORIGINS`는 JSON 배열 표현이 필요하다.
 
@@ -250,7 +252,7 @@ Backend Runtime 활성화 전 `apps/backend/configmap.yaml`의 Application Setti
 SEOKPAN_ALLOWED_ORIGINS: '["https://game.seokpan.soldesk.store"]'
 ```
 
-현재 정합화 작업은 `seokpan-gitops#90`에서 추적한다.
+`SEOKPAN_ALLOWED_ORIGINS` JSON 배열 표현은 A-10 Runtime에 반영됐다. 이후 변경에서도 동일한 형식과 Same-Origin 동작을 유지한다.
 
 ---
 
@@ -285,7 +287,7 @@ harbor.seokpan.soldesk.store/seokpan/frontend@sha256:<verified-digest>
 
 Digest는 실행 시점의 검증된 Harbor Artifact에서 가져온다.
 
-Kustomize Image 계약은 실제 `kubectl kustomize` 렌더 결과로 다시 확인한다.
+Kustomize Image 설정은 실제 `kubectl kustomize` 렌더 결과로 다시 확인한다.
 
 ---
 
@@ -308,7 +310,7 @@ Migration → db_admin
 
 ### 6.2 CA
 
-공개 CA 계약:
+공개 CA 사용 기준:
 
 ```text
 ConfigMap: seokpan-internal-ca
@@ -463,7 +465,7 @@ Schema 변경은 Git Revert만으로 DB를 원상복구할 수 있다고 가정�
 
 ## 8. Backend 1 Replica First Runtime
 
-Backend 1 Replica는 실제 Provider Integration의 첫 Runtime Gate다.
+Backend 1 Replica는 실제 Provider Integration의 첫 Runtime Gate이며 A-10에서 검증 완료됐다. 아래 절차는 신규 Release, 재구축, 장애 분석 시 동일 Gate를 재현하기 위한 Runbook으로 유지한다.
 
 ### 8.1 선행조건
 
@@ -475,7 +477,7 @@ Backend 1 Replica는 실제 Provider Integration의 첫 Runtime Gate다.
 - Redis Runtime 준비
 - Provider-aware readiness 기준 준비
 - `apps-backend` Argo CD Application 존재
-- `SEOKPAN_ALLOWED_ORIGINS` JSON 배열 계약 정합화 (`seokpan-gitops#90`)
+- `SEOKPAN_ALLOWED_ORIGINS`가 JSON 배열 형식이며 실제 허용 Origin 값과 일치하는지 확인 (`seokpan-gitops#90`)
 
 하나라도 충족되지 않으면 `replicas: 0`을 유지한다.
 
@@ -484,23 +486,20 @@ Backend 1 Replica는 실제 Provider Integration의 첫 Runtime Gate다.
 ```text
 apps/backend/kustomization.yaml
 apps/backend/deployment.yaml
-apps/backend/configmap.yaml   # Settings 계약 변경이 필요한 경우
+apps/backend/configmap.yaml   # Settings 값 또는 형식 변경이 필요한 경우
 ```
 
-현재 상태:
-
-```text
-image: git-pending
-replicas: 0
-```
-
-변경 목표:
+A-10 최초 활성화 당시 목표:
 
 ```text
 verified Backend Digest
 replicas: 1
-production Settings 계약 정합
+production Settings와 실제 Runtime 요구값 일치
 ```
+
+현재 정상 Baseline은 Backend 2 Replica다.
+
+Backend First Runtime을 다시 검증해야 할 때는 검증된 1 Replica Revision 또는 명시적인 Test Revision을 GitOps로 적용하며, 현재 2 Replica Live State를 직접 수정해 새로운 미검증 상태를 만들지 않는다.
 
 Image Digest pinning은 현재 Kustomize 버전의 렌더 결과를 기준으로 적용한다. Kustomize `images` 항목은 image name/tag뿐 아니라 digest 교체도 지원한다.
 
@@ -583,14 +582,14 @@ Provider-aware Readiness
 
 ## 9. Backend 2 Replica Scale-out
 
-1 Replica 통합 검증 전에는 2 Replica로 확장하지 않는다.
+1 Replica 통합 검증 전에는 2 Replica로 확장하지 않는다. A-10에서는 이 순서를 실제로 통과했으며 현재 Backend 정상 Baseline은 2 Replica다.
 
 ### 9.1 선행조건
 
 - Backend 1 Replica Running
 - DB/Redis Provider 연결 정상
 - Migration Gate 후검증 완료
-- Realtime/Runner가 Process-local Authority에 의존하지 않는 A-10 상태
+- Realtime/Runner의 공유 상태가 특정 Backend Pod의 Process Memory에만 의존하지 않는 A-10 상태
 
 ### 9.2 GitOps Scale-out
 
@@ -654,9 +653,9 @@ Worker 분산 여부 자체를 성공 기준으로 임의 확정하지 않는다
 - Backend 2 Replica 수동 Scale-out 경로 검증 완료
 - Container Resource Request / Limit 결정
 - Metrics Server 또는 Resource Metrics 경로 준비
-- HPA와 Argo CD 사이의 `replicas` ownership 계약 확정
+- HPA와 Argo CD 중 `replicas` 값을 누가 최종적으로 변경·유지할지 확정
 
-### 10.2 HPA / Argo CD Replica Ownership
+### 10.2 HPA / Argo CD Replica 관리 주체
 
 HPA는 `Deployment.spec.replicas`를 변경한다. 반면 Argo CD `selfHeal`이 정적 `replicas` 값을 계속 소유하면 HPA와 Argo CD가 같은 필드를 두고 경쟁할 수 있다.
 
@@ -690,7 +689,7 @@ spec:
 ```text
 Resource Request / Limit 정의
 → Resource Metrics 경로 준비
-→ Replica Ownership 계약 확정
+→ `replicas` 값을 최종 변경·유지할 주체 확정
 → HPA Desired State 작성
 → Kustomize / Argo Application 정합화
 → 정적/API 검증
@@ -719,7 +718,7 @@ HPA 정책이 문제를 만들면:
 
 ```text
 HPA Desired State Revert/제거
-→ HPA용 Replica Ownership 예외도 함께 원복
+→ HPA 사용을 위해 적용한 Argo CD `replicas` 관리 예외도 함께 원복
 → 검증된 Static Replica Desired State 복구
 → Argo CD Sync
 ```
@@ -733,19 +732,20 @@ HPA Desired State Revert/제거
 ### 11.1 현재 상태
 
 ```text
-replicas: 0
-image: git-pending
-apps-frontend Child Application: Root 편입 완료
+replicas: 2
+image: verified Harbor Digest
+apps-frontend Child Application: Synced / Healthy
+Frontend Runtime: Running
 ```
 
-GitOps 관리 편입과 실제 Frontend Runtime 활성화는 별개다.
+GitOps 관리 편입과 실제 Frontend Runtime 활성화는 개념적으로 구분하지만, 현재 A-10 기준에서는 둘 다 검증됐다.
 
 ### 11.2 선행조건
 
 - 실제 Frontend Image Digest 확보
 - Container Runtime Smoke 확인
 - `apps-frontend` Argo CD Application 확인
-- Backend Runtime과 동일 Origin 계약 준비
+- Backend와 동일 Origin으로 동작하도록 Frontend의 접속 URL·Cookie·CORS 경로를 맞춤
 
 Frontend는 환경별 Backend 절대 URL을 Image에 굽지 않고 같은 Origin의 `/api/v1`, `/ws/v1`을 사용한다.
 
@@ -791,9 +791,9 @@ Frontend Runtime 활성화 성공과 Browser E2E 성공은 별도로 판정한�
 
 ## 12. Application HTTPRoute / Gateway Integration
 
-현재 Gateway Platform은 구성되어 있으나 Application HTTPRoute는 구현 완료 상태로 확인되지 않는다. 아래는 **Planned Runbook**이다.
+Application HTTPRoute는 A-10에서 실제 Backend/Frontend Service와 연결되어 HTTPS/API/WebSocket Runtime Gate를 통과했다. 아래 절차는 신규 Route 변경·재구축·장애 복구를 위한 Runbook으로 유지한다.
 
-### 12.1 목표 Route 계약
+### 12.1 목표 Route 구성
 
 ```text
 /       → frontend:8080
@@ -823,7 +823,7 @@ Application HTTPRoute Manifest 작성
 → HTTPS / WSS Runtime 확인
 ```
 
-아직 Route 자산 경로와 이름이 확정되지 않았으므로 본 문서에서 임의 파일명을 만들지 않는다.
+실제 Route 자산 경로와 Resource 이름은 실행 시점의 `seokpan-gitops` `main`을 Source of Truth(현재 Route 정의를 최종 관리하는 기준 저장소)로 사용한다.
 
 ### 12.4 적용 후 확인 예
 
@@ -877,23 +877,39 @@ Argo CD UI에서 임의 Revision을 장기 Source of Truth로 만들지 않고 G
 
 ## 14. Application Observability 연결
 
-Observability Platform 자체의 구축·운영은 Delivery / Observability 담당 영역이다. Kubernetes & Application Integration은 Application Runtime이 관측 대상이 될 수 있도록 Application 계약을 제공한다.
+Observability Platform 자체의 구축·운영은 Delivery / Observability 담당 영역이다. Kubernetes & Application Integration은 Application이 Health·Metric·Log를 노출하고 Observability가 이를 수집할 수 있도록 필요한 Endpoint·Label·Port 구성을 제공한다.
 
 ### 14.1 Metrics 현재 자산
 
-현재 GitOps에는 Application용 pending 자산이 존재한다.
+Application Metrics 경로는 A-10에서 Runtime 활성화까지 완료됐다.
+
+현재 경로:
 
 ```text
-observability/servicemonitor-app.yaml.pending
+Backend GET /metrics
+→ Backend Service
+→ ServiceMonitor observability/seokpan-app-metrics
+→ Prometheus
 ```
 
-`.pending` 상태에서는 정식 Argo CD Desired State에 편입하지 않는다.
+확인된 Runtime 결과:
 
-Current-State 정합화는 `seokpan-gitops#86`에서 추적한다.
+- Backend 2 Replica의 `/metrics` HTTP 200
+- Backend Service `metadata.labels`와 ServiceMonitor selector 일치
+- Prometheus Active Target 2개 모두 `UP`
+- `seokpan_http_requests_total` 실제 Query PASS
+- `seokpan_http_request_duration_seconds_count` 실제 Query PASS
 
-### 14.2 Metrics 활성화 전 실제 대조
+Evidence:
 
-문서에 특정 과거 selector 값을 고정해서 신뢰하지 않고 실행 직전 실제 Backend Service와 pending ServiceMonitor를 대조한다.
+- `seokpan-app#78` — Backend `/metrics` 구현, Test, Image Digest 생성
+- `seokpan-gitops#91` — ServiceMonitor 활성화, 두 Backend Replica Scrape, Prometheus Query 검증
+
+새 Backend Image, Service 또는 ServiceMonitor 변경 이후에는 아래 절차로 다시 검증한다.
+
+### 14.2 Metrics 변경 전 실제 대조
+
+문서에 특정 과거 selector 값을 고정해서 신뢰하지 않고 실행 직전 실제 Backend Service와 현재 ServiceMonitor Desired State를 대조한다.
 
 Backend Service selector 확인:
 
@@ -906,7 +922,7 @@ Repository에서도 다음을 함께 확인한다.
 
 ```text
 apps/backend/service.yaml
-observability/servicemonitor-app.yaml.pending
+observability/servicemonitor-app.yaml
 ```
 
 최소 조건:
@@ -917,22 +933,22 @@ observability/servicemonitor-app.yaml.pending
 - Service Port `http`와 ServiceMonitor endpoint 일치
 - Delivery / Observability 담당 Review
 
-### 14.3 Metrics 활성화 순서
+### 14.3 Metrics 변경·재검증 순서
 
 ```text
-Backend Runtime Running
-→ Backend /metrics 제공 확인
+Backend Runtime 확인
+→ Backend /metrics 응답 확인
 → Backend Service Label / Port 확인
-→ pending ServiceMonitor 정합화
-→ .pending 제거 / 정식 YAML 편입
-→ GitOps PR
-→ Delivery / Observability Review
-→ Merge
+→ ServiceMonitor selector 정합 확인
+→ GitOps 변경이 있으면 PR / Review / Merge
 → Argo CD Sync
 → Prometheus Target 확인
+→ 실제 Application Metric Query
 ```
 
-Observability Platform Running만으로 Application Metrics Integration 완료를 선언하지 않는다.
+`Prometheus Target UP`과 실제 Application Metric Query 결과를 함께 확인한다.
+
+Observability Platform 자체가 Running이라는 사실만으로 Application Metrics Integration을 PASS 처리하지 않는다.
 
 ### 14.4 Application Log 연결
 
@@ -945,7 +961,7 @@ container
 node_name
 ```
 
-Backend/Frontend Runtime 활성화 후 최소 확인 범위:
+Backend/Frontend Runtime 또는 Image Revision 변경 후 최소 확인 범위:
 
 ```text
 application Namespace Pod가 Alloy discovery 대상에 포함됨
@@ -970,7 +986,7 @@ Metric Query·Log Query·Dashboard·Alert Rule·최종 Evidence는 12 또는 Del
 | `CreateContainerConfigError` | Secret / ConfigMap / Key | Provider 공급 상태 확인 |
 | Startup 실패 | Process / Env / Config | Pod Event·Log 확인 후 App 또는 Config 수정 |
 | Readiness 실패 | Provider readiness / DB / Redis | Provider별 상태 분리 확인 |
-| DB TLS 실패 | CA / Endpoint / Secret / MaxScale | CA·TLS 계약 확인 |
+| DB TLS 실패 | CA / Endpoint / Secret / MaxScale | Root CA, 서버 인증서, Endpoint, TLS 연결 설정을 순서대로 확인 |
 | Redis 실패 | Service DNS / Redis Runtime | Redis Service·Pod·연결 확인 |
 | Migration 실패 | Job / DB / Replication | Runtime 활성화 중단, 새 승인 후 새 Job |
 | Rollout 실패 | 신규 Revision | Git Revert 또는 수정 PR |
@@ -978,7 +994,7 @@ Metric Query·Log Query·Dashboard·Alert Rule·최종 Evidence는 12 또는 Del
 | 2 Replica 전용 장애 | Shared State / Runner / Realtime | 검증된 1 Replica Revision으로 복귀 후 분석 |
 | Metrics 미수집 | `/metrics` / Service label / ServiceMonitor / Target | Application·Observability 경계 순차 확인 |
 | Logs 미수집 | Pod discovery / Alloy / Loki / labels | Application Pod와 수집 경로 순차 확인 |
-| HPA와 Argo 반복 Diff | Replica Ownership 계약 | HPA/Argo 소유권 설정 원복 또는 정합화 |
+| HPA와 Argo 반복 Diff | `replicas` 값을 두 시스템이 동시에 변경하는지 확인 | 한쪽만 `replicas`를 관리하도록 설정을 복구 |
 
 장애 복구의 공식 측정값과 Evidence는 12에서 관리한다.
 
@@ -1037,13 +1053,13 @@ Argo Sync 문제가 발생했을 때 먼저 Git Revision·Application Source·Di
 | 변경 대상 | 기본 Rollback | 주의사항 |
 | --- | --- | --- |
 | Backend Image / Replica / Config | 정상 Git Revision으로 Revert | DB Schema와 App 호환성 확인 |
-| Frontend Image / Replica | 정상 Git Revision으로 Revert | Backend API 계약 호환 확인 |
-| HPA | HPA 정책 + Replica Ownership 계약 Revert | Static Replica Desired State도 함께 복구 |
+| Frontend Image / Replica | 정상 Git Revision으로 Revert | Frontend가 호출하는 Backend API 경로·Request/Response 형식이 해당 Revision과 호환되는지 확인 |
+| HPA | HPA 정책과 `replicas` 관리 주체 설정 Revert | Static Replica Desired State도 함께 복구 |
 | HTTPRoute | Route Revert | Gateway Platform 재구축 불필요 여부 확인 |
 | ConfigMap / CA | Git Revert + 소비 Pod 반영 경로 확인 | `envFrom`, `subPath`는 기존 Pod에 자동 반영되지 않음 |
 | Migration | DB 상태 기반 Restore/보정 판단 | 단순 Git Revert로 Schema 복구 가정 금지 |
 | Secret | Infra Ansible/Vault로 이전 값 복구 + 소비 Pod 반영 확인 | Secret 값을 Git에 저장하지 않음 |
-| ServiceMonitor | Pending/이전 정상 Desired State로 Revert | Application Metrics와 Platform 상태 분리 |
+| ServiceMonitor | 정상 수집이 확인된 ServiceMonitor와 Service Label 설정으로 Revert | Application Metrics와 Observability Platform 상태를 분리 확인 |
 
 ---
 
@@ -1078,8 +1094,8 @@ Log / Screenshot / Run ID
 - 실행 위치가 필요한 명령은 Working Directory가 명확하다.
 - 현재 없는 자산을 존재한다고 표현하지 않는다.
 - Migration의 승인형 One-shot 경계를 보존한다.
-- Backend 1 Replica → 2 Replica → HPA 순서를 유지한다.
-- HPA와 Argo CD의 Replica Ownership 충돌을 사전에 방지한다.
+- HPA를 수행하는 경우 Backend 1 Replica 검증 → 2 Replica 수동 Scale-out 검증 이후 HPA 순서를 유지한다.
+- HPA와 Argo CD가 `replicas` 값을 동시에 변경하는 충돌을 사전에 방지한다.
 - Frontend → HTTPRoute → HTTPS/WSS 순서가 명확하다.
 - GitOps 변경과 Cluster 직접 변경의 경계가 명확하다.
 - ConfigMap/Secret 변경 시 실행 중 Pod 반영 경계를 명확히 한다.

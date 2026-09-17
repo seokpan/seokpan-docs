@@ -11,7 +11,7 @@
 12 = Test Case / Preconditions / Stimulus·Fault / Measurement / PASS·FAIL / Evidence
 ```
 
-12는 11의 실행 명령을 복제하지 않는다. 실제 실행 절차는 11을 참조하고 본 문서는 검증 계약과 측정 Evidence를 소유한다.
+12는 11의 실행 명령을 복제하지 않는다. 실제 실행 절차는 11을 참조하고, 본 문서는 각 Test의 선행조건·실행 자극/장애·관찰 항목·PASS/FAIL 기준·측정 Evidence를 정의한다.
 
 직접 기준:
 
@@ -225,7 +225,7 @@ Revision이 바뀌지 않은 검증 완료 Capability는 재사용할 수 있다
 - Argo Root/Child Application 구조
 - Redis StatefulSet/PVC Persistence
 - DB Runtime/Migration Secret 공급 자동화
-- MaxScale TLS / CA 계약
+- MaxScale TLS Endpoint와 Root CA/서버 인증서 검증 경로
 - One-shot Migration 자산 정적/API 검증
 - Gateway Platform HTTPS/TLS
 - Runtime pull-only Robot/Secret의 임시 Pod Digest Pull Evidence
@@ -252,51 +252,57 @@ Evidence Revision 불일치
 | --- | --- | --- |
 | Kubernetes / Calico / CoreDNS | Validated | 재사용 가능 |
 | Namespace / RBAC / Argo CD | Validated | 재사용 가능 |
-| Redis Runtime / Persistence | Validated | Consumer 별도 |
-| Backend → Redis | Not Tested | Planned |
-| Backend/Frontend Child Application | Root 편입 완료 | Runtime과 분리 |
-| Backend Runtime | replicas 0 / git-pending | Not Tested |
-| Frontend Runtime | replicas 0 / git-pending | Not Tested |
-| A-10 Provider Integration | In Progress | Blocker |
-| Backend Origin JSON | GitOps #90 Open | Blocker |
-| Runtime pull-only Robot/Vault/Secret | Infra PR #185 Open, 임시 Pod Pull PASS | Partial / Review 대기 |
-| Deployment imagePullSecrets | GitOps #57 후속 | Not Wired / Not Tested |
-| Actual Backend/Frontend Workload Pull | GitOps #57 후속 | Not Tested |
-| Infra #180 | Open | Actual Workload 소비 후 종료 |
-| Migration Asset | Implemented / Static+API Validated | Runtime Gate 별도 |
-| Actual Migration Gate | Not Tested | Planned |
-| HPA | Not Implemented | Planned |
-| Application HTTPRoute | Not Implemented | Planned |
-| ServiceMonitor | `.pending` | GitOps #91 Planned |
-| Application Metrics | Not Tested | Planned |
-| Application Logs | Platform 존재, App Consumer 미검증 | Planned |
+| Redis Runtime / Persistence | Validated | 재사용 가능 |
+| Backend → Redis | 실제 Backend 연결 및 2 Replica Session 공유 확인 | Validated for A-10 |
+| Backend/Frontend Child Application | Root 편입 / `Synced` / `Healthy` | Validated |
+| Backend Runtime | 2 Replica, verified Digest, worker-01 / worker-02 분산 | Validated for A-10 |
+| Frontend Runtime | 2 Replica, verified Digest | Validated for A-10 |
+| A-10 Provider Integration | Completed | PASS |
+| Backend Origin JSON | JSON 배열 형식 Runtime 반영 | PASS |
+| Runtime pull-only Robot / Secret | Actual Workload에서 사용 | PASS |
+| Deployment `imagePullSecrets` | Backend/Frontend Runtime 소비 | PASS |
+| Actual Backend/Frontend Workload Pull | Verified Digest Pull / Ready | PASS |
+| Migration Gate | 기존 Runtime DB + 신규 빈 DB 재현 | PASS |
+| MaxScale TLS / CA Consumer | 실제 Backend TLS 1.3 Session 및 CA Fingerprint 확인 | PASS |
+| Backend 2 Replica Shared Runtime | Scale-out/Session 공유 기본 경로 확인, Realtime Edge Case는 P4 진행 중 | Partial |
+| HPA | Not Implemented | Not Tested |
+| Application HTTPRoute | Running | PASS |
+| HTTPS / API / WebSocket | A-10 Runtime Gate 통과 | PASS |
+| ServiceMonitor | Runtime 활성화 | PASS |
+| Application Metrics | Prometheus Target 2개 `UP`, 실제 Metric Query 확인 | PASS |
+| Application Logs | Platform 수집 경로 존재, 본 역할의 최종 App Log Evidence 미확정 | Partial / Not Final |
+| Argo CD Self-Heal | 실제 Live State Drift 복구 확인 | PASS |
+| Git Revert Rollback | 실제 Runtime Rollback Run 미수행 | Not Tested |
+| P4 Stabilization / Acceptance | `seokpan-app#76`에서 진행 중 | In Progress |
 
----
+A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 
 ## 8. Test Traceability Matrix
 
-| Test Case | 목적 | Gate | 11 | 상태 |
+| Test Case | 목적 | Gate | 11 | 현재 상태 |
 | --- | --- | --- | --- | --- |
-| KAI-PRE-01 | Dependency Snapshot | A~C | 4~6 | Defined |
-| KAI-DEL-01 | Artifact/Registry/GitOps/Argo | B~D/E | 5/8/11/13 | Partial / Blocked |
-| KAI-MIG-01 | Migration Gate | C→D | 7 | Not Tested |
-| KAI-RUN-01 | Backend 1 Replica Provider | D | 8 | Blocked |
-| KAI-RUN-02 | Backend 2 Replica Shared Runtime | E | 9 | Blocked |
-| KAI-HPA-01 | HPA/Workload Distribution | E | 10 | Not Implemented |
-| KAI-FE-01 | Frontend Runtime | E | 11 | Blocked |
-| KAI-RT-01 | HTTPRoute/HTTPS/WSS | F | 12 | Not Implemented |
-| KAI-OBS-01 | Application Metrics | G | 14 | Blocked |
-| KAI-OBS-02 | Application Logs | G | 14 | Blocked |
-| KAI-E2E-01 | Browser M5 First Success | F~G | 11~14 | Blocked |
-| KAI-CON-01 | M-01 / P4 | G | 9 | Blocked |
-| KAI-PERF-01 | M-02 / P4 | G | 9~10 | Blocked |
-| KAI-REC-01 | M-03 / P4 | G | 9/15/17 | Blocked |
-| KAI-CD-01 | Self-Heal | G | 13 | Planned |
-| KAI-CD-02 | Git Revert Rollback | G | 13/17 | Planned |
-| KAI-CFG-01 | Config/Secret/CA Consumer | D~G | 16~17 | Planned |
-| KAI-DR-01 | Restore 후 App 정상화 | G | 17 | Planned |
+| KAI-PRE-01 | Dependency Snapshot | A~C | 4~6 | Validated |
+| KAI-DEL-01 | Artifact / Registry / GitOps / Argo | B~D/E | 5/8/11/13 | PASS |
+| KAI-MIG-01 | Migration Gate | C→D | 7 | PASS |
+| KAI-RUN-01 | Backend 1 Replica Provider | D | 8 | PASS |
+| KAI-RUN-02 | Backend 2 Replica Shared Runtime | E | 9 | Partial — A-10 Scale-out PASS, P4 Realtime 세부 검증 진행 중 |
+| KAI-HPA-01 | HPA / Workload Distribution | E | 10 | Not Implemented / Not Tested |
+| KAI-FE-01 | Frontend Runtime | E | 11 | PASS |
+| KAI-RT-01 | HTTPRoute / HTTPS / WSS | F | 12 | PASS |
+| KAI-OBS-01 | Application Metrics | G | 14 | PASS |
+| KAI-OBS-02 | Application Logs | G | 14 | Partial / 최종 Evidence 미확정 |
+| KAI-E2E-01 | Browser M5 First Success | F~G | 11~14 | In Progress — 외부 접속 Runtime Gate PASS, P4 전체 사용자 흐름 미완료 |
+| KAI-CON-01 | M-01 / P4 | G | 9 | In Progress / Not Final |
+| KAI-PERF-01 | M-02 / P4 | G | 9~10 | Not Tested |
+| KAI-REC-01 | M-03 / P4 | G | 9/15/17 | In Progress / Not Final |
+| KAI-CD-01 | Self-Heal | G | 13 | PASS |
+| KAI-CD-02 | Git Revert Rollback | G | 13/17 | Not Tested |
+| KAI-CFG-01 | Config / Secret / CA Consumer | D~G | 16~17 | PASS for DB Secret / Root CA consumer path |
+| KAI-DR-01 | Restore 후 Application 정상화 | G | 17 | Not Tested / Cross-role |
 
----
+`PASS`는 해당 Test Case의 현재 정의 범위에 실제 Runtime Evidence가 존재할 때만 사용한다.
+
+`KAI-RUN-02`는 Backend 2 Replica 배포 자체가 성공했다는 이유만으로 전체 PASS 처리하지 않는다. Cross-Pod WebSocket, Chat 권한, Runner/Realtime lifecycle과 reconnect 수렴은 P4에서 계속 검증한다.
 
 ## 9. Test Contract Matrix
 
@@ -307,18 +313,18 @@ Evidence Revision 불일치
 | KAI-MIG-01 | DB/Secret/CA/Backup/Replication | current 또는 승인 Mutation | Revision/Job/Replication/Data | 기대 Revision·데이터·복제 정상 | Approval/Job/BeforeAfter |
 | KAI-RUN-01 | A-10, Delivery, Migration PASS | replicas 1 활성화 | Probe/DB/Redis/Readiness | 실제 Provider로 1 Pod Ready | Pod/Log/Connection |
 | KAI-RUN-02 | RUN-01 PASS | replicas 2 | Shared state/PubSub/Runner/Reconnect | Replica 간 상태 수렴, 중복 Runner 없음 | Pod/Redis/Timeline |
-| KAI-HPA-01 | 2 Replica, Metrics, ownership | 단계 부하 | HPA/Replica/latency/error | Scale 정상, Argo 경쟁 없음 | HPA/Metric/Argo |
+| KAI-HPA-01 | 2 Replica, Metrics, `replicas` 관리 주체 확정 | 단계 부하 | HPA/Replica/latency/error | Scale 정상, Argo CD와 `replicas` 변경 충돌 없음 | HPA/Metric/Argo |
 | KAI-FE-01 | Frontend Artifact | Frontend 활성화 | Pod/Service/SPA | 승인 Digest Runtime 정상 | Pod/HTTP |
 | KAI-RT-01 | Backend+Frontend+Gateway | HTTPRoute 적용 | Conditions/HTTPS/WSS/CORS | Route·HTTPS·WSS 정상 | Route/HTTP/WSS |
-| KAI-OBS-01 | /metrics, Service label 계약 | ServiceMonitor 활성화 | Target/Scrape/Metric | Target UP, 실제 Metric 조회 | Prometheus |
+| KAI-OBS-01 | `/metrics` 제공 및 Service label이 ServiceMonitor selector와 일치 | ServiceMonitor 활성화 | Target/Scrape/Metric | Target UP, 실제 Metric 조회 | Prometheus |
 | KAI-OBS-02 | App Pod Running | 기준 Log Event 발생 | Alloy/Loki/labels/delay | 실제 App Log 조회, label 일치 | Log Query |
-| KAI-E2E-01 | M3+M4 선행 | 팀원 PC 실제 사용자 흐름 | Browser/Network/App state | 실제 URL/Provider/데이터 UX 정상 | Screenshot/Trace/Log |
+| KAI-E2E-01 | M3 Runtime + M4 Delivery/Observability 선행조건 충족 | 팀원 PC 실제 사용자 흐름 | Browser/Network/App state | 실제 URL/Provider/데이터 UX 정상 | Screenshot/Trace/Log |
 | KAI-CON-01 | Shared Runtime | 동시 Vote/stale/retry | Move/Result/Rating/state | M-01 0건 조건 | DB/Redis/Log |
 | KAI-PERF-01 | MVP Runtime | 단계 부하 | events/s, latency, error, resource | 측정 완결, M-01 유지, 병목 식별 | Raw load/Metric |
 | KAI-REC-01 | 2 Replica/Reconnect | 단일 Backend 장애 | reconnect/state/recovery/wrong-loss | 상태 복원, 오패배 0 | Timeline/State |
-| KAI-CD-01 | Known-Good Git | 안전한 Live Drift | OutOfSync/SelfHeal | Git 상태로 수렴 | Argo/BeforeAfter |
-| KAI-CD-02 | Known-Good Revision | Git Revert | Sync/Ready/Recovery | Known-Good 복구 | PR/Argo/Timeline |
-| KAI-CFG-01 | 승인 Config 변경 | Config/Secret/CA 변경 이벤트 | Pod UID/new config/readiness | 새 Pod가 최신 계약 소비 | Revision/Pod/Fingerprint |
+| KAI-CD-01 | 검증 완료된 Git Desired State | 안전한 Live Drift(실행 중 리소스를 일시적으로 Git과 다르게 변경) | OutOfSync/SelfHeal | Git 상태로 복구 | Argo/BeforeAfter |
+| KAI-CD-02 | 정상 동작이 검증된 Git Revision | Git Revert | Sync/Ready/Recovery | 검증된 Revision으로 복구 | PR/Argo/Timeline |
+| KAI-CFG-01 | 승인 Config 변경 | Config/Secret/CA 변경 | Pod UID/new config/readiness | 새 Pod가 변경된 Config/Secret/CA 값을 실제로 사용 | Revision/Pod/Fingerprint |
 | KAI-DR-01 | Restore 수행 | 복원 후 Consumer 연결 | Data sample/readiness/browser | 무결성+App 정상화 | DR+App Evidence |
 
 ---
@@ -344,11 +350,7 @@ App Commit
 
 Capability와 Consumer를 분리한다.
 
-```text
-Infra PR #185 임시 Pod Pull PASS
-≠
-실제 Backend/Frontend Deployment Pull PASS
-```
+A-10에서는 임시 Pull Capability뿐 아니라 실제 Backend/Frontend Deployment가 Runtime 전용 `imagePullSecret`과 검증 Digest를 소비해 Pod `Ready`까지 도달했다.
 
 전체 PASS:
 
@@ -360,22 +362,19 @@ Infra PR #185 임시 Pod Pull PASS
 - ImagePull 성공 및 Workload Ready.
 - `latest`/`git-pending` 실제 Runtime 미사용.
 
-Partial:
+현재 결과:
 
 ```text
-Registry Capability = PASS 또는 Review Pending
-Actual Workload Consumption = Not Tested
-KAI-DEL-01 = Partial / Blocked
+Registry Pull Capability: PASS
+Actual Backend/Frontend Workload Pull: PASS
+Verified Digest / Pod ImageID / Ready: PASS
+KAI-DEL-01: PASS
 ```
 
-현재 최신 선행 흐름:
+Evidence:
 
-```text
-Infra PR #185 리뷰/승인/Merge
-→ GitOps #57 imagePullSecrets + Digest
-→ 실제 Workload Pull/기동
-→ Infra #180 종료
-```
+- `seokpan-gitops#57` — GitOps Digest Pinning, 실제 Workload Pull, Argo CD Runtime 배포 경로 검증
+- `seokpan-app#3` — A-10 Runtime이 실제 소비한 Backend/Frontend Digest와 Deployment 상태 연결
 
 ### KAI-MIG-01 — Migration Gate
 
@@ -400,6 +399,12 @@ PASS:
 - Runtime/Migration Credential 경계 유지.
 - Mutation 시 승인된 Job만 1회 성공.
 
+현재 결과: `PASS`.
+
+Evidence:
+
+- `seokpan-app#22` — 기존 Runtime DB Audit/Stamp/후속 Revision, 기존 데이터 보존·Replication, 신규 빈 DB `alembic upgrade head` 재현
+
 ### KAI-RUN-01 — Backend 1 Replica
 
 Preconditions:
@@ -419,14 +424,39 @@ PASS:
 - Migration Credential 미소비.
 - Memory Provider fallback 없음.
 
+현재 결과: `PASS`.
+
+Evidence:
+
+- GitOps PR #93 — Backend 1 Replica 실제 Runtime 활성화
+- `seokpan-app#50` — MaxScale TLS를 통한 Identity/Game DB 실제 Session
+- `seokpan-gitops#7` — Redis Service DNS를 통한 실제 Backend Consumer 연결
+
 ### KAI-RUN-02 — Backend 2 Replica
 
-PASS:
+현재 A-10 Scale-out 결과:
 
-- Pod 2 Ready.
-- 동일 권위 상태 수렴.
-- Process-local Memory 비권위.
-- Pub/Sub 누락/재접속 시 Snapshot 수렴.
+- Backend Pod 2개 `Ready`.
+- worker-01 / worker-02 분산.
+- 두 Pod가 동일한 검증 Backend Digest 사용.
+- Redis 기반 Session 공유 기본 경로 확인.
+
+현재 판정: `Partial`.
+
+아직 P4에서 검증 중인 항목:
+
+- Cross-Pod WebSocket replacement.
+- Room WebSocket과 Chat이 서로 다른 Pod를 타는 경우의 권한 확인.
+- Runner 오류가 Realtime 전체 가용성에 미치는 영향.
+- reconnect/disconnect lifecycle 수렴.
+- Pub/Sub 누락 이후 Snapshot 복구의 세부 Edge Case.
+
+전체 PASS 기준:
+
+- Pod 2개 `Ready`.
+- 공유 Runtime State가 Replica 간 일관되게 수렴.
+- 특정 Backend Pod의 Process Memory가 Replica 간 공유해야 하는 상태의 Source of Truth(현재 상태를 판단하는 기준 저장소)가 되지 않음.
+- Pub/Sub 누락/재접속 시 Snapshot으로 수렴.
 - Runner 중복 마감 없음.
 
 ### KAI-HPA-01
@@ -445,13 +475,20 @@ PASS:
 
 ### KAI-FE-01
 
+현재 결과: `PASS`.
+
+Evidence:
+
+- `seokpan-app#3` — Frontend 2 Replica Runtime 완료 상태
+- GitOps PR #96 — Frontend 2 Replica와 Same-Origin Gateway 경로 반영
+
 Preconditions:
 
 - Backend Scale/HPA 단계 판정
 - Frontend KAI-DEL-01 Actual Pull PASS
 - Container Smoke
 
-HPA가 Deferred되면 PASS로 가장하지 않고 Go/No-Go 근거를 남긴다.
+HPA 구현을 이번 MVP 범위에서 보류(Deferred)하면 PASS로 처리하지 않고, 구현하지 않기로 한 이유와 Go/No-Go 판단 근거를 남긴다.
 
 PASS:
 
@@ -460,6 +497,13 @@ PASS:
 - SPA 기본 경로 정상.
 
 ### KAI-RT-01
+
+현재 결과: `PASS for A-10 external Runtime Gate`.
+
+Evidence:
+
+- `seokpan-infra#188` — Let's Encrypt Production TLS, Windows Host/Linux VM HTTPS 접속, Guest Session/Lobby WebSocket 확인
+- `seokpan-app#3` — Gateway HTTPS/API/WebSocket Runtime Gate 완료 상태 연결
 
 경로:
 
@@ -480,7 +524,12 @@ PASS:
 
 ### KAI-OBS-01
 
-현재 ServiceMonitor `.pending`, GitOps #91 추적.
+현재 결과: `PASS`.
+
+Evidence:
+
+- `seokpan-app#78` — Backend `/metrics` 구현과 검증 Image 생성
+- `seokpan-gitops#91` — ServiceMonitor Runtime 활성화, Backend 2 Replica Prometheus Target `UP`, 실제 Application Metric Query 확인
 
 PASS:
 
@@ -538,7 +587,7 @@ Pass Turn Move = 0
 중복 GameResult = 0
 중복 Rating = 0
 stale 잘못된 상태 변경 = 0
-동일 idempotency 권위 반영 = 1
+동일 idempotency key에 대한 최종 상태 반영 횟수 = 1
 ```
 
 Backend-only 사전시험은 가능하지만 최종 P4는 M5 이후 동일 MVP Runtime 계열에서 재실행한다.
@@ -575,12 +624,18 @@ PASS:
 
 - 사용자 몰수패/공동패배 오판 0.
 - 재연결 성공.
-- Room/Game/Turn/Board 권위 상태 복원.
+- Room/Game/Turn/Board의 기준 상태가 장애 전 정상 상태로 복원.
 - Recovery time 측정 가능.
 
 ### KAI-CD-01
 
-안전한 비영속 Live Drift만 사용한다.
+Self-Heal 검증에서는 영구 데이터에 영향을 주지 않는 Live Drift(실행 중 Kubernetes 리소스를 Git Desired State와 일시적으로 다르게 만드는 변경)만 사용한다.
+
+현재 결과: `PASS`.
+
+Evidence:
+
+- `seokpan-gitops#57` — Kubernetes Live State Drift를 의도적으로 만든 뒤 Argo CD Self-Heal이 Git Desired State로 복구한 Runtime 검증
 
 PASS:
 
@@ -594,7 +649,7 @@ DB Schema Migration은 대상이 아니다.
 
 PASS:
 
-- Known-Good Git Revision 복귀.
+- 정상 동작이 이미 검증된 Git Revision으로 복귀.
 - Argo Sync.
 - Runtime Ready.
 - Recovery time/manual steps 측정.
@@ -604,10 +659,17 @@ PASS:
 
 이 Test만을 위해 운영 Credential/CA를 임의 회전하지 않는다.
 
+현재 결과: `PASS for DB Secret / Root CA consumer path`.
+
+Evidence:
+
+- `seokpan-app#50` — Runtime DB Secret과 공개 Root CA를 소비한 실제 MaxScale TLS 연결
+- `seokpan-gitops#39` — Root CA 갱신 후 새 Backend Pod의 Mount Fingerprint와 실제 DB TLS 연결 확인
+
 PASS:
 
 - 필요한 경우 새 Pod 생성.
-- 새 Pod가 최신 Config/Secret/CA 계약 소비.
+- 새 Pod가 최신 Config/Secret/CA 값을 실제로 사용.
 - CA 변경 시 기대 Fingerprint.
 - Git 기록 없는 restart만으로 종료하지 않음.
 
@@ -627,53 +689,74 @@ PASS:
 
 ### Phase 0 — Registry / Artifact
 
+현재 결과: `Completed`.
+
 ```text
-Infra PR #185 리뷰/승인/Merge
-→ Runtime Pull Capability를 main 기준으로 확정
-→ GitOps #57 Backend/Frontend imagePullSecrets + Digest
+Runtime Pull Capability
+→ Backend/Frontend imagePullSecrets
+→ Verified Digest
 → Argo Sync
-→ Actual Workload Pull/기동
-→ Infra #180 종료
+→ Actual Workload Pull
+→ Pod Ready
 ```
 
 ### Phase 1 — Backend First Runtime
 
+현재 결과: `Completed`.
+
 ```text
-A-10 Provider 구현
-→ KAI-MIG-01
-→ KAI-RUN-01
+A-10 Production Provider
+→ KAI-MIG-01 PASS
+→ KAI-RUN-01 PASS
 ```
 
 ### Phase 2 — Scale / HPA
 
+현재 상태:
+
 ```text
 KAI-RUN-02
-→ KAI-HPA-01
+├─ Backend 2 Replica Scale-out: A-10 Runtime 범위 PASS
+└─ Shared Runtime 세부 검증: P4 진행 중
+
+KAI-HPA-01
+└─ Not Implemented / Not Tested
 ```
 
-HPA가 Deferred되면 PASS로 기록하지 않는다.
+HPA는 Backend 2 Replica 이후 수행할 별도 Validation Track이다.
+
+HPA 미구현은 Frontend / External Runtime 진행을 차단하지 않으며, HPA를 구현·측정하지 않은 상태에서 HPA PASS를 기록하지 않는다.
 
 ### Phase 3 — Frontend / External / Observability
 
+현재 결과:
+
 ```text
-KAI-FE-01
-→ KAI-RT-01
-→ DNS / 공개 TLS 통합
-→ KAI-OBS-01 / KAI-OBS-02
-→ Delivery/Observability prerequisite 확인
+KAI-FE-01: PASS
+KAI-RT-01: PASS
+Public TLS / External Access: PASS
+KAI-OBS-01 Metrics: PASS
+KAI-OBS-02 Logs: Partial / Final Evidence pending
 ```
 
 Gateway Platform PASS를 Application Route PASS로 대체하지 않는다.
 
 ### Phase 4 — M5 First Success
 
+현재 상태:
+
 ```text
-팀원 PC 실제 URL
-→ KAI-E2E-01
-→ 실제 데이터 UX/UI 확인
+External Runtime Gate
+- Windows Host / Linux VM HTTPS 접속: PASS
+- API / WebSocket 경로: PASS
+
+KAI-E2E-01
+- 전체 Browser 사용자 흐름 Acceptance: In Progress
 ```
 
-09 기준 M3 Runtime + M4 Delivery/Observability 선행조건 이후 수행한다.
+최종 M5 First Success는 팀원 PC의 실제 URL에서 핵심 사용자 흐름과 실제 Provider/Data까지 확인했을 때 PASS로 판정한다.
+
+외부 접속 성공만으로 KAI-E2E-01 전체를 PASS 처리하지 않는다.
 
 ### Phase 5 — MVP P4
 
@@ -692,16 +775,22 @@ Cross-role KAI-DR-01
 
 ### Absolute Gates
 
+이미 통과한 A-10 선행 Gate를 과거 미완료 상태로 되돌려 기록하지 않는다.
+
+현재 P4에서 여전히 유효한 절대 조건:
+
 ```text
-Infra PR #185 미확정 → Registry Capability main 완료 표시 금지
-Deployment imagePullSecrets 미반영 → Actual Workload Pull PASS 금지
-Actual Workload Pull 미검증 → Infra #180 완료 금지
-A-10 미완료 → Provider Runtime PASS 금지
-Backend 1 Replica 미검증 → 2 Replica/HPA 금지
-2 Replica Shared Runtime 미검증 → M-01/M-03 최종 판정 금지
-Metrics Endpoint/Service metadata label 미정 → ServiceMonitor 활성화 금지
-M3/M4 미충족 → M5 최종 판정 금지
-M5 미성립 → P4 최종 판정 금지
+Backend 2 Replica 세부 Shared Runtime 검증 미완료
+→ M-01/M-03 최종 판정 금지
+
+HPA 미구현
+→ HPA Scale 결과 PASS 금지
+
+Git Revert Rollback 미실행
+→ KAI-CD-02 PASS 금지
+
+P4 핵심 사용자 흐름 안정화 미완료
+→ Final MVP Acceptance PASS 금지
 ```
 
 ---
@@ -731,8 +820,8 @@ Static Replica
 ### GitOps Rollback
 
 ```text
-Known-Good
-→ 검증 가능한 Revision/Drift
+정상 동작이 검증된 상태
+→ 검증 가능한 Git Revision 또는 안전한 Live Drift
 → Revert + Argo Sync
 ```
 
@@ -821,33 +910,54 @@ Follow-up:
 Gate G는 본 역할만으로 완료되지 않는다.
 
 ```text
-Kubernetes/Application Integration
-+ Data/Storage Recovery
-+ Delivery/Observability
-+ Network/External Infra
-+ Browser/E2E
+Kubernetes / Application Integration
++ Data / Storage Recovery
++ Delivery / Observability
++ Network / External Infra
++ Browser / E2E
 ```
 
-본 역할 핵심 Acceptance:
+### 15.1 현재 본 역할 검증 상태
 
-- Commit→Digest→Runtime Pull Secret→GitOps→Argo→Actual Pod Traceability
-- Migration Gate Evidence
-- Backend 1 Replica PASS
-- Backend 2 Replica PASS
-- Scale/HPA 상태 명확화
-- Frontend Runtime PASS
-- HTTPRoute/HTTPS/WSS/DNS/Public TLS PASS
-- Application Metrics/Logs Consumer Evidence
-- Browser M5 First Success + 실제 데이터 UX/UI PASS
-- M-01 P4 PASS
-- M-02 P4 Baseline
-- M-03 P4 PASS + Recovery time
-- GitOps Self-Heal/Rollback Evidence
-- HPA 미구현/Deferred 시 상태·근거 유지
+| 항목 | 현재 상태 |
+| --- | --- |
+| Commit → Digest → Pull Secret → GitOps → Argo CD → Actual Pod Traceability | PASS |
+| Migration Gate | PASS |
+| Backend 1 Replica Provider Runtime | PASS |
+| Backend 2 Replica Scale-out / Worker 분산 | PASS |
+| Backend 2 Replica Shared Runtime 전체 | Partial — P4 세부 검증 진행 중 |
+| HPA | Not Implemented / Not Tested |
+| Frontend 2 Replica Runtime | PASS |
+| HTTPRoute / HTTPS / API / WebSocket / Public TLS | PASS |
+| Application Metrics | PASS |
+| Application Logs 최종 Consumer Evidence | Partial |
+| Browser External Runtime Gate | PASS |
+| Browser 전체 M5 / 실제 데이터 UX Acceptance | In Progress |
+| M-01 Concurrency | In Progress / Not Final |
+| M-02 Performance Baseline | Not Tested |
+| M-03 Recovery | In Progress / Not Final |
+| Argo CD Self-Heal | PASS |
+| Git Revert Rollback | Not Tested |
+| Config / DB Secret / Root CA Consumer | PASS for verified path |
+| DR 이후 Application 정상화 | Not Tested / Cross-role |
 
-Alert Evidence와 DR Evidence는 Cross-role로 동일 Acceptance Run에 연결한다.
+### 15.2 최종 MVP Acceptance에 필요한 남은 검증
 
----
+최종 Gate G PASS를 위해 본 역할 관점에서 남은 핵심 항목은 다음과 같다.
+
+- Backend 2 Replica Shared Runtime 세부 검증 완료
+- Browser M5 First Success와 실제 Provider/Data 기반 사용자 흐름 PASS
+- M-01 P4 최종 판정
+- M-02 대표 부하 Performance Baseline
+- M-03 장애·복구 최종 판정과 Recovery time 측정
+- Application Log 최종 Consumer Evidence
+- Git Revert 기반 실제 Rollback Run
+- 필요한 경우 HPA의 구현 여부와 미구현/Deferred 근거 확정
+- Cross-role DR 이후 Application 정상화 Evidence 연결
+
+이미 PASS한 A-10 Runtime Integration 항목을 다시 미완료로 표현하지 않으며, 아직 실행하지 않은 P4/Rollback/DR/HPA 항목을 완료된 결과처럼 기록하지 않는다.
+
+Alert Evidence와 DR Evidence는 Cross-role 결과로 동일 Acceptance Run에 연결한다.
 
 ## 16. 문서 완료 기준
 
