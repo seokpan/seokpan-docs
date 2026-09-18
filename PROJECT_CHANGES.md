@@ -1007,6 +1007,51 @@
   - `seokpan/seokpan-infra#119`
   - `seokpan/seokpan-infra` PR #197
 
+## 2026-09-18
+
+### DB/MaxScale/NFS Observability Exporter 1단계 코드화 — node_exporter/mysqld_exporter
+
+- 구분: 신규 구성요소 추가 및 구현 단계 확정
+- 기존 기준:
+  - mariadb-01/02, maxscale-01, nfs 4대는 node_exporter_linux(호스트
+    Metric)·alloy_linux(로그)로 일부 관측성만 확보되어 있었고, MariaDB
+    쿼리/복제 통계와 MaxScale 라우팅·Failover 상태는 Prometheus 경로에
+    없었다. MaxScale 상태는 `maxctrl list servers` 수동 확인에 의존했다.
+- 변경/확정 내용:
+  - node_exporter 버전을 `1.12.1-distroless`로 4대 전체 통일한다
+    (kube-prometheus-stack in-cluster node-exporter와 동일 계열).
+  - MariaDB 모니터링은 `mysqld_exporter 0.20.0`을 채택한다. MariaDB
+    11.8.9의 `slave_status` collector 실행에는 `PROCESS/SELECT/
+    BINLOG MONITOR` 외에 `SLAVE MONITOR` 권한이 추가로 필요함을 실측으로
+    확인했다(TS-043).
+  - MariaDB 모니터링 전용 계정 `exporter_svc`를 신설한다. 기존
+    `mariadb_account` role의 `detect_master.yml` 패턴대로 MaxScale
+    기반 현재 Master를 동적 판별해 Master에서만 계정 DDL을 수행하고,
+    Replica에는 복제로 전파한다. `MAX_USER_CONNECTIONS=3`을 적용하며,
+    재실행 시 현재값이 목표값과 다를 때만 `ALTER USER`를 실행하도록
+    구성해 idempotency를 확보했다.
+  - NFS는 별도 Exporter를 도입하지 않고 node_exporter의 `nfsd`
+    Collector(기본 활성화)로 대체하기로 결론짓고, 실측으로
+    `node_nfsd_*` Metric 정상 노출을 확인했다.
+  - node_exporter는 `0.0.0.0:9100`, mysqld_exporter는 `0.0.0.0:9104`에
+    listen하도록 구성했다.
+- 영향:
+  - mariadb-01/02, maxscale-01, nfs 4대에 node_exporter가, mariadb-01/02
+    2대에 mysqld_exporter가 systemd 서비스로 상시 구동된다.
+  - 이번 단계에는 방화벽(9100/9104 TCP) 반영과 Prometheus Scrape Target
+    등록이 포함되지 않아, 로컬 Scrape만 가능하고 외부(Prometheus)에서는
+    아직 접근할 수 없다.
+  - 이슈 #199는 "completed"로 close됐으나, 실제 병합된 PR(#200, #201)이
+    다루는 범위는 node_exporter·mysqld_exporter뿐이다. 이슈 본문의 완료
+    기준 중 `maxscale_exporter`(MaxScale REST API 기반) 채택·구현,
+    방화벽/Prometheus 연동, Alert Rule(복제 지연·Server DOWN)은 아직
+    착수되지 않았다. 후속 이슈로 별도 추적이 필요하다.
+- 관련:
+  - `seokpan/seokpan-infra#199`
+  - `seokpan/seokpan-infra` PR #200
+  - `seokpan/seokpan-infra` PR #201
+  - `seokpan/seokpan-docs` TS-043
+
 ---
 
 ## 작성 형식
