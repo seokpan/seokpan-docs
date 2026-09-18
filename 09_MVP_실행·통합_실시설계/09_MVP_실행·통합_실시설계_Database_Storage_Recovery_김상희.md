@@ -218,8 +218,30 @@ Database 계정은 용도에 따라 분리한다.
 | `backup_svc`       | Backup 작업                 |
 | `repl_user`        | MariaDB 서버 간 데이터 복제       |
 | `maxscale_monitor` | MaxScale의 DB 상태 확인        |
+| `exporter_svc` | mysqld_exporter Metric 수집(모니터링 전용, 읽기 전용) |
 
 Application Runtime 계정과 Migration 계정을 분리하여 애플리케이션이 일반적인 DB 작업을 수행하는 과정에서 Schema 변경 권한까지 직접 사용할 필요가 없도록 구성한다.
+
+## 3.3-1 DB/MaxScale/NFS 서버 관측성(Observability Exporter)
+
+mariadb-01/02, maxscale-01, nfs 4대에는 서버 자체 자원(CPU/메모리/
+디스크/네트워크) 수집을 위한 node_exporter가 배포되어 있다.
+
+mariadb-01/02에는 추가로 MariaDB 서비스 자체 상태(쿼리/복제 통계) 수집을
+위한 mysqld_exporter가 `exporter_svc` 계정으로 배포되어 있으나,
+Prometheus Scrape 연동과 Alert Rule 등록은 팀 결정으로 보류된 상태다.
+
+maxscale-01의 MaxScale 서비스 자체 상태(라우팅/Failover) 수집용
+maxscale_exporter는 구현 자체가 보류 상태이며, 현재도 `maxctrl list
+servers` 수동 확인에 의존한다.
+
+NFS는 별도 Exporter 없이 node_exporter의 `nfsd` Collector로 대체한다.
+
+```text
+서버 자체 자원 → node_exporter (4대 전체)
+MariaDB 서비스 상태 → mysqld_exporter (배포 완료, 연동 보류)
+MaxScale 서비스 상태 → maxscale_exporter (미구현, 보류)
+```
 
 ---
 
@@ -935,6 +957,26 @@ Browser
 ```
 
 특히 회원 가입, 게임방 생성, 게임 진행, 결과 저장 등의 실제 사용자 시나리오를 통해 MariaDB와 Redis가 각각 의도한 데이터를 저장하는지 확인할 필요가 있다.
+
+## 8.5 DB/MaxScale 서비스 레벨 Observability 보류
+
+현재 Prometheus로 수집되는 것은 4대 서버의 자체 자원(node_exporter)뿐이다.
+MariaDB/MaxScale **서비스 자체 상태**의 Prometheus 연동은 다음과 같이
+보류된 상태다.
+
+```text
+mysqld_exporter
+→ 배포·계정·Metric 수집 자체는 정상 동작
+→ Prometheus 연동/Alert Rule은 팀 결정으로 보류
+
+maxscale_exporter
+→ 구현 자체가 보류
+```
+
+따라서 복제 지연이나 MaxScale Failover 발생을 Alert로 조기 탐지하는
+경로는 아직 없으며, 장애 인지는 계속 수동 확인(`maxctrl list servers`,
+로그 확인)에 의존한다. 이 Gap은 MariaDB DR Recovery 완료 기준(RTO/RPO)
+과는 별개이며, 별도 팀 결정으로 관리한다.
 
 ---
 
