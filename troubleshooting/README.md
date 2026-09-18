@@ -62,6 +62,8 @@
 41. **[TS-041 — etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포](TS-041_etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포.md)**
 42. **[TS-042 — MariaDB DR 복구 replication_setup의 role Guard 누락으로 master 경로 fatal 실패](TS-042_backup_transfer_replication_setup_role_guard_누락.md)**
 43. **[TS-043 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생](TS-043_mysqld_exporter_SLAVE_MONITOR_권한_누락.md)**
+44. **[TS-044 — MariaDB_CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 발생]
+(TS-044_MariaDB CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 — 버림 쿼리 선행 기법.md)**
 
 ---
 
