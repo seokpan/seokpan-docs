@@ -1052,6 +1052,27 @@
   - `seokpan/seokpan-infra` PR #201
   - `seokpan/seokpan-docs` TS-043
 
+### DR-03 Redis AOF/PVC Recovery 검증 완료, Redis Key Schema 확정
+
+이슈 #115(seokpan-infra) 1차 Infra 레벨 검증 완료. Redis가 AOF/PVC 손상으로
+완전히 죽어도 MariaDB `move` 테이블 기준으로 게임 상태(board, current_team,
+turn_no 등)를 재구성할 수 있음을 격리 환경에서 실증.
+
+**변경/확정된 사실**:
+- 실제 운영 Redis Key Schema 최초 공식 확인: `stone:v1:room:{room_id}:game`
+  (STRING/JSON), `:board`(HASH). 좌표 변환 공식(`pos_x`↔열문자, `pos_y`↔행숫자)
+  확정.
+- `platform/redis-0`에는 `pods/exec` 권한을 부여하지 않기로 확정 — 파괴적
+  검증은 항상 격리 환경(storage-infra)에서 수행.
+- 이슈 #115 등록 당시 전제("Backend 연동 전")가 낡은 정보였음이 확인됨 —
+  Backend/Redis Runtime 연동은 이미 완료 상태. 관련 문서 갱신 시 유의.
+
+**영향받는 문서**: `F_redis_recovery_contract.md`(3/4/5절 갱신, 6절 신규),
+`E_infra_snapshot.md`(9-11절 신규), `H_progress_checklist.md`(F-10절 신규)
+
+**후속 작업**: 이번 검증 절차의 Ansible 자동화 진행 중 — 운영 Redis 쓰기 권한
+정책이 확정되지 않아 실제 반영 단계는 보류.
+
 ---
 
 ## 작성 형식
