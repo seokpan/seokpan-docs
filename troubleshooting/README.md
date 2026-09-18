@@ -60,8 +60,10 @@
 39. **[TS-039 — Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌](TS-039_Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌.md)**
 40. **[TS-040 — Jinja2에서 `.items`가 dict의 `.items()` 메서드로 오인되는 버그](TS-040_Jinja2에서 .items가 dict의 .items() 메서드로 오인되는 버그.md)**
 41. **[TS-041 — etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포](TS-041_etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포.md)**
+42. **[TS-042 — MariaDB DR 복구 replication_setup의 role Guard 누락으로 master 경로 fatal 실패](TS-042_backup_transfer_replication_setup_role_guard_누락.md)**
+43. **[TS-043 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생](TS-043_mysqld_exporter_SLAVE_MONITOR_권한_누락.md)**
 
 ---
 
-현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **41건**  
-기준 시점: **2026-09-15**
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **43건**  
+기준 시점: **2026-09-16**
