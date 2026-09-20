@@ -136,8 +136,9 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 - 비밀번호는 Argon2id로 저장하며 정확한 비용 Parameter는 Linux Application Container에서 측정한 뒤 고정한다.
 - HTTP는 Resource와 상태 전이를 드러내는 명시적 명령을 사용한다. Domain 중복 처리는 `request_id`, 오래된 상태 거부는 `expected_state_version`, Log 추적은 `X-Request-ID`로 구분한다.
 - WebSocket은 Lobby와 Room 연결을 분리하고 첫 Application 메시지로 서버 기준 Snapshot을 보낸다. 최초 Snapshot부터 이후 Event까지 같은 연결의 메시지 순서 번호를 사용하며, Room 상태와 Game/Vote 상태가 번갈아 바뀌어도 그 순서는 뒤로 가지 않는다. Event 누락·중복·역전이 확인되면 Snapshot을 다시 받아 상태를 맞춘다.
-- 일반 단절의 30초 Disconnect Lease는 참가자·팀·진행 중 Game 상태 복원에 사용하되 이전 Vote와 방장 권한은 자동 복원하지 않는다.
-- 방장이 명시적으로 퇴장하거나 연결 단절이 감지되면 접속 중인 가장 이른 Member에게 즉시 승계하고 모든 Ready를 해제한다.
+- 일반 단절의 Disconnect Lease는 **10초**로 사용한다. 유예 동안 참가자·팀·Ready 의도와 진행 중 Game 참여 상태를 보존하되 이전 Vote는 자동 복원하지 않는다.
+- 방장이 명시적으로 퇴장·로그아웃하는 등 이탈이 확정되면 접속 중인 가장 이른 Member에게 즉시 승계하고 모든 Ready를 해제한다. 단순 연결 단절은 10초 동안 기존 방장 권한과 Ready 의도를 보존하며, 유예 만료 시에만 같은 승계·Ready 해제를 수행한다.
+- 연결이 끊긴 참가자의 Ready 표시는 의도 상태로만 보존한다. `connected=false` 참가자는 최소 Ready·양 팀 Ready·현재 판 PLAYER 조건에 포함하지 않으며, 연결이 끊긴 방장은 유예 중 Game Start를 실행할 수 없다.
 - 승계 가능한 Member가 없으면 Room을 종료한다. `WAITING`은 Game 처리를 만들지 않고, `PLAYING`의 기존 Game만 전적·Rating 미반영 `SYSTEM_INVALID`로 종결한다.
 
 ### 5.1 인증 복구와 화면 상태 재조회
@@ -148,7 +149,7 @@ Application Container는 Kubernetes Node나 Ansible Controller의 System Python�
 - `GET /api/v1/lobby/snapshot`과 현재 참가자의 `GET /api/v1/rooms/{room_id}/state`는 상태와 메시지 순서 기준을 함께 제공한다. 조회 자체로 정상 Socket을 교체하거나 방 참여를 바꾸지 않는다. 메시지 순서 번호와 Room/Game 변경 검사 번호는 기존대로 구분한다.
 - Game의 `deadline_ms`·`server_now_ms`를 기준으로 남은 시간을 표시한다. 브라우저 시계나 화면의 0초 표시만으로 마감·Pass·착수·승패를 확정하지 않는다.
 - 단순 창 복귀에는 기존 화면을 유지하면서 인증을 재확인할 수 있으나, 확인 중에는 CSRF를 지우고 조작을 막는다. 같은 신원·방 참여가 확인되면 정상 연결과 화면을 유지하고, 다른 신원·만료·확인 실패에는 이전 화면을 폐기한다.
-- 인증 복구와 실제 게임 Socket 단절을 구분한다. 실제 단절에는 기존 방장 승계·Ready 해제·표 제거 규칙을 적용한다. 여러 탭의 CSRF 공유가 Room 연결 교체 정책이나 재접속 규칙을 우회하지 않는다.
+- 인증 복구와 실제 게임 Socket 단절을 구분한다. 실제 단절에서는 표를 즉시 제거하되 참가자 이탈과 방장 승계는 10초 재접속 유예와 명시적 이탈 규칙에 따라 확정한다. 여러 탭의 CSRF 공유가 Room 연결 교체 정책이나 재접속 규칙을 우회하지 않는다.
 - 구형 Session 자료를 요청 중 자동 변환하지 않는다. 실제 배포 전 보존할 자료·실행 버전·되돌리기 방법을 확인하고, 필요한 전환은 별도 승인된 절차가 준비될 때까지 보류한다. 자료 삭제·강제 로그아웃으로 우회하지 않는다.
 
 ### 5.2 채팅·접속자 연결의 구분
@@ -197,7 +198,7 @@ MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이
 - MariaDB Commit 후 Redis를 갱신하며, Redis 갱신 실패 시 MariaDB 확정 결과로 멱등 재동기화한다.
 - 식별자 기본 형식은 소문자 하이픈 UUIDv4이며 `game.room_id VARCHAR(64)`는 호환성을 유지한 채 신규 값에 UUIDv4를 사용한다.
 - Redis Key Prefix는 `stone:v1:`이며 Room 관련 Key는 `{room_id}` Hash Tag 아래 역할별 Hash·Set·ZSet으로 분리한다.
-- 최초 Lifecycle 기준은 Session Idle 2시간·Absolute 24시간, Disconnect Lease 30초, Resolver Lease 5초, Command 중복 결과 24시간, 종료 Room Tombstone 10분이다.
+- 현재 Lifecycle 기준은 Session Idle 2시간·Absolute 24시간, Disconnect Lease **10초**, Resolver Lease 5초, Command 중복 결과 24시간, 종료 Room Tombstone 10분이다.
 - Ready·팀·Room 상태, 연결 세대, Vote·마감, `request_id`와 해당 Resource의 `state_version`은 Version 관리 Lua 한 번의 실행에서 함께 처리하며 Redis 서버 시각으로 마감을 판정한다. WebSocket Envelope의 메시지 순서 번호는 이 Resource Version을 대신하지 않으며 Event 발행 단계에서 별도로 관리한다.
 - 기존 `game_participant`에는 Application 생성 UUIDv4 `participant_id`와 Game 내 Participant·Member·Guest 중복 방지, 엄격한 Member/Guest 조합 제약을 최소 보완한다.
 - 기존 DB는 DDL·행 Audit 뒤 초기 Alembic Revision으로 채택하고, 빈 DB는 같은 Revision Chain으로 생성한다. 실제 DDL 적용은 Backup·Rollback·담당자 검토와 별도 승인을 거친다.
