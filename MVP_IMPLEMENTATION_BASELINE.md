@@ -198,7 +198,7 @@ MariaDB는 회원·게임 결과·전적처럼 영구 보관해야 하는 데이
 - MariaDB Commit 후 Redis를 갱신하며, Redis 갱신 실패 시 MariaDB 확정 결과로 멱등 재동기화한다.
 - 식별자 기본 형식은 소문자 하이픈 UUIDv4이며 `game.room_id VARCHAR(64)`는 호환성을 유지한 채 신규 값에 UUIDv4를 사용한다.
 - Redis Key Prefix는 `stone:v1:`이며 Room 관련 Key는 `{room_id}` Hash Tag 아래 역할별 Hash·Set·ZSet으로 분리한다.
-- 최초 Lifecycle 기준은 Session Idle 2시간·Absolute 24시간, Disconnect Lease **10초**, Resolver Lease 5초, Command 중복 결과 24시간, 종료 Room Tombstone 10분이다.
+- 현재 Lifecycle 기준은 Session Idle 2시간·Absolute 24시간, Disconnect Lease **10초**, Resolver Lease 5초, Command 중복 결과 24시간, 종료 Room Tombstone 10분이다.
 - Ready·팀·Room 상태, 연결 세대, Vote·마감, `request_id`와 해당 Resource의 `state_version`은 Version 관리 Lua 한 번의 실행에서 함께 처리하며 Redis 서버 시각으로 마감을 판정한다. WebSocket Envelope의 메시지 순서 번호는 이 Resource Version을 대신하지 않으며 Event 발행 단계에서 별도로 관리한다.
 - 기존 `game_participant`에는 Application 생성 UUIDv4 `participant_id`와 Game 내 Participant·Member·Guest 중복 방지, 엄격한 Member/Guest 조합 제약을 최소 보완한다.
 - 기존 DB는 DDL·행 Audit 뒤 초기 Alembic Revision으로 채택하고, 빈 DB는 같은 Revision Chain으로 생성한다. 실제 DDL 적용은 Backup·Rollback·담당자 검토와 별도 승인을 거친다.
