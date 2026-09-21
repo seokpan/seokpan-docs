@@ -970,7 +970,7 @@ mysqld_exporter
 → Prometheus 수집 연동은 확인 완료(2026-09-21), Alert Rule은 2차 이관
 
 maxscale_exporter
-→ 구현 자체가 보류
+→ 공식 exporter 부재(MXS-3022 Won't Do)로 소스 빌드 방식으로 2차 재착수 (REST read-only 계정만 코드화)
 ```
 
 따라서 복제 지연이나 MaxScale Failover 발생을 Alert로 조기 탐지하는
