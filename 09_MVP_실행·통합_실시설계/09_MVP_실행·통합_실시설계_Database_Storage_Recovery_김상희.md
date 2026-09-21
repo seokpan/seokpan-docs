@@ -239,8 +239,8 @@ NFS는 별도 Exporter 없이 node_exporter의 `nfsd` Collector로 대체한다.
 
 ```text
 서버 자체 자원 → node_exporter (4대 전체)
-MariaDB 서비스 상태 → mysqld_exporter (배포 완료, 연동 보류)
-MaxScale 서비스 상태 → maxscale_exporter (미구현, 보류)
+MariaDB 서비스 상태 → mysqld_exporter (배포·Prometheus 수집 완료, Alert Rule 2차)
+MaxScale 서비스 상태 → maxscale_exporter (2차 이관, REST read-only 계정만 코드화)
 ```
 
 ---
@@ -967,7 +967,7 @@ MariaDB/MaxScale **서비스 자체 상태**의 Prometheus 연동은 다음과 �
 ```text
 mysqld_exporter
 → 배포·계정·Metric 수집 자체는 정상 동작
-→ Prometheus 연동/Alert Rule은 팀 결정으로 보류
+→ Prometheus 수집 연동은 확인 완료(2026-09-21), Alert Rule은 2차 이관
 
 maxscale_exporter
 → 구현 자체가 보류

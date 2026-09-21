@@ -64,8 +64,10 @@
 43. **[TS-043 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생](TS-043_mysqld_exporter_SLAVE_MONITOR_권한_누락.md)**
 44. **[TS-044 — MariaDB_CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 발생]
 (TS-044_MariaDB CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 — 버림 쿼리 선행 기법.md)**
+45. **[TS-045 — 원 계획의 maxscale_exporter(공식 REST API exporter)가 존재하지 않아 소스 빌드 방식으로 2차 이관]
+(TS-045_maxscale_exporter(공식 REST API exporter)가 존재하지 않아 소스 빌드 방식으로 2차 이관.md)**
 
 ---
 
-현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **43건**  
-기준 시점: **2026-09-16**
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **45건**  
+기준 시점: **2026-09-21**
