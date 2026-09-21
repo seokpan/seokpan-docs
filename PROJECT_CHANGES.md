@@ -1115,3 +1115,23 @@ turn_no 등)를 재구성할 수 있음을 격리 환경에서 실증.
   - \`seokpan/seokpan-app#88\`
   - \`seokpan/seokpan-app@b94687cb250173585635d5e518974a91bb0db147\`
 
+### mysqld_exporter Prometheus 수집 확인, Alert Rule·maxscale_exporter 2차 이관
+
+- 구분: Runtime 검증으로 기존 가정 수정 및 범위 조정
+- 기존 기준:
+  - 2026-09-18 항목은 방화벽 반영과 Prometheus Scrape Target 등록이 없어 Prometheus에서 접근할 수 없다고 기록했고, maxscale_exporter는 MaxScale REST API 기반 공식 exporter 채택을 전제로 했다. 2026-09-17 팀 결정으로 Prometheus 연동과 Alert Rule은 보류 상태였다.
+- 변경/확정 내용:
+  - mysqld_exporter는 seokpan-gitops의 ServiceMonitor 구성으로 Prometheus 타겟 2/2 `up`이며 복제 메트릭이 조회된다. `9104/tcp`는 방화벽 신규 요청 없이 통과한다(추정 원인: vrouter policy `target: ACCEPT`, 직접 확인은 미실시).
+  - 복제 Alert Rule(중단·지연)은 발표·보고서 준비를 우선해 2차 프로젝트로 이관한다. 수집·조회는 가능하며 이상 확인은 당분간 수동으로 한다.
+  - 원안 `mariadb-corporation/maxscale_exporter`는 MariaDB JIRA MXS-3022(Won't Do)로 존재하지 않는다. 커뮤니티 대안은 사전 빌드 바이너리·체크섬이 없어 소스 빌드 방식(커밋 고정, 자체 SHA256)으로 2차에서 재착수한다.
+  - maxscale-01 REST API read-only 계정만 코드화한다(소비자 없는 dormant credential).
+  - 계정 생성은 `maxctrl` argv 대신 REST API(JSON body)로 수행하고 존재 판정은 ID 조회로 한다(PR #214 리뷰에서 비밀번호 argv 노출·부분 문자열 판정을 지적받아 반영). MaxScale REST admin 비밀번호는 기본값을 유지하며 2차에서 교체한다.
+- 영향:
+  - 이슈 #199의 완료 범위와 09-18 항목의 "후속 필요" 중 방화벽·Prometheus 연동은 해소되고 Alert Rule과 maxscale_exporter는 2차 이관으로 정리된다.
+  - 통과 원인이 명시 허용이 아니므로 policy를 강화하면 수집이 끊길 수 있어 명시 허용 검토를 2차에 남긴다.
+- 관련:
+  - `seokpan/seokpan-infra#211`
+  - `seokpan/seokpan-infra#199`
+  - `seokpan/seokpan-infra` PR #214
+  - `seokpan/seokpan-docs` TS-045
+
