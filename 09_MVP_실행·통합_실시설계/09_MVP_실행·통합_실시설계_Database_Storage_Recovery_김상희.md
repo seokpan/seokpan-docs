@@ -53,17 +53,18 @@ Application이 복구된 Database를 다시 사용할 수 있는지 확인
 ## 1.2 범위
 
 | 영역               | 주요 구성                                                             | 검증 목적                     |
-| ---------------- | ----------------------------------------------------------------- | ------------------------- |
-| MariaDB          | mariadb-01 / mariadb-02                                           | 데이터베이스 운영 및 복제 상태 확인      |
-| MaxScale         | maxscale-01                                                       | DB 접속 지점과 장애 전환 확인        |
-| Database Schema  | `stone_game`                                                      | 애플리케이션 데이터 구조 확인          |
-| Database Account | `identity_svc`, `game_svc`, `db_admin`, `backup_svc`, `repl_user` | 용도별 접근 권한 및 인증 확인         |
-| TLS              | MariaDB TLS + Root CA                                             | Kubernetes → DB 암호화 연결 확인 |
-| NFS              | `192.168.54.50`                                                   | 백업 및 Kubernetes 저장소 제공    |
-| MariaDB Backup   | Full + Incremental                                                | 백업 체인 생성 및 보존 확인          |
-| MariaDB Recovery | `mariadb_dr_recovery.yml`                                         | 백업 기반 DB 복구 및 RTO/RPO 측정  |
-| Redis            | `platform` namespace                                              | 게임 상태 데이터 저장 및 영속성 확인     |
-| etcd DR          | Kubernetes etcd Snapshot                                          | Kubernetes 상태 데이터 복구 확인   |
+| ---------------- | ------------------------------------------------------------------- | ------------------------- |
+| MariaDB          | mariadb-01 / mariadb-02                                              | 데이터베이스 운영 및 복제 상태 확인      |
+| MaxScale         | maxscale-01                                                          | DB 접속 지점과 장애 전환 확인        |
+| Database Schema  | `stone_game`                                                         | 애플리케이션 데이터 구조 확인          |
+| Database Account | `identity_svc`, `game_svc`, `db_admin`, `backup_svc`, `repl_user`, `maxscale_monitor`, `exporter_svc` | 용도별 접근 권한 및 인증 확인 |
+| TLS              | MariaDB TLS + Root CA                                                | Kubernetes → DB 암호화 연결 확인 |
+| NFS              | `192.168.54.50`                                                      | 백업 및 Kubernetes 저장소 제공    |
+| MariaDB Backup   | Full + Incremental                                                   | 백업 체인 생성 및 보존 확인          |
+| MariaDB Recovery | `mariadb_dr_recovery.yml`                                            | 백업 기반 DB 복구 및 RTO/RPO 측정  |
+| Redis            | `platform` namespace                                                 | 게임 상태 데이터 저장 및 영속성 확인     |
+| Redis DR-03      | MariaDB 확정 기록 기준 재구성                                                | PVC 손상 시 복구 계약 검증         |
+| etcd DR          | Kubernetes etcd Snapshot                                             | Kubernetes 상태 데이터 복구 확인   |
 
 ---
 
@@ -108,6 +109,8 @@ Application Consumer Ready
 Application Integration Validated
 ```
 
+**추가 원칙(2026-09-18 재귀 검증 시 재확인)**: 하나의 DR 대상(Redis DR-03 등)에 대해서도 "격리 환경에서 절차 자체가 검증됨"과 "운영 환경에 그 절차가 자동으로 반영됨"은 서로 다른 판정이다. 전자가 `Validated`라고 해서 후자까지 `Validated`로 승격하지 않는다.
+
 ---
 
 ## 2.2 Recovery 관련 판정 기준
@@ -150,6 +153,8 @@ MaxScale 상태 확인
 
 본 프로젝트에서는 마지막으로 확보된 백업과 복구 대상 데이터의 시점을 비교하여 실제 RPO를 측정한다.
 
+RTO/RPO는 시나리오에 따라 다른 값을 갖는다(예: MariaDB의 Isolated 복구와 Production 양쪽 유실 복구는 서로 다른 RTO/RPO를 가지며, 하나로 통합해 표현하지 않는다 — 3.12절 참고).
+
 ---
 
 # 3. Database / Storage / Recovery Current State
@@ -159,12 +164,12 @@ MaxScale 상태 확인
 MariaDB는 2대의 서버로 구성되어 있으며, 한 서버에서 다른 서버로 데이터를 복제하는 구조를 사용한다.
 
 | 구성          | 주소                              | 역할                 |
-| ----------- | ------------------------------- | ------------------ |
-| mariadb-01  | `192.168.52.40`                 | MariaDB 서버         |
-| mariadb-02  | `192.168.51.40`                 | MariaDB 서버         |
-| maxscale-01 | `192.168.53.40`                 | MaxScale           |
-| DB VIP      | `10.1.93.90:3306`               | 애플리케이션 DB 접속 지점    |
-| DB FQDN     | `db.seokpan.soldesk.store:3306` | 애플리케이션이 사용하는 DB 주소 |
+| ----------- | -------------------------------- | ------------------ |
+| mariadb-01  | `192.168.52.40`                  | MariaDB 서버         |
+| mariadb-02  | `192.168.51.40`                  | MariaDB 서버         |
+| maxscale-01 | `192.168.53.40`                  | MaxScale           |
+| DB VIP      | `10.1.93.90:3306`                | 애플리케이션 DB 접속 지점    |
+| DB FQDN     | `db.seokpan.soldesk.store:3306`  | 애플리케이션이 사용하는 DB 주소 |
 
 MariaDB 버전은 `11.8.9-log`이며, MaxScale은 `24.02.9`를 사용한다.
 
@@ -183,6 +188,8 @@ MariaDB-01 / MariaDB-02
 ```
 
 이 구조를 통해 애플리케이션과 실제 MariaDB 서버의 위치를 분리하고, DB 서버 장애가 발생했을 때 MaxScale이 제공하는 장애 전환 구조를 사용할 수 있다.
+
+**⚠️ 중요**: `auto_failover=true`, `auto_rejoin=true`가 실제로 켜져 있어 Master/Replica 역할은 고정이 아니다. 모든 DB 쓰기 작업(계정 생성, 스키마 변경, 백업, 복구 등) 전에는 반드시 `maxctrl list servers`로 현재 Master를 재확인한다.
 
 ---
 
@@ -218,21 +225,20 @@ Database 계정은 용도에 따라 분리한다.
 | `backup_svc`       | Backup 작업                 |
 | `repl_user`        | MariaDB 서버 간 데이터 복제       |
 | `maxscale_monitor` | MaxScale의 DB 상태 확인        |
-| `exporter_svc` | mysqld_exporter Metric 수집(모니터링 전용, 읽기 전용) |
+| `exporter_svc`     | mysqld_exporter Metric 수집(모니터링 전용, `SLAVE MONITOR` 포함 필요 최소 권한, 쓰기 권한 없음) |
 
 Application Runtime 계정과 Migration 계정을 분리하여 애플리케이션이 일반적인 DB 작업을 수행하는 과정에서 Schema 변경 권한까지 직접 사용할 필요가 없도록 구성한다.
 
 ## 3.3-1 DB/MaxScale/NFS 서버 관측성(Observability Exporter)
 
 mariadb-01/02, maxscale-01, nfs 4대에는 서버 자체 자원(CPU/메모리/
-디스크/네트워크) 수집을 위한 node_exporter가 배포되어 있다.
+디스크/네트워크) 수집을 위한 node_exporter(`1.12.1-distroless`)가 배포되어 있다.
 
 mariadb-01/02에는 추가로 MariaDB 서비스 자체 상태(쿼리/복제 통계) 수집을
-위한 mysqld_exporter가 `exporter_svc` 계정으로 배포되어 있으나,
-Prometheus Scrape 연동과 Alert Rule 등록은 팀 결정으로 보류된 상태다.
+위한 mysqld_exporter(`0.20.0`)가 `exporter_svc` 계정으로 배포되어 있으며, 배포 검증 중 발견한 `SLAVE MONITOR` 권한 누락 버그는 수정 완료했다(TS-043). Prometheus Scrape 연동은 확인 완료됐으나 Alert Rule 등록은 팀 결정으로 보류된 상태다.
 
-maxscale-01의 MaxScale 서비스 자체 상태(라우팅/Failover) 수집용
-maxscale_exporter는 구현 자체가 보류 상태이며, 현재도 `maxctrl list
+maxscale-01의 MaxScale 서비스 상태(라우팅/Failover) 수집용
+maxscale_exporter는 REST read-only 계정과 Role 골격까지만 코드화됐고, 실제 바이너리 배포는 2차 프로젝트로 이관됐다. 현재도 `maxctrl list
 servers` 수동 확인에 의존한다.
 
 NFS는 별도 Exporter 없이 node_exporter의 `nfsd` Collector로 대체한다.
@@ -298,9 +304,11 @@ NFS 서버는 다음 주소에서 제공한다.
 | 경로                   | 용도                             |
 | -------------------- | ------------------------------ |
 | `/srv/nfs/k8s`       | Kubernetes PersistentVolume 제공 |
-| `/srv/nfs/db-backup` | MariaDB Backup 저장 및 공유 상태 관리   |
+| `/mnt/nfs-db-backup` (마운트, 서버 측 export는 db-backup 계열) | MariaDB Backup Chain 공유 상태 관리(`.state/` 서브디렉터리에 `.backup_chain_state.json`) |
 
 NFS를 사용하는 이유는 여러 서버 또는 Kubernetes Pod에서 동일한 저장 공간에 접근할 수 있도록 하기 위함이다.
+
+**경로 혼동 주의**: `/srv/nfs/db-backup`은 각 MariaDB 호스트의 **로컬** 스테이징 디렉터리이며(이름과 달리 NFS 공유 경로가 아님), 실제 NFS 공유 상태 authority는 `/mnt/nfs-db-backup/.state/`다. 이 구분은 DR-01 실측(이슈 #194) 중 실제로 혼동이 발견되어 정정된 사항이다.
 
 ---
 
@@ -350,7 +358,7 @@ Incremental Backup은 이전 Backup과 연결된 상태를 확인한 후 생성�
 
 정상적인 Chain이 존재하지 않으면 무효한 Incremental Backup을 계속 연결하지 않고 Full Backup부터 새로운 Chain을 시작한다.
 
-또한 MaxScale 장애 전환으로 Backup을 실행하는 DB 서버가 변경될 수 있기 때문에 Backup Chain 상태를 특정 DB 서버의 Local 파일에만 저장하지 않고 NFS에 공유한다.
+또한 MaxScale 장애 전환으로 Backup을 실행하는 DB 서버가 변경될 수 있기 때문에 Backup Chain 상태를 특정 DB 서버의 Local 파일에만 저장하지 않고 NFS에 공유한다(3.6절 경로 참고).
 
 ---
 
@@ -374,7 +382,7 @@ Chain 상태 갱신
 Lock 해제
 ```
 
-동시 실행 테스트를 통해 여러 Backup 작업이 동시에 Chain 상태를 수정하지 않는 것을 확인했다.
+동시 실행 테스트를 통해 여러 Backup 작업이 동시에 Chain 상태를 수정하지 않는 것을 확인했다(3회 반복, 동시 획득 0건).
 
 ---
 
@@ -431,28 +439,28 @@ MaxScale 상태 확인
 * MaxScale 상태
 * 서비스 접근 가능 여부
 
+Recovery는 `backup_restore_mode: isolated`(격리 인스턴스 검증용)와 `production`(실제 서비스 datadir 대상)을 명시적으로 분기한다. production 모드에서는 Count/CHECKSUM Gate가 `assert` 대신 정보성 리포트로 전환되며(백업 시점과 복구 시점 사이 정상적인 데이터 간극이 존재할 수 있으므로), SHA-256 무결성 검증은 두 모드 모두 하드 Gate로 유지한다. 양쪽 다 유실된 최악 시나리오에서는 MaxScale의 Split-brain 위험(고립된 두 Master 동시 존재)을 막기 위해 role=master 확립 시 나머지 호스트에 `read_only=1` 강제 배포 안전장치가 자동 적용·자동 해제된다.
+
 ---
 
-## 3.12 MariaDB DR-01 최종 실측
+## 3.12 MariaDB DR-01 최종 실측 (완료, 이슈 #194 — 2026-09-18 close)
 
-2026-09-16 DR-01 실측에서는 실제 복구 절차를 실행하여 RTO와 RPO를 측정했다.
+2026-09-16 DR-01 실측에서는 실제 복구 절차를 실행하여 RTO와 RPO를 측정했다. Isolated 모드(격리 인스턴스, 검증 목적)와 Production 모드(양쪽 서버 동시 유실 최악 시나리오, 실제 서비스 datadir 대상)를 구분해서 각각 측정했다.
 
-실측은 Full + Incremental Backup Chain을 이용한 특정 시점 복구를 기준으로 수행했으며, 복구 과정의 각 단계와 최종 서비스 복구 상태를 확인했다.
+### 최종 측정값 (확정, 09/12 문서 동일하게 사용)
 
-### 최종 측정값
+| 시나리오 | 조건 | RTO | RPO |
+| --- | --- | --- | --- |
+| Isolated | `mariadb_restore_chain.yml`, mariadb-02 대상, Full-only 체인(`chain_20260916`) | **27.376초** | 해당 없음(격리 검증용, 실제 데이터 유실 시나리오 아님) |
+| Production | 양쪽 서버 동시 정지 → `mariadb_dr_recovery.yml` 4단계를 master→replica 순 완주 | 단일 노드 재개 **1분 29초** / 양쪽 이중화 완전 정상화 **4분 0초** | **3건 손실**(더미데이터 B 전량, Incremental 이후 미백업 데이터가 설계대로 정확히 손실) |
 
-| 항목        | 최종 실측 결과                                  |
-| --------- | ----------------------------------------- |
-| RTO       | **최종 실측값 반영 필요**                          |
-| RPO       | **최종 실측값 반영 필요**                          |
-| Backup 방식 | Full + Incremental Chain                  |
-| 복구 방식     | Backup Restore + Recovery 절차              |
-| 정합성 검증    | GTID / Replication / 데이터 / Application 계정 |
-| 추가 검증     | MaxScale 및 서비스 상태                         |
+Isolated 모드는 Count/CHECKSUM/FK Gate 7개 테이블·7개 관계 전부 PASS. Production 모드는 복구 후 mariadb-01 vs mariadb-02 Count/CHECKSUM 7개 테이블 전부 일치, 그리고 3.11절의 Split-brain 방지 안전장치(read_only 강제 배포)가 실제로 mariadb-02 재편입 시점에 자동 해제되는 것까지 이때 최초로 실측 검증됐다.
 
-> **주의:** 이전에 사용했던 초기 RTO 측정값은 최종 결과가 아니므로 본 문서에서는 사용하지 않는다.
+> **주의**: 이 두 시나리오의 RTO/RPO는 서로 다른 조건(격리 검증 vs 실제 유실 복구)에서 나온 값이므로 하나의 수치로 합치거나 서로 대체하지 않는다. 두 값 모두 위 표를 최종 값으로 사용하며, 이전에 이 절이 "최종 실측값 반영 필요"로 표시했던 것은 이 표로 대체됐다.
 
-DR-01 실측 과정에서는 실제 환경에서 복구 절차를 수행하면서 `master` 경로에서 Replica 전용 검증 태스크가 실행되는 문제가 발견되었다. 해당 문제는 PR #197에서 `backup_restore_role=replica` 조건을 추가하여 수정했으며, 수정 후 Master/Replica 양쪽에서 재검증하여 두 경로 모두 `failed=0`으로 정상 완료되는 것을 확인했다.
+DR-01 실측 과정에서는 `roles/backup_transfer/tasks/replication_setup.yml:117`("복제 정상 기동 Gate" 태스크)에 `when: backup_restore_role == 'replica'` 조건이 누락되어 있어, `backup_restore_role=master` 경로 실행 시 register되지 않은 `dr_slave_status.query_result`를 참조하다 fatal 처리되는 버그가 발견되었다(같은 파일의 다른 3개 태스크는 이미 정상적으로 조건이 걸려 있었음). PR #197에서 조건을 추가해 수정했으며, 수정 후 Master/Replica 양쪽에서 재검증해 두 경로 모두 `failed=0`으로 정상 완료되는 것을 확인했다(리뷰어 이유빈, TS-042로 게시).
+
+같은 실측 중 3.6절의 NFS 공유 경로 표기 오류(`/mnt/nfs-db-backup` 루트가 아니라 `.state/` 서브디렉터리)도 함께 발견·정정됐다.
 
 ---
 
@@ -480,9 +488,21 @@ Redis는 AOF(Append Only File)를 사용하며 `appendfsync everysec` 설정으�
 * Pod 재생성 후 데이터 유지
 * PVC 기반 데이터 보존
 
-따라서 **Redis 기본 영속성은 검증된 상태**이다.
+따라서 **Redis 기본 영속성은 검증된 상태**이다(seokpan-gitops#7).
 
-다만 Redis 데이터를 권한 있는 Backup으로 별도 보호하고, 장애 상황에서 해당 Backup을 이용해 복구하는 **완전한 Redis DR 검증은 아직 완료되지 않았다.**
+### Redis DR-03 — PVC 손상 시 MariaDB 기준 재구성 (1차 Infra 레벨 검증 완료, 이슈 #115, 2026-09-18)
+
+Redis DR은 "Redis 데이터를 별도로 백업했다가 복원"하는 방식이 아니라, **MariaDB의 확정 기록(move, game_result, rating_history)이 항상 진실이고, Redis PVC가 손상되면 MariaDB 기준으로 Redis 상태를 재구성한다**는 설계다(`F_redis_recovery_contract.md`). Room/현재 투표/Ready 상태 같은 "지금 이 순간"의 공유 런타임 상태만 Redis가 담당하고, 그중에서도 아직 MariaDB에 확정되지 않은 진행 중 투표는 복구 대상이 아니다(유실돼도 정상 동작으로 인정).
+
+동일 스펙(redis:8.10.1, appendonly yes/everysec, nfs-k8s PVC)의 격리 StatefulSet(`storage-infra/redis-dr03-test`)에서 실제 운영 데이터 기반 Key Schema를 확인하고 다음을 검증했다.
+
+* 정상 재기동 시 AOF Replay로 완전 복구(PASS)
+* AOF(base.rdb) 직접 손상 시 CrashLoopBackOff 재현(PASS, "Wrong RDB checksum ... RDB CRC error")
+* MariaDB `move` 테이블(`move_no` 순) 기준 SQL 수동 재구성 → 사전 계산값과 완전 일치(PASS)
+* Redis Ahead(무효화)/Behind(재동기화)/Exact 3케이스 판정 로직(PASS)
+* Data Loss/Duplicate/Stale 3종 무결성 검증(PASS, 전부 없음)
+
+**이 검증 완료가 곧 운영 반영 완료를 의미하지 않는다.** 운영 `platform/redis-0`에 대한 자동 복구(Ansible 자동화, `redis-dr-recovery-automation-handoff.md`로 인계)는 아직 착수 전이며, 재구성값을 운영 Redis에 실제로 쓰는 권한 설계가 BLOCKING 선행조건으로 남아 있다. 장애 관찰/주입용 권한(`pods:delete`, `pods/log:get`)은 `platform/ksh` SA에 이미 부여됐고(seokpan-gitops#47/#48), `pods/exec`는 부여하지 않기로 확정했다. 이슈 #115는 이 잔여 작업 때문에 open 상태를 유지한다.
 
 ---
 
@@ -506,6 +526,22 @@ kube-apiserver 인증 확인
 Kubernetes Object 비교
 ```
 
+**진행 이력(3단계로 구분)**:
+
+```text
+이슈 #113 (2026-09-08 스코프 축소, completed)
+  → Snapshot 생성 + SHA-256 무결성 검증 + NFS 전용 경로(/srv/nfs/etcd-dr) 전송까지만
+
+이슈 #156 (2026-09-11, closed) — 1차 수동 E2E
+  → 별도 물리PC 격리망(loadgen/loadgen2/loadgen3, VMnet 192.168.55.0/24)에서
+    수동으로 3-member Restore → K8s API 기동 → Object 검증 → RTO 측정
+  → RTO = 38분 44초(트러블슈팅 대응 시간 포함), Namespace 12/Deployment 21/Secret 37 diff 0
+
+이슈 #176 + PR #191 (2026-09-14~16, 2026-09-16 01:32 UTC merged) — 자동화
+  → Safety Guard → Restore Decision Gate → Final Restore Gate 3단 안전장치 자동화
+  → bridged loadgen 환경(10.1.93.95~97/24)에서 E2E 자동 실행
+```
+
 격리 환경에서 3-member etcd를 복구하고 다음 항목을 확인했다.
 
 * etcd Leader / Raft 상태
@@ -513,9 +549,9 @@ Kubernetes Object 비교
 * 3-member Quorum
 * kube-apiserver 인증
 * Namespace / Deployment / Secret Object 수
-* 원본과 복구 결과 비교
+* 원본과 복구 결과 비교(Namespace 13→13, Deployment 21→21, Secret 39→39, diff 0)
 
-최종 DR-02 E2E 검증에서는 **RTO 52초**가 측정되었다.
+**최종 DR-02 E2E 검증(자동화, PR #191)에서는 RTO 52초**(Restore→Quorum 21초 / Quorum→API 27초 / API→Object 4초)가 측정되었다. 09/12 문서에서 "etcd DR-02 RTO"를 대표값으로 인용할 때는 이 52초를 사용하고, #156의 수동 측정값(38분44초)은 자동화 이전 참고값으로만 병기한다.
 
 이 결과는 **etcd Snapshot 기반 Kubernetes 상태 복구 시간**을 의미하며, 전체 Kubernetes 클러스터 재구축 시간이나 Worker Node 재가입 시간을 포함한 전체 재해복구 시간으로 해석하지 않는다.
 
@@ -596,7 +632,7 @@ Redis
 Game Room / Runtime State
 ```
 
-MariaDB가 회원 및 영속적인 게임 데이터를 저장한다면 Redis는 실시간 게임 상태와 같이 빠른 접근이 필요한 데이터를 저장하는 역할을 수행한다.
+MariaDB가 회원 및 영속적인 게임 데이터를 저장한다면 Redis는 실시간 게임 상태와 같이 빠른 접근이 필요한 데이터를 저장하는 역할을 수행한다. 두 저장소 간 상태 일치 판정과 재구성 규칙은 3.13절 Redis DR-03을 따른다.
 
 ---
 
@@ -653,7 +689,7 @@ Full / Incremental
     ↓
 NFS
     ↓
-/srv/nfs/db-backup
+/mnt/nfs-db-backup/.state/ (상태 authority) + 각 호스트 로컬 스테이징(/srv/nfs/db-backup)
 ```
 
 Backup Chain 상태도 NFS에 함께 관리하여 MariaDB 서버가 변경되어도 기존 Chain의 상태를 이어서 관리할 수 있도록 한다.
@@ -684,12 +720,32 @@ Application 계정 접속 확인
 
 ---
 
-## 5.5 Kubernetes etcd Recovery 흐름
+## 5.5 Redis DR-03 흐름 (PVC 손상 시)
+
+```text
+Redis PVC 손상 감지
+    ↓
+MariaDB move 테이블 조회(game_id, move_no 순)
+    ↓
+보드/턴/현재 팀 재구성
+    ↓
+Redis Ahead/Behind/Exact 판정
+    ↓
+필요 시 MariaDB 기준 강제 재동기화
+    ↓
+(운영 반영은 자동화 착수 전 — §3.13 BLOCKING 참고)
+```
+
+---
+
+## 5.6 Kubernetes etcd Recovery 흐름
 
 ```text
 etcd Snapshot
     ↓
 Hash / Revision 확인
+    ↓
+Safety Guard → Restore Decision Gate → Final Restore Gate
     ↓
 격리 환경 Restore
     ↓
@@ -817,7 +873,7 @@ Backup
 → PASS
 ```
 
-단, 최종 RTO/RPO 수치는 실측 결과 문서와 동일한 값을 사용해야 한다.
+**최종 판정: PASS(완료)** — Isolated RTO 27.376초, Production RPO 3건/RTO 1분29초(단일)·4분(이중화). 3.12절 표를 최종 값으로 사용한다.
 
 ---
 
@@ -830,6 +886,7 @@ Backup
 * AOF 활성화
 * Pod 재생성
 * 기존 데이터 유지
+* PVC 손상 시 MariaDB 기준 재구성(DR-03) 절차 검증
 
 ### 판정
 
@@ -837,8 +894,11 @@ Backup
 Redis Persistence
 → PASS
 
-Redis Authority-based DR
-→ Partial
+Redis DR-03(1차 Infra 레벨, 격리 환경)
+→ PASS
+
+Redis DR-03 운영 자동화
+→ Not Tested(BLOCKING: 운영 Pod 쓰기 반영 권한 결정)
 ```
 
 ---
@@ -866,7 +926,7 @@ Snapshot
 → PASS
 ```
 
-최종 E2E 측정 RTO는 **52초**이다.
+최종 E2E 측정 RTO는 **52초**(자동화, PR #191)이다. 자동화 이전 수동 측정값(38분44초, 이슈 #156)은 참고값으로만 병기한다.
 
 ---
 
@@ -878,45 +938,37 @@ Snapshot
 | B    | Credential / TLS         | `Validated` | Vault ↔ Secret ↔ DB                      |
 | C    | NFS / Kubernetes Storage | `Validated` | PVC / Persistence                        |
 | D    | MariaDB Backup           | `Validated` | Full / Incremental / Chain / Lock        |
-| E    | MariaDB Recovery         | `Validated` | Restore / 정합성 / RTO / RPO                |
+| E    | MariaDB Recovery         | **`Validated`(완료)** | Restore / 정합성 / RTO·RPO 확정(이슈 #194) |
 | F    | Redis Persistence        | `Validated` | Write / Read / Pod Recreation            |
-| F    | Redis DR                 | `Partial`   | 권한 기반 Backup / Restore 미완료               |
-| G    | etcd DR                  | `Validated` | Isolated Restore / Quorum / API / Object |
+| F    | Redis DR-03(1차 Infra)    | **`Validated`** | 격리 환경 재구성 절차 검증 완료(이슈 #115) |
+| F    | Redis DR-03(운영 자동화)      | `Not Tested` | BLOCKING: RBAC/쓰기 반영 권한 결정            |
+| G    | etcd DR                  | `Validated` | Isolated Restore / Quorum / API / Object, RTO 52초(자동화) |
 
 ---
 
 # 8. 남은 Blocker와 Gap
 
-## 8.1 MariaDB Recovery 실측 결과 문서 반영
+## 8.1 ~~MariaDB Recovery 실측 결과 문서 반영~~ (해결됨, 2026-09-18)
 
-DR-01 실제 복구 실측은 완료되었으므로, 최종 문서에는 **실측 문서에서 확정된 RTO/RPO 값을 동일하게 반영해야 한다.**
-
-초기 측정값은 최종 결과에서 제외한다.
+DR-01 실제 복구 실측이 완료되어 3.12절에 최종 RTO/RPO 값을 반영했다. 이전 절이 명시했던 "실측값 반영 필요" 상태는 해소됐다.
 
 ```text
-초기 측정값
-→ 문서에서 제외
-
-최종 DR-01 실측값
-→ 공식 RTO / RPO로 사용
+초기 측정값(없음, 이번이 최초 실측)
+→ 3.12절 표가 최종 확정값
 ```
 
 ---
 
-## 8.2 Redis 완전한 DR
+## 8.2 Redis DR-03 운영 자동화 (잔여, BLOCKING)
 
 현재 Redis는 다음까지 검증되어 있다.
 
 ```text
-Write / Read
-→ PVC
-→ Pod Recreation
-→ Data Persistence
+기본 Persistence(Write/Read/PVC/Pod Recreation)
+→ 1차 Infra 레벨 DR-03 절차 검증(격리 환경, MariaDB 기준 재구성)
 ```
 
-하지만 별도의 Backup을 권한 있는 방식으로 보호하고 장애 상황에서 복구하는 전체 과정은 아직 완전히 검증되지 않았다.
-
-따라서 현재 상태를 `Redis DR PASS`로 확대 해석하지 않고 `Partial`로 유지한다.
+하지만 이 절차를 운영 `platform/redis-0`에 자동으로 반영하는 Ansible 자동화는 아직 착수 전이며, 재구성값을 운영 Pod에 실제로 써넣는 권한 설계가 선행되어야 한다(`pods/exec` 미부여 확정, 대안 경로 미정). 따라서 현재 상태를 `Redis DR PASS(운영 반영 포함)`로 확대 해석하지 않고, "1차 Infra 레벨 PASS + 운영 자동화 Not Tested"로 구분해서 유지한다.
 
 ---
 
@@ -958,25 +1010,28 @@ Browser
 
 특히 회원 가입, 게임방 생성, 게임 진행, 결과 저장 등의 실제 사용자 시나리오를 통해 MariaDB와 Redis가 각각 의도한 데이터를 저장하는지 확인할 필요가 있다.
 
-## 8.5 DB/MaxScale 서비스 레벨 Observability 보류
+## 8.5 DB/MaxScale 서비스 레벨 Observability 잔여 범위
 
-현재 Prometheus로 수집되는 것은 4대 서버의 자체 자원(node_exporter)뿐이다.
-MariaDB/MaxScale **서비스 자체 상태**의 Prometheus 연동은 다음과 같이
-보류된 상태다.
+현재 Prometheus로 수집되는 것은 4대 서버의 자체 자원(node_exporter)과
+mariadb-01/02의 MariaDB 서비스 상태(mysqld_exporter)까지다. 남은 잔여
+범위는 다음과 같다.
 
 ```text
 mysqld_exporter
-→ 배포·계정·Metric 수집 자체는 정상 동작
-→ Prometheus 수집 연동은 확인 완료(2026-09-21), Alert Rule은 2차 이관
+→ 배포·계정·Metric 수집·Prometheus 연동까지 완료
+→ Alert Rule(복제 지연, Slave 중단)은 2차 이관
 
 maxscale_exporter
 → 공식 exporter 부재(MXS-3022 Won't Do)로 소스 빌드 방식으로 2차 재착수 (REST read-only 계정만 코드화)
+
+vrouter 방화벽
+→ 9100/tcp rich rule이 mariadb-01/02 대역만 확인됨, maxscale-01·nfs 대역 커버 여부 네트워크 담당자 확인 필요
 ```
 
-따라서 복제 지연이나 MaxScale Failover 발생을 Alert로 조기 탐지하는
-경로는 아직 없으며, 장애 인지는 계속 수동 확인(`maxctrl list servers`,
-로그 확인)에 의존한다. 이 Gap은 MariaDB DR Recovery 완료 기준(RTO/RPO)
-과는 별개이며, 별도 팀 결정으로 관리한다.
+MaxScale Failover 발생을 Alert로 조기 탐지하는 경로는 아직 없으며, 장애
+인지는 계속 수동 확인(`maxctrl list servers`, 로그 확인)에 의존한다. 이
+Gap은 MariaDB DR Recovery 완료 기준(RTO/RPO)과는 별개이며, 별도 팀
+결정으로 관리한다.
 
 ---
 
@@ -993,20 +1048,22 @@ Credential / TLS
     ↓
 Backup Chain
     ↓
-MariaDB Recovery
+MariaDB Recovery (완료)
     ↓
-RTO / RPO Evidence
+RTO / RPO Evidence (확정)
     ↓
 Redis Persistence
     ↓
-etcd DR
+Redis DR-03 (1차 완료, 운영 자동화 잔여)
+    ↓
+etcd DR (완료, RTO 52초)
     ↓
 Application Data Consumer
     ↓
 MVP Data Platform Acceptance
 ```
 
-### MariaDB Recovery 핵심 경로
+### MariaDB Recovery 핵심 경로 (완료)
 
 ```text
 Full Backup
@@ -1027,10 +1084,10 @@ Application Account
     ↓
 Data Integrity
     ↓
-RTO / RPO
+RTO / RPO (확정)
 ```
 
-이 흐름에서 하나라도 실패하면 단순히 Backup 파일이 존재한다는 이유로 Recovery 완료로 판단하지 않는다.
+이 흐름은 이슈 #194로 실제 실행까지 완료됐다. 남은 것은 Redis DR-03 운영 자동화와 Application Data Consumer의 최신 Revision 기준 재검증이다.
 
 ---
 
@@ -1073,9 +1130,7 @@ RTO / RPO
 * [x] MaxScale 상태 검증
 * [x] Application 계정 접근 검증
 * [x] DR-01 실측
-* [x] 최종 RTO / RPO 측정
-
-> 최종 RTO / RPO 숫자는 DR-01 실측 결과 원문과 동일하게 반영한다.
+* [x] 최종 RTO / RPO 측정 — **Isolated 27.376초 / Production RPO 3건·RTO 1분29초(단일)·4분(이중화)**(이슈 #194, 2026-09-18 close)
 
 ---
 
@@ -1086,7 +1141,8 @@ RTO / RPO
 * [x] AOF Persistence
 * [x] Write / Read
 * [x] Pod Recreation 후 데이터 유지
-* [ ] 권한 기반 Redis Backup / Restore DR
+* [x] DR-03 1차 Infra 레벨 검증(격리 환경, MariaDB 기준 재구성, 이슈 #115)
+* [ ] DR-03 운영 자동화(Ansible, `platform/redis-0` 실제 쓰기 반영) — BLOCKING: 쓰기 권한 결정
 
 ---
 
@@ -1099,12 +1155,13 @@ RTO / RPO
 * [x] Quorum 확인
 * [x] kube-apiserver 인증
 * [x] Kubernetes Object 비교
-* [x] E2E RTO 측정
+* [x] E2E RTO 측정(수동 1차 + 자동화)
 
 최종 측정 결과:
 
 ```text
-etcd DR-02 RTO = 52초
+etcd DR-02 RTO(수동, 이슈 #156, 참고값) = 38분 44초
+etcd DR-02 RTO(자동화, 이슈 #176/PR #191, 대표값) = 52초
 ```
 
 ---
@@ -1114,14 +1171,14 @@ etcd DR-02 RTO = 52초
 ## 11.1 Database / Backup / Recovery
 
 | 항목               | 추적 대상           | 목적                                    |
-| ---------------- | --------------- | ------------------------------------- |
+| ---------------- | --------------- | -------------------------------------- |
 | DB 기본 구성         | `seokpan-infra` | MariaDB / MaxScale 구성                 |
 | Backup Chain     | `seokpan-infra` | Full / Incremental Backup             |
 | Backup 공유 상태     | `seokpan-infra` | NFS 기반 Chain 상태 공유                    |
 | Backup 동시 실행 보호  | `seokpan-infra` | Shared Lock                           |
 | MariaDB Recovery | `seokpan-infra` | Restore / Replication / Service Check |
-| DR-01 실측         | Infra #194      | MariaDB RTO / RPO 실측                  |
-| Recovery 버그 수정   | Infra PR #197   | Master / Replica Recovery 경로 오류 수정    |
+| DR-01 실측(완료)     | Infra #194(closed, 2026-09-18) | MariaDB RTO/RPO 실측 및 확정        |
+| Recovery 버그 수정   | Infra PR #197   | `replication_setup.yml:117` Gate `when` 누락 수정 |
 
 ---
 
@@ -1140,40 +1197,55 @@ etcd DR-02 RTO = 52초
 | 항목                | 추적 대상                | 목적                                 |
 | ----------------- | -------------------- | ---------------------------------- |
 | DB Credential 정합성 | Infra #172 / PR #172 | Vault / DB / Kubernetes Secret 정합성 |
-| Recovery Safety   | Infra #176           | 잘못된 환경에서 DR 실행 방지                  |
-| Replication       | Infra #197           | Master / Replica 조건별 Recovery 검증   |
+| Replication       | Infra #197           | Master 경로 fatal 버그 수정 검증           |
+
+> **정정**: 이전 버전에서 이 표의 "Recovery Safety" 항목 근거로 인용했던 Infra #176은 실제로는 **etcd DR-02 자동화 전용 이슈**(Safety Guard/Restore Decision Gate)이며 MariaDB Recovery와는 무관하다. MariaDB 쪽의 잘못된 환경 실행 방지는 `mariadb_dr_recovery.yml`의 `backup_restore_mode`(isolated/production) 명시적 분기(3.11절)로 구현되어 있다.
 
 ---
 
 ## 11.4 Kubernetes DR
 
-| 항목          | 추적 대상         | 목적                     |
-| ----------- | ------------- | ---------------------- |
-| etcd DR 설계  | Infra #113    | Snapshot / Restore     |
-| etcd DR E2E | Infra PR #191 | 격리 환경 Restore 및 RTO 검증 |
-| DR 보호 범위    | Infra #143 계열 | 전체 DR 범위 및 MVP 범위 관리   |
+| 항목            | 추적 대상             | 목적                            |
+| ------------- | ----------------- | ------------------------------ |
+| etcd DR 설계    | Infra #113        | Snapshot / 무결성 / NFS 전송(축소 스코프) |
+| etcd DR-02 수동 E2E | Infra #156(closed) | 격리 환경 Restore 및 RTO 수동 측정(38분44초) |
+| etcd DR-02 자동화 | Infra #176(closed), PR #191(merged) | Safety Guard/Restore Decision Gate 자동화, RTO 52초 |
+| DR 보호 범위      | Infra #143 계열      | 전체 DR 범위 및 MVP 범위 관리          |
 
 ---
 
-## 11.5 최종 판정
+## 11.5 Redis DR-03
 
-본 문서에서 중요한 판단 기준은 **구현 여부가 아니라 실제 검증 여부**이다.
+| 항목                | 추적 대상          | 목적                                |
+| ----------------- | -------------- | ---------------------------------- |
+| DR-03 설계/계약        | `F_redis_recovery_contract.md` | MariaDB 기준 재구성 규칙 정의     |
+| DR-03 1차 검증        | Infra #115(open) | 격리 환경(redis-dr03-test) 재구성 절차 검증 |
+| DR-03 RBAC         | seokpan-gitops#47 / #48 | 장애 관찰/주입 권한(`pods:delete`+`pods/log:get`) 부여, `pods/exec` 미부여 확정 |
+| DR-03 운영 자동화 인계    | `redis-dr-recovery-automation-handoff.md` | Ansible 자동화 착수 명세(진행 중) |
+
+---
+
+## 11.6 최종 판정
+
+본 문서에서 중요한 판단 기준은 **구현 여부가 아니라 실제 검증 여부**이며, 나아가 **"격리/1차 검증 완료"와 "운영 반영 완료"도 서로 다른 판정**임을 구분한다.
 
 ```text
 구성 완료
     ↓
 실행
     ↓
-검증
+검증(격리/1차)
     ↓
 측정
     ↓
 Evidence
     ↓
+운영 반영(해당하는 경우)
+    ↓
 Gate 판정
 ```
 
-따라서 MariaDB Backup, Recovery, Redis Persistence, etcd DR은 각각 독립적으로 검증 상태를 관리하며, 하나의 구성요소가 정상이라고 해서 전체 Data Platform Recovery가 완료된 것으로 판단하지 않는다.
+따라서 MariaDB Backup·Recovery(완료), etcd DR(완료), Redis Persistence(완료), Redis DR-03(1차 완료·운영 자동화 잔여)은 각각 독립적으로 검증 상태를 관리하며, 하나의 구성요소가 정상이라고 해서 전체 Data Platform Recovery가 완료된 것으로 판단하지 않는다.
 
 최종 MVP Data Platform의 완료 조건은 다음과 같다.
 
@@ -1183,11 +1255,12 @@ MariaDB
 + Credential / TLS
 + NFS Storage
 + Backup
-+ MariaDB Recovery
-+ RTO / RPO Evidence
++ MariaDB Recovery (완료)
++ RTO / RPO Evidence (확정)
 + Redis Persistence
-+ etcd DR
++ Redis DR-03 운영 자동화 (잔여, BLOCKING)
++ etcd DR (완료)
 + Application Data Consumer 검증
 ```
 
-이 모든 항목의 실제 실행 결과와 Evidence를 기준으로 최종 상태를 판정한다.
+이 모든 항목의 실제 실행 결과와 Evidence를 기준으로 최종 상태를 판정하며, Redis DR-03 운영 자동화가 남아 있는 한 "전체 Data Platform DR Acceptance 완료"는 아직 선언하지 않는다.
