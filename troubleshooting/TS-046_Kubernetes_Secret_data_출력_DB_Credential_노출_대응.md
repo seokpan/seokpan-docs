@@ -11,7 +11,7 @@
 
 ## 최초 문제
 
-Backend DB Runtime·Migration Secret 공급 자동화를 검증하는 과정에서 Kubernetes Secret 구조를 수동으로 확인하면서 Secret의 base64 `data`까지 출력하는 방식을 사용했다.
+Backend 실행용·Migration DB Secret 공급 자동화를 검증하는 과정에서 Kubernetes Secret 구조를 수동으로 확인하면서 Secret의 base64 `data`까지 출력하는 방식을 사용했다.
 
 Kubernetes Secret의 `data`는 암호화된 값이 아니라 base64로 인코딩된 값이므로, 출력된 내용에서 기존 DB Connection Credential을 복원할 수 있었다.
 
