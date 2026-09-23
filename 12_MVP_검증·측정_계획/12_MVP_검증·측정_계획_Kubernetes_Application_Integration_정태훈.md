@@ -272,8 +272,8 @@ Evidence Revision 불일치
 | Application Metrics | Prometheus Target 2개 `UP`, 실제 Metric Query 확인 | PASS |
 | Application Logs | Backend structured stdout → Alloy → Loki Runtime Evidence | PASS |
 | Argo CD Self-Heal | 실제 Live State Drift 복구 확인 | PASS |
-| Git Revert Rollback | 실제 Runtime Rollback Run 미수행 | Not Tested |
-| P4 Stabilization / Acceptance | `seokpan-app#76`에서 진행 중 | In Progress |
+| Git Revert Rollback | 정상 Revision으로 Git Revert → Argo CD Sync → Runtime Ready 복구 실측 | PASS |
+| P4 Source Closeout / 강화 Validation | `#76` 구현 분류 수렴, 강화 검증은 `#112` | Partial / Validation Pending |
 
 A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 
