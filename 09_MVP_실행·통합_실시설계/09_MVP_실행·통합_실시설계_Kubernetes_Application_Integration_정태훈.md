@@ -177,12 +177,12 @@ HPA를 도입할 경우 `Deployment.spec.replicas`를 Argo CD와 HPA 중 누가 
 A-01~A-08: 기능·Headless·Frontend First Success — Completed
 A-09: Container / Jenkins / Image Acceptance — Completed
 A-10: Production Provider / GitOps / Kubernetes Runtime Integration — Completed
-P4: Stabilization / Acceptance — In Progress
+P4 Source Stabilization — Implementation Closeout / 강화 Validation #112 Pending
 ```
 
 A-10 완료는 실제 Provider와 Kubernetes Runtime 연결이 성립했다는 의미다.
 
-현재 진행 중인 `seokpan-app#76`의 서비스 안정화 작업까지 완료됐다는 뜻은 아니다.
+`seokpan-app#76`은 2026-09-23 Closeout에서 구현·Source 상태를 재분류했으며, 실제 Provider·2-Pod·Failure/Measurement 강화 검증은 `seokpan-app#112`로 분리했다. 따라서 A-10 완료를 #112의 Validation PASS로 확대하지 않는다.
 
 ### 5.2 Build / Artifact
 
@@ -536,11 +536,11 @@ Application Metrics Integration: PASS
 Application Logging Runtime → Alloy → Loki: PASS
 Argo CD Self-Heal: PASS
 Git Revert 기반 Runtime Rollback: PASS
-P4 Concurrency / Realtime / Recovery / Performance: In Progress / Not Yet Passed
-Final MVP Acceptance: In Progress
+P4 Concurrency / Realtime / Recovery / Performance: Validation Pending / #112 및 역할별 12에서 추적
+Final MVP Acceptance: Partial / Validation Pending
 ```
 
-현재 `seokpan-app#76`에서 서비스 안정화 항목을 추적한다.
+`seokpan-app#76`은 구현 Closeout 분류를 완료했고, 강화 Validation은 `seokpan-app#112`를 Canonical로 사용한다.
 
 버그픽스 중간 상태는 09에 세부 복제하지 않고 최종 검증 결과만 후속 현행화한다.
 
@@ -554,7 +554,7 @@ Final MVP Acceptance: In Progress
 | D Backend First Runtime | PASS | Migration 후 Backend 1 Replica 실제 Provider 연결 검증 |
 | E Scale-out / Frontend | PASS | Backend 2 Replica·Worker 분산·Frontend 2 Replica PASS. HPA는 별도 미검증 Track |
 | F External Route / Transport | PASS | HTTPRoute·HTTPS·API·WebSocket·Windows/Linux 접속 Runtime Gate PASS. Realtime semantics 전체는 P4 별도 검증 |
-| G MVP Acceptance | In Progress | A-10 완료 이후 P4 Stabilization / Acceptance 진행 중 |
+| G MVP Acceptance | Partial / Validation Pending | 구현 Closeout은 수렴 중이며 실제 Realtime·Recovery·Measurement 강화 Validation은 #112 및 역할별 12에서 추적 |
 
 A-10 완료 판정과 Gate G 최종 Acceptance 판정을 분리한다.
 
@@ -687,12 +687,22 @@ A-10 완료를 위 미검증 항목의 완료로 확대하지 않는다.
 - `seokpan-gitops#91` — Backend ServiceMonitor와 Prometheus Target/Metric Query
 - `seokpan-infra#188` — Let's Encrypt Production TLS와 Windows Host/Linux VM 외부 접속
 
-현재 진행 중인 P4 서비스 안정화의 상세 상태는 `seokpan-app#76`에서 추적한다.
+P4 구현 Closeout의 상세 분류는 `seokpan-app#76`, 강화 Validation은 `seokpan-app#112`에서 추적한다.
 
 Historical 문서는 당시 상태를 유지한다. 이후 상태는 Change → Implementation → Runtime Validation으로 연결하고, 09에 개별 실행 로그나 버그픽스 중간 결과를 복제하지 않는다.
 
 
 ## 14. 2026-09-23 Closeout Delta
+
+Production Game lifecycle mode 경계:
+
+```text
+Captured lifecycle Source = Implemented / final main 반영
+Production lifecycle mode = legacy
+Captured production activation = Deferred
+```
+
+현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없으므로 Application 기본값 `legacy`가 실제 Runtime 기준이다. captured activation과 실제 전환 검증은 `seokpan-app#112 V-06` 및 2차 재평가 대상으로 둔다.
 
 A-10 이후 추가로 완료된 현재 Evidence를 반영한다.
 
