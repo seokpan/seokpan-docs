@@ -72,7 +72,7 @@ strategy:
 - PDB `minAvailable: 1`
 - 기존 Backend Image·Secret·ConfigMap·Service 계약
 
-Live Deployment를 직접 Patch하거나 Pod를 수동 삭제하는 방식으로 우회하지 않고 GitOps Desired State를 수정했다.
+실행 중인 Deployment를 직접 Patch하거나 Pod를 수동 삭제하는 방식으로 우회하지 않고 Git의 배포 설정을 수정했다.
 
 ## 검증
 
@@ -86,7 +86,7 @@ PDB minAvailable: 1
 hostname DoNotSchedule
 ```
 
-후속 Runtime 검증에서 Backend는 다시 다음 상태로 동작했다.
+후속 실제 클러스터 검증에서 Backend는 다시 다음 상태로 동작했다.
 
 ```text
 Backend Replica   2/2 Ready
@@ -95,9 +95,9 @@ Placement         worker-01 / worker-02
 Argo CD           Synced / Healthy
 ```
 
-이후 Backend Image Digest를 변경한 Runtime 반영에서도 두 Replica가 새 Digest로 Ready 상태에 수렴하고 worker-01/worker-02 분산을 유지한 것을 확인했다.
+이후 Backend Image Digest를 변경해 다시 배포했을 때에도 두 Replica가 새 Digest로 Ready 상태에 수렴하고 worker-01/worker-02 분산을 유지한 것을 확인했다.
 
-따라서 2 Worker 강제 분산 상태에서 이후 Rollout이 같은 교착 조건에 다시 막히지 않고 완료되는 것을 실제 Runtime에서 확인했다.
+따라서 2 Worker 강제 분산 상태에서 이후 Rollout이 같은 교착 조건에 다시 막히지 않고 완료되는 것을 실제 클러스터에서 확인했다.
 
 ## Before → After
 
@@ -121,4 +121,4 @@ maxSurge: 0
 - GitOps PR #94 — Backend 2 Replica 공유 Runtime: https://github.com/seokpan/seokpan-gitops/pull/94
 - GitOps PR #95 — RollingUpdate 교착 보완: https://github.com/seokpan/seokpan-gitops/pull/95
 - PR #95 Merge Commit: `c6c4263b841c4f10e8bb491f02c3a4908fc90294`
-- 후속 Runtime Evidence — GitOps Issue #91: https://github.com/seokpan/seokpan-gitops/issues/91
+- 후속 실제 클러스터 검증 — GitOps Issue #91: https://github.com/seokpan/seokpan-gitops/issues/91
