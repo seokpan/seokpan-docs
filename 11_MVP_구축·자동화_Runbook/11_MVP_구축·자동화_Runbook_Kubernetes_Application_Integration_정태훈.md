@@ -126,11 +126,12 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 | HPA | Not Implemented / Not Tested |
 | Application ServiceMonitor | Running, Prometheus Target 2개 `UP` |
 | Application Metrics | Runtime Query Validated |
-| P4 Stabilization / Acceptance | In Progress |
+| Production Game lifecycle mode | `legacy` — captured Source는 main 반영, 실제 activation은 Deferred / #112 V-06 |
+| P4 Source Closeout / 강화 Validation | Implementation 수렴 / Validation #112 Pending |
 
 이 표는 재실행·장애 대응 시 사용할 Current State 기준점이다.
 
-12 문서의 Test Case별 PASS/FAIL Evidence를 대신하지 않으며, A-10 완료 뒤 확인 중인 Game/Realtime 안정화 문제는 `seokpan-app#76`에서 별도로 추적한다.
+12 문서의 Test Case별 PASS/FAIL Evidence를 대신하지 않는다. P4 구현 Closeout 분류는 `seokpan-app#76`, 실제 Provider·2-Pod·Recovery·Measurement 강화 검증은 `seokpan-app#112`를 Canonical로 사용한다.
 
 ## 4. 공통 Pre-check
 
@@ -253,6 +254,42 @@ SEOKPAN_ALLOWED_ORIGINS: '["https://game.seokpan.soldesk.store"]'
 ```
 
 `SEOKPAN_ALLOWED_ORIGINS` JSON 배열 표현은 A-10 Runtime에 반영됐다. 이후 변경에서도 동일한 형식과 Same-Origin 동작을 유지한다.
+
+
+### 4.8 Game lifecycle 운영 모드
+
+현재 Application Source에는 `legacy / captured` 두 lifecycle 구성이 존재하지만, 1차 종료 시점의 Production Runtime은 **legacy**다.
+
+현재 확인:
+
+```text
+Application default
+game_lifecycle_mode = legacy
+
+GitOps backend ConfigMap
+SEOKPAN_GAME_LIFECYCLE_MODE = 미설정
+
+Actual Production mode
+legacy
+```
+
+따라서 Source가 존재한다는 이유로 captured lifecycle이 운영 중이라고 판단하지 않는다.
+
+captured 전환은 `backend/docs/game-lifecycle-rollout.md`의 Gate를 모두 만족한 경우에만 수행한다.
+
+```text
+고정 dependency 회귀
+→ 기존 Game / intent / phase / pending marker inventory
+→ backup / No-Go 확인
+→ old writer drain
+→ 모든 Backend 동일 captured 설정
+→ Provider / 2 Replica / Gateway 검증
+→ 트래픽 재개
+```
+
+1차에서는 이 전환을 실행하지 않았으며 `DEFERRED`다. 실제 전환·Recovery 검증은 `seokpan-app#112 V-06`, 2차 필요성 판단은 Docs #89에서 연결한다.
+
+단순히 ConfigMap에 환경변수만 추가하거나 한 Replica만 captured로 변경하는 것은 허용하지 않는다.
 
 ---
 
