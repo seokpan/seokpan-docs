@@ -533,7 +533,9 @@ A-10까지의 Runtime Integration은 완료됐지만, 최종 MVP Acceptance는 �
 
 ```text
 Application Metrics Integration: PASS
+Application Logging Runtime → Alloy → Loki: PASS
 Argo CD Self-Heal: PASS
+Git Revert 기반 Runtime Rollback: PASS
 P4 Concurrency / Realtime / Recovery / Performance: In Progress / Not Yet Passed
 Final MVP Acceptance: In Progress
 ```
@@ -577,9 +579,8 @@ A-10의 기존 직접 Blocker는 해소됐다.
 별도 미구현/미검증 항목:
 
 - HPA
-- Git Revert 기반 실제 Rollback Run
 - Cross-role DR 이후 Application 정상화 Test
-- 일부 Application Log 최종 Evidence
+- P4 Performance / Recovery의 최종 정량 판정
 
 현재 진행 중인 버그픽스의 개별 식별 번호나 임시 Root Cause 가설은 이 문서에 중복 기록하지 않고 `seokpan-app#76`을 Source로 사용한다.
 
@@ -647,7 +648,6 @@ HPA
 P4 Concurrency
 P4 Performance
 P4 Recovery
-Git Revert Rollback Run
 Cross-role DR 이후 Application 정상화
 Final MVP Acceptance
 ```
@@ -690,3 +690,16 @@ A-10 완료를 위 미검증 항목의 완료로 확대하지 않는다.
 현재 진행 중인 P4 서비스 안정화의 상세 상태는 `seokpan-app#76`에서 추적한다.
 
 Historical 문서는 당시 상태를 유지한다. 이후 상태는 Change → Implementation → Runtime Validation으로 연결하고, 09에 개별 실행 로그나 버그픽스 중간 결과를 복제하지 않는다.
+
+
+## 14. 2026-09-23 Closeout Delta
+
+A-10 이후 추가로 완료된 현재 Evidence를 반영한다.
+
+- Final Application Source Freeze 이후 Jenkins Image Pipeline과 GitOps Promotion PR 자동화가 실제 동작했다.
+- GitOps #57에서 Git Revert 기반 Runtime Rollback 검증을 완료했다.
+- App #90 / GitOps #109에서 Backend structured log가 실제 Pod stdout → Alloy → Loki까지 수집되는 경로를 검증했다.
+- Realtime 10초 reconnect grace와 관련 Source는 final main에 반영됐으나, 일부 실제 2-Pod/Failure Boundary 강화 검증은 App #112로 분리한다.
+- HPA는 1차 완료조건에서 Deferred이며 구현·측정 완료로 표현하지 않는다.
+
+현재 종료 시점의 통합 Snapshot은 `CURRENT_STATE.md`를 사용하고, 본 09는 역할·Integration Gate와 책임 경계를 유지한다.
