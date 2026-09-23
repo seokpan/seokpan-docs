@@ -1,6 +1,6 @@
 [← 트러블슈팅 목차로 돌아가기](README.md)
 
-# TS-047 — 초기 VM의 Legacy DNS Search Domain이 Pod DNS Search Path까지 남아 있던 문제
+# TS-047 — 초기 VM의 과거 DNS Search Domain 설정이 Pod DNS Search Path까지 남아 있던 문제
 
 | 항목 | 내용 |
 |---|---|
@@ -40,7 +40,7 @@ search <namespace>.svc.cluster.local svc.cluster.local cluster.local stone.test
 
 `stone.test`, `example.com`은 VM 생성 초기 단계에서 사람이 수동으로 입력했던 값이었다.
 
-이후 공식 Endpoint 정책이 `*.seokpan.soldesk.store`로 바뀌었지만 VM의 NetworkManager Profile 또는 일부 Hostname에 초기 설정이 남아 Configuration Drift가 발생했다.
+이후 공식 Endpoint 정책이 `*.seokpan.soldesk.store`로 바뀌었지만 VM의 NetworkManager Profile 또는 일부 Hostname에 초기 설정이 남아 설정 불일치가 발생했다.
 
 일부 Host에서는 NetworkManager Profile의 `ipv4.dns-search`에 값이 남아 있었고, `ansible.example.com`, `nfs.example.com`처럼 초기 FQDN Hostname에서 Search Domain이 파생되는 경우도 확인했다.
 
