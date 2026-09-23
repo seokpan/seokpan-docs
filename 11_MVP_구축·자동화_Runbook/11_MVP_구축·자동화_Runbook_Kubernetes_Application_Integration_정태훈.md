@@ -289,6 +289,38 @@ Digest는 실행 시점의 검증된 Harbor Artifact에서 가져온다.
 
 Kustomize Image 설정은 실제 `kubectl kustomize` 렌더 결과로 다시 확인한다.
 
+### 5.3 현재 정상 Promotion 경로
+
+2026-09-22 이후 일반적인 Application `main` 변경의 배포 경로는 사람이 GitOps Digest를 직접 고치는 방식이 아니라 **검증된 Image를 입력으로 Promotion PR을 자동 생성**하는 흐름을 사용한다.
+
+```text
+App main merge
+→ Jenkins P1 재검증 / Build / Scan / Health / Final Digest
+→ GitOps main의 component별 deployed source SHA / digest 조회
+→ deployed source SHA .. current App SHA 누적 diff로 component impact 판정
+→ 영향 Component만 digest + app-source-commit provenance 갱신
+→ Promotion Branch / Commit / Push / PR 자동 생성
+→ 사람 Review / 1 Approval
+→ Squash Merge
+→ Argo CD Sync
+→ Kubernetes Runtime
+```
+
+운영 경계:
+
+- GitOps `main` 직접 push 금지
+- Jenkins auto-merge / 자동 승인 금지
+- Backend/Frontend 비영향 Component의 불필요한 rollout 금지
+- 동일/충돌 Promotion은 fail-closed
+- Image 검증 Credential과 GitOps Repository Credential 분리
+- Merge 후 Promotion Branch 정리는 GitHub Repository 설정 사용
+
+실제 자동 생성 Evidence는 GitOps PR #132/#133/#134다. 각 PR은 App Source SHA, Jenkins Build/URL, Component Impact, old/new Source SHA와 Digest를 기록한다.
+
+아래 Backend/Frontend Manifest 직접 변경 절차는 **최초 활성화, 명시적인 Test Revision, 복구·예외 작업**에서 사용할 수 있는 Runbook으로 유지한다. 정상적인 App main release에서는 자동 Promotion PR 경로를 우선한다.
+
+---
+
 ---
 
 ## 6. DB / CA / Provider Pre-check
