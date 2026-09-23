@@ -321,8 +321,6 @@ App main merge
 
 ---
 
----
-
 ## 6. DB / CA / Provider Pre-check
 
 ### 6.1 DB Endpoint
