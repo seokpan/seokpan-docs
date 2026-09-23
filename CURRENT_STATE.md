@@ -13,7 +13,7 @@
 | `seokpan-app` | `55b1c6185c3fc235bd31186e4e3a9d689786a1ca` | Application Source, CI 정의, Application 내부 문서 |
 | `seokpan-gitops` | `cdeb05c72fe92563d39bc07061b8ea6d9263ab53` | Kubernetes Desired State, Argo CD, Platform/CICD/Observability Manifest |
 | `seokpan-infra` | `4d382358fbfa6fd512993442a891d19c229e01f0` | On-prem Infra, Network, DB/Storage, Secret 공급, Ansible 자동화 |
-| `seokpan-docs` | `8b7180b971505a2fba2a083316146e87fd53d482` | 공용 설계·변경·Runbook·Validation·Troubleshooting |
+| `seokpan-docs` | PR #156 작성 기준 base `8b7180b971505a2fba2a083316146e87fd53d482`; 최종 상태는 본 문서가 포함된 Git revision | 공용 설계·변경·Runbook·Validation·Troubleshooting |
 
 `seokpan-app/main`의 최신 Commit은 README 정리 Commit을 포함한다. 최종 Application 제품 변경은 Room 공통 2열 Layout까지 반영된 Source Freeze 계열이며, 이후 Jenkins Image Pipeline과 GitOps Promotion으로 실제 Desired State가 갱신됐다.
 
@@ -139,9 +139,9 @@ A-01~A-10 Application Roadmap의 Runtime Integration은 완료됐다.
 - WAITING / PLAYING 공통 2열 Layout
 - 내부 Participant ID neutral fallback
 - Global Shell / Navigation 역할 분리
-- Local Operation Feedback
+- Local Operation Feedback Source 및 기본 UI 회귀
 
-후속 Frontend 변경은 Jenkins Image Pipeline과 GitOps Promotion PR을 통해 최종 Desired State에 반영됐다.
+후속 Frontend 변경은 Jenkins Image Pipeline과 GitOps Promotion PR을 통해 최종 Desired State에 반영됐다. Realtime failure-path의 강화 Browser/Provider 검증은 별도 #112에서 관리한다.
 
 ### 4.3 CI/CD / GitOps — IMPLEMENTED + VALIDATED
 
