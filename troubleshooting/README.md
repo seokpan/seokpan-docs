@@ -65,8 +65,12 @@
 44. **[TS-044 — MariaDB_CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 발생]
 (TS-044_MariaDB CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 — 버림 쿼리 선행 기법.md)**
 45. **[TS-045 — 원 계획의 maxscale_exporter(공식 REST API exporter)가 존재하지 않아 소스 빌드 방식으로 2차 이관](TS-045_maxscale_exporter_공식_exporter_부재_소스빌드_2차_이관.md)**
+46. **[TS-046 — Kubernetes Secret 검증 중 DB Credential을 복원할 수 있는 값이 출력된 문제](TS-046_Kubernetes_Secret_data_출력_DB_Credential_노출_대응.md)**
+47. **[TS-047 — 초기 VM의 Legacy DNS Search Domain이 Pod DNS Search Path까지 남아 있던 문제](TS-047_Legacy_VM_DNS_Search_Domain_Configuration_Drift.md)**
+48. **[TS-048 — Ansible Vault의 DB Credential이 MariaDB·Kubernetes Secret과 달라진 문제](TS-048_Ansible_Vault_DB_Credential_Runtime_불일치.md)**
+49. **[TS-049 — Backend 2 Replica 강제 분산과 기본 RollingUpdate가 충돌해 Rollout이 교착된 문제](TS-049_Backend_강제분산_RollingUpdate_Surge_교착.md)**
 
 ---
 
-현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **45건**  
-기준 시점: **2026-09-21**
+현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **49건**  
+기준 시점: **2026-09-23**
