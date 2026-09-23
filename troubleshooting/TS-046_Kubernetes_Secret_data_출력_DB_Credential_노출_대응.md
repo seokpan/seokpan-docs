@@ -5,7 +5,7 @@
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-08 |
-| **상태** | **해결 / 노출 가능 Credential 회전 완료** |
+| **상태** | **해결 / 관련 Credential 회전 완료** |
 | **주 담당** | **정태훈 — Kubernetes 플랫폼 및 애플리케이션 통합** |
 | **영향 범위** | Backend 실행용·Migration DB Secret 공급 자동화, `identity_svc`·`game_svc`·`db_admin` Credential |
 
