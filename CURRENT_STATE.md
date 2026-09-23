@@ -13,7 +13,7 @@
 | `seokpan-app` | `55b1c6185c3fc235bd31186e4e3a9d689786a1ca` | Application Source, CI 정의, Application 내부 문서 |
 | `seokpan-gitops` | `cdeb05c72fe92563d39bc07061b8ea6d9263ab53` | Kubernetes Desired State, Argo CD, Platform/CICD/Observability Manifest |
 | `seokpan-infra` | `4d382358fbfa6fd512993442a891d19c229e01f0` | On-prem Infra, Network, DB/Storage, Secret 공급, Ansible 자동화 |
-| `seokpan-docs` | PR #156 작성 기준 base `8b7180b971505a2fba2a083316146e87fd53d482`; 최종 상태는 본 문서가 포함된 Git revision | 공용 설계·변경·Runbook·Validation·Troubleshooting |
+| `seokpan-docs` | PR #156 branch가 `main` `1039bfa3722d591d26917ff81879412fb4ca3695`까지 재대조됨; 최종 상태는 본 문서가 포함된 Git revision | 공용 설계·변경·Runbook·Validation·Troubleshooting |
 
 `seokpan-app/main`의 최신 Commit은 README 정리 Commit을 포함한다. 최종 Application 제품 변경은 Room 공통 2열 Layout까지 반영된 Source Freeze 계열이며, 이후 Jenkins Image Pipeline과 GitOps Promotion으로 실제 Desired State가 갱신됐다.
 
@@ -247,19 +247,34 @@ Canonical: `seokpan-app#112`
 
 ### 5.2 P4 Stability / Game Lifecycle
 
-`seokpan-app#76`, `#86`에는 Final Source Freeze 이전 체크포인트와 실제 강화 검증 잔여가 함께 존재한다.
+2026-09-23 Closeout에서 `seokpan-app#76/#86/#88/#85`의 구현 상태와 강화 Validation을 분리했다.
 
-현재 Source Freeze에 다수 안정화 변경이 포함됐으므로 각 Issue Owner가 다음을 최종 분리해야 한다.
+현재 판정:
+
+- `#76` — F01~F16을 Complete / Source Complete / NOT REQUIRED / Deferred / Validation Pending으로 재분류 완료
+- `#86` — Game lifecycle Source 구현 완료, Issue completed
+- `#88` — Realtime Source/정책 구현 완료, App 내부 정책 문서 정합화 PR #113 이후 구현 Issue 종료 예정
+- `#85` — Local Operation / Realtime Presentation 구현 완료, Issue completed
+- 실제 Provider·2-Pod·Failure Boundary·Measurement는 `seokpan-app#112`가 Canonical Validation Backlog
+
+특히 Game lifecycle은 다음 경계를 유지한다.
 
 ```text
-구현 완료
-vs
-실제 Provider / 2-Pod / Failure Injection / Measurement Validation
-vs
-1차에서 수행하지 않을 Deferred
+Captured lifecycle Source = IMPLEMENTED / main 반영
+Production lifecycle mode = legacy
+Captured production activation = NOT PERFORMED / DEFERRED
 ```
 
-Current State는 이 Owner reconciliation 이전의 미완료 체크박스를 그대로 “미구현 기능”으로 해석하지 않는다.
+현재 `seokpan-gitops/apps/backend/configmap.yaml`에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다. 따라서 captured lifecycle이 Production에서 활성화됐다고 주장하지 않는다.
+
+`#112`에서 추가로 추적하는 범위:
+
+- V-01~V-04 — Realtime / Safe Leave / Reconnect / failure-path UX
+- V-05 — Room admission / Session concurrency
+- V-06 — Game lifecycle / Recovery / captured 전환 검증
+- V-07 — F10/F13 Measurement
+
+이 Validation이 남았다는 이유로 final main에 이미 통합된 Source를 미구현으로 되돌려 기록하지 않으며, 실제 미실행 항목을 PASS로 기록하지도 않는다.
 
 ## 6. 1차에서 구현하지 않은 항목
 
@@ -288,6 +303,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 ### 7.1 Deferred
 
 - Backend HPA
+- Captured Game lifecycle Production 활성화
 - 추가 `lb-02` / `maxscale-02` HA
 - Redis Sentinel / Redis Cluster
 - ANALYSIS Runtime
@@ -297,6 +313,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 
 ### 7.2 Known Limitation / Validation Boundary
 
+- Production Game lifecycle은 현재 `legacy`; captured Source는 main에 있으나 운영 전환은 Deferred
 - Realtime reconnect / replacement의 일부 failure boundary는 #112의 강화 검증 대상
 - 전체 P4 Performance Baseline은 완료된 수치가 없는 항목을 PASS로 쓰지 않음
 - Cross-role DR 이후 Application 정상화는 동일 Run/Revision으로 연결된 Evidence가 확보된 범위만 인정
@@ -356,7 +373,9 @@ README는 App / Infra / GitOps 모두 2026-09-23 최신 요약형 구조로 merg
 ### Application / Platform
 
 - `seokpan-app#3` — Application Roadmap
-- `seokpan-app#76` — Stability Parent
+- `seokpan-app#76` — Stability Parent Closeout / Validation 분리
+- `seokpan-app#86` — Game lifecycle Source Closeout / Production legacy 경계
+- `seokpan-app#88` — Realtime Source Closeout / Validation #112
 - `seokpan-app#82` — UX Parent
 - `seokpan-app#90` — Application Logging
 - `seokpan-app#94` — Gateway Browser Happy Path
