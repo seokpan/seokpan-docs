@@ -1135,3 +1135,50 @@ turn_no 등)를 재구성할 수 있음을 격리 환경에서 실증.
   - `seokpan/seokpan-infra` PR #214
   - `seokpan/seokpan-docs` TS-045
 
+
+
+## 2026-09-16
+
+### HPA를 1차 MVP 완료조건에서 Deferred
+
+- 구분: 1차 MVP 범위 조정 및 Validation 경계 확정
+- 기존 기준:
+  - 07/09/11/12에서는 Backend Scale-out 이후 HPA 적용 가능성을 후속 Validation Track으로 두었다.
+  - 실제 A-10 Runtime은 Backend 2 Replica와 Worker 분산까지 검증했지만 HPA에 필요한 Resource Metrics, Request/Limit, Trigger/Target, Argo CD와 `spec.replicas` 소유권은 확정되지 않았다.
+- 변경/확정 내용:
+  - 1차 프로젝트 완료조건에는 HPA 구현을 포함하지 않는다.
+  - 1차의 Scale-out Evidence는 검증된 Backend 2 Replica + Worker 분산 + Shared Runtime 경로를 기준으로 사용한다.
+  - HPA는 Resource Metric과 부하 기준, `replicas` 관리 주체를 정량적으로 확정할 수 있는 시점에 다시 검토한다.
+  - 구현하지 않은 HPA 결과를 Scale-out/HPA PASS로 표현하지 않는다.
+- 영향:
+  - 09/11/12와 CURRENT_STATE에서 HPA는 `NOT IMPLEMENTED / DEFERRED`로 구분한다.
+  - 2차에서 OpenShift/ROSA의 Autoscaling 기능을 사용하더라도 1차 HPA 설계를 그대로 전제하지 않고 새 환경의 Metric/Policy를 기준으로 재평가한다.
+- 관련:
+  - `seokpan/seokpan-app#3`
+  - `seokpan/seokpan-docs#128`
+
+## 2026-09-22
+
+### Jenkins → GitOps Promotion PR 자동화 및 사람 승인 경계 확정
+
+- 구분: 2026-09-11 Delivery 책임 경계 후속 변경
+- 기존 기준:
+  - 2026-09-11에는 Jenkins가 검증된 Harbor Image/Digest 생성에서 책임을 종료하고, GitOps Branch/Commit/Push/PR 생성은 현재 MVP에서 제외한다고 확정했다.
+- 변경/확정 내용:
+  - main Image Pipeline이 검증된 Final Digest를 생성한 뒤, GitOps의 현재 component별 Source SHA와 Digest를 읽고 `deployed source SHA .. current App SHA` 누적 diff로 Backend/Frontend 영향 범위를 판정한다.
+  - 실제 영향 Component만 GitOps Desired State의 Digest와 `seokpan.io/app-source-commit` provenance를 갱신한다.
+  - Jenkins는 전용 GitHub Credential로 Promotion Branch 생성 → Commit/Push → Pull Request 생성까지 자동화한다.
+  - GitOps `main` 직접 push, 자동 승인, auto-merge는 허용하지 않는다. 기존 Branch Protection과 사람 1 Approval을 유지하고 Merge 뒤 Argo CD가 Desired State를 Sync한다.
+  - 동일/충돌 Promotion은 fail-closed로 처리하며, merge 후 Branch 정리는 GitHub Repository 설정에 맡긴다.
+- 영향:
+  - 2026-09-11의 "Jenkins는 GitOps PR 생성을 자동 수행하지 않는다" 결정은 본 후속 결정으로 대체된다.
+  - 전체 흐름은 `App main → Jenkins 검증/Build → Harbor Final Digest → GitOps Promotion PR 자동 생성 → 사람 Review/Approval → Merge → Argo CD`로 정리한다.
+  - Image 검증 Credential과 GitOps Repository write/PR Credential은 계속 분리한다.
+- 검증:
+  - App #98 구현 완료.
+  - GitOps Promotion PR #132/#133/#134가 실제로 자동 생성되었고 App SHA, Jenkins Build/URL, Component Impact, old/new Digest/Source SHA를 기록했다.
+- 관련:
+  - `seokpan/seokpan-app#98`
+  - `seokpan/seokpan-gitops` PR #132
+  - `seokpan/seokpan-gitops` PR #133
+  - `seokpan/seokpan-gitops` PR #134
