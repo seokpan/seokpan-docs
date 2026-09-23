@@ -7,7 +7,7 @@
 | **발생/발견 시기** | 2026-09-08 |
 | **상태** | **해결 / 노출 가능 Credential 회전 완료** |
 | **주 담당** | **정태훈 — Kubernetes 플랫폼 및 애플리케이션 통합** |
-| **영향 범위** | Backend DB Runtime·Migration Secret 공급 자동화, `identity_svc`·`game_svc`·`db_admin` Credential |
+| **영향 범위** | Backend 실행용·Migration DB Secret 공급 자동화, `identity_svc`·`game_svc`·`db_admin` Credential |
 
 ## 최초 문제
 
@@ -60,7 +60,7 @@ Credential 회전은 기존 계정·권한 구조를 바꾸지 않고 다음 순
 
 기존 `mariadb_account` Role은 계정 재실행 시 Password를 자동 변경하지 않는 `update_password: on_create` 정책을 유지했다.
 
-이번 회전은 노출 대응을 위한 일회성 작업으로 별도 임시 Playbook에서 `update_password: always`를 사용했고, 실행 후 지속 Desired State에는 포함하지 않았다.
+이번 회전은 노출 대응을 위한 일회성 작업으로 별도 임시 Playbook에서 `update_password: always`를 사용했고, 실행 후 지속적으로 관리하는 자동화에는 포함하지 않았다.
 
 최종 자동화에서는 다음 기준을 적용했다.
 
@@ -102,7 +102,7 @@ failed=0
 
 으로 수렴했다.
 
-최종 검증 Output에는 실제 Credential과 완성된 DB URL이 포함되지 않았고, Runtime Secret과 Migration Secret의 Key 경계도 유지됨을 확인했다.
+최종 검증 Output에는 실제 Credential과 완성된 DB URL이 포함되지 않았고, Backend 실행용 Secret과 Migration Secret의 Key가 서로 섞이지 않았음을 확인했다.
 
 ## Before → After
 
