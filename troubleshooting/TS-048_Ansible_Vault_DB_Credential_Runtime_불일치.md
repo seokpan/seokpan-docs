@@ -7,7 +7,7 @@
 | **발생/발견 시기** | 2026-09-10 |
 | **상태** | **해결 / 정확한 개별 충돌 해결 동작은 미확정** |
 | **주 담당** | **정태훈 — Kubernetes 플랫폼 및 애플리케이션 통합** |
-| **영향 범위** | Ansible Vault DB Credential, MariaDB 서비스 계정, Backend Runtime·Migration Secret |
+| **영향 범위** | Ansible Vault DB Credential, MariaDB 서비스 계정, Backend 실행용·Migration Secret |
 
 ## 최초 문제
 
@@ -56,7 +56,7 @@ Kubernetes Secret   MATCHES_159    MATCHES_159   MATCHES_159
 현재 Vault          다른 값        다른 값        다른 값
 ```
 
-따라서 실제 Runtime이 변경된 것이 아니라 Source of Truth로 관리하려던 Vault의 세 값만 현재 상태에서 이탈한 것으로 확인했다.
+따라서 실제 MariaDB와 Kubernetes Secret이 변경된 것이 아니라 관리 기준으로 사용하던 Vault의 세 값만 달라진 것으로 확인했다.
 
 현재 Evidence 기준으로는 PR #161의 `vault.yml` 변경 과정에서 DB Credential 3종이 의도하지 않게 다른 값으로 변경된 회귀로 판단했다.
 
@@ -78,7 +78,7 @@ PR #161에서 추가된 Harbor API Robot Secret과 다른 Vault 값은 그대로
 
 ## 검증
 
-복구 후 실제 값은 출력하지 않고 변경 범위와 Runtime 정합성을 다시 확인했다.
+복구 후 실제 값은 출력하지 않고 변경 범위와 실제 사용 상태의 일치 여부를 다시 확인했다.
 
 ```text
 Vault 변경 범위        PASS
