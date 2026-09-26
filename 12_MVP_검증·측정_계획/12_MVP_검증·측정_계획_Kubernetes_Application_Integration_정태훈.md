@@ -270,10 +270,10 @@ Evidence Revision 불일치
 | HTTPS / API / WebSocket | A-10 Runtime Gate 통과 | PASS |
 | ServiceMonitor | Runtime 활성화 | PASS |
 | Application Metrics | Prometheus Target 2개 `UP`, 실제 Metric Query 확인 | PASS |
-| Application Logs | Platform 수집 경로 존재, 본 역할의 최종 App Log Evidence 미확정 | Partial / Not Final |
+| Application Logs | Backend structured stdout → Alloy → Loki Runtime Evidence | PASS |
 | Argo CD Self-Heal | 실제 Live State Drift 복구 확인 | PASS |
-| Git Revert Rollback | 실제 Runtime Rollback Run 미수행 | Not Tested |
-| P4 Stabilization / Acceptance | `seokpan-app#76`에서 진행 중 | In Progress |
+| Git Revert Rollback | 정상 Revision으로 Git Revert → Argo CD Sync → Runtime Ready 복구 실측 | PASS |
+| P4 Source Closeout / 강화 Validation | `#76` 구현 분류 수렴, 강화 검증은 `#112` | Partial / Validation Pending |
 
 A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 
@@ -290,13 +290,13 @@ A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 | KAI-FE-01 | Frontend Runtime | E | 11 | PASS |
 | KAI-RT-01 | HTTPRoute / HTTPS / WSS | F | 12 | PASS |
 | KAI-OBS-01 | Application Metrics | G | 14 | PASS |
-| KAI-OBS-02 | Application Logs | G | 14 | Partial / 최종 Evidence 미확정 |
+| KAI-OBS-02 | Application Logs | G | 14 | PASS |
 | KAI-E2E-01 | Browser M5 First Success | F~G | 11~14 | In Progress — 외부 접속 Runtime Gate PASS, P4 전체 사용자 흐름 미완료 |
 | KAI-CON-01 | M-01 / P4 | G | 9 | In Progress / Not Final |
 | KAI-PERF-01 | M-02 / P4 | G | 9~10 | Not Tested |
 | KAI-REC-01 | M-03 / P4 | G | 9/15/17 | In Progress / Not Final |
 | KAI-CD-01 | Self-Heal | G | 13 | PASS |
-| KAI-CD-02 | Git Revert Rollback | G | 13/17 | Not Tested |
+| KAI-CD-02 | Git Revert Rollback | G | 13/17 | PASS |
 | KAI-CFG-01 | Config / Secret / CA Consumer | D~G | 16~17 | PASS for DB Secret / Root CA consumer path |
 | KAI-DR-01 | Restore 후 Application 정상화 | G | 17 | Not Tested / Cross-role |
 
@@ -647,6 +647,11 @@ PASS:
 
 DB Schema Migration은 대상이 아니다.
 
+현재 결과: `PASS`.
+
+Evidence:
+- `seokpan-gitops#57` — 검증된 정상 Git Revision/Image Digest로 GitOps를 되돌린 뒤 Argo CD Sync와 Runtime Ready 복구를 실제 확인
+
 PASS:
 
 - 정상 동작이 이미 검증된 Git Revision으로 복귀.
@@ -736,7 +741,7 @@ KAI-FE-01: PASS
 KAI-RT-01: PASS
 Public TLS / External Access: PASS
 KAI-OBS-01 Metrics: PASS
-KAI-OBS-02 Logs: Partial / Final Evidence pending
+KAI-OBS-02 Logs: PASS
 ```
 
 Gateway Platform PASS를 Application Route PASS로 대체하지 않는다.
@@ -785,9 +790,6 @@ Backend 2 Replica 세부 Shared Runtime 검증 미완료
 
 HPA 미구현
 → HPA Scale 결과 PASS 금지
-
-Git Revert Rollback 미실행
-→ KAI-CD-02 PASS 금지
 
 P4 핵심 사용자 흐름 안정화 미완료
 → Final MVP Acceptance PASS 금지
@@ -930,14 +932,14 @@ Kubernetes / Application Integration
 | Frontend 2 Replica Runtime | PASS |
 | HTTPRoute / HTTPS / API / WebSocket / Public TLS | PASS |
 | Application Metrics | PASS |
-| Application Logs 최종 Consumer Evidence | Partial |
+| Application Logs 최종 Consumer Evidence | PASS |
 | Browser External Runtime Gate | PASS |
 | Browser 전체 M5 / 실제 데이터 UX Acceptance | In Progress |
 | M-01 Concurrency | In Progress / Not Final |
 | M-02 Performance Baseline | Not Tested |
 | M-03 Recovery | In Progress / Not Final |
 | Argo CD Self-Heal | PASS |
-| Git Revert Rollback | Not Tested |
+| Git Revert Rollback | PASS |
 | Config / DB Secret / Root CA Consumer | PASS for verified path |
 | DR 이후 Application 정상화 | Not Tested / Cross-role |
 
@@ -950,8 +952,10 @@ Kubernetes / Application Integration
 - M-01 P4 최종 판정
 - M-02 대표 부하 Performance Baseline
 - M-03 장애·복구 최종 판정과 Recovery time 측정
-- Application Log 최종 Consumer Evidence
-- Git Revert 기반 실제 Rollback Run
+- Realtime / 2 Replica / Reconnect 강화 검증 — `seokpan-app#112 V-01~V-04`
+- Room admission / Session concurrency — `seokpan-app#112 V-05`
+- Game lifecycle / Recovery / captured activation — `seokpan-app#112 V-06`
+- F10/F13 Measurement — `seokpan-app#112 V-07`
 - 필요한 경우 HPA의 구현 여부와 미구현/Deferred 근거 확정
 - Cross-role DR 이후 Application 정상화 Evidence 연결
 
@@ -976,3 +980,49 @@ Alert Evidence와 DR Evidence는 Cross-role 결과로 동일 Acceptance Run에 �
 - Secret/Token/Private Key Evidence 금지.
 - 실패 Run 보존, 재실행은 새 Run ID.
 - 실제 Repository/Runtime과 재대조 후 추가 필수 보완사항이 없을 때 종료.
+
+
+## 17. 2026-09-23 Closeout Validation Delta
+
+### KAI-OBS-02 — Application Log Runtime
+
+현재 결과: `PASS`.
+
+Evidence:
+- `seokpan-app#90` — Backend Application Logging Baseline, structured JSON event/context와 민감정보 제외 경계
+- `seokpan-gitops#109` — 배포와 동일 Backend Image 기반 Runtime Harness에서 structured log 출력 및 Alloy → Loki 동일 event 조회
+
+확인된 경로:
+
+```text
+Backend structured stdout
+→ containerd Pod log
+→ Grafana Alloy
+→ Loki
+```
+
+### Production Game lifecycle Validation Boundary
+
+현재 Source와 실제 Runtime을 분리한다.
+
+```text
+Captured lifecycle Source = IMPLEMENTED / main 반영
+Production lifecycle mode = legacy
+Captured production activation = NOT PERFORMED / DEFERRED
+```
+
+현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다.
+
+따라서 captured lifecycle의 실제 Provider/2 Replica/Recovery 결과를 PASS로 기록하지 않는다. 실제 전환 Gate와 필요성 재평가는 `seokpan-app#112 V-06` 및 Docs #89에서 추적한다.
+
+### Closeout Validation Backlog
+
+구현 완료와 강화 검증을 분리한다.
+
+- `seokpan-app#112 V-01~V-04` — F07 cross-Pod replacement, F08 connected lifecycle, Safe Leave/Reconnect, Realtime presentation
+- `seokpan-app#112 V-05` — Room admission / Session concurrency
+- `seokpan-app#112 V-06` — Game lifecycle / Recovery / captured production activation
+- `seokpan-app#112 V-07` — F10/F13 Performance/Scale measurement
+- HPA — `NOT IMPLEMENTED / DEFERRED`
+- P4 Performance / Recovery — 실제 최종 정량 Evidence가 없는 항목은 `NOT TESTED` 또는 진행 상태 유지
+- Cross-role DR 이후 Application 정상화 — 각 DR Run과 동일 Revision으로 연결된 Evidence가 확보될 때만 PASS

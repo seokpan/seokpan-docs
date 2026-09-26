@@ -126,11 +126,12 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 | HPA | Not Implemented / Not Tested |
 | Application ServiceMonitor | Running, Prometheus Target 2개 `UP` |
 | Application Metrics | Runtime Query Validated |
-| P4 Stabilization / Acceptance | In Progress |
+| Production Game lifecycle mode | `legacy` — captured Source는 main 반영, 실제 activation은 Deferred / #112 V-06 |
+| P4 Source Closeout / 강화 Validation | Implementation 수렴 / Validation #112 Pending |
 
 이 표는 재실행·장애 대응 시 사용할 Current State 기준점이다.
 
-12 문서의 Test Case별 PASS/FAIL Evidence를 대신하지 않으며, A-10 완료 뒤 확인 중인 Game/Realtime 안정화 문제는 `seokpan-app#76`에서 별도로 추적한다.
+12 문서의 Test Case별 PASS/FAIL Evidence를 대신하지 않는다. P4 구현 Closeout 분류는 `seokpan-app#76`, 실제 Provider·2-Pod·Recovery·Measurement 강화 검증은 `seokpan-app#112`를 Canonical로 사용한다.
 
 ## 4. 공통 Pre-check
 
@@ -254,6 +255,42 @@ SEOKPAN_ALLOWED_ORIGINS: '["https://game.seokpan.soldesk.store"]'
 
 `SEOKPAN_ALLOWED_ORIGINS` JSON 배열 표현은 A-10 Runtime에 반영됐다. 이후 변경에서도 동일한 형식과 Same-Origin 동작을 유지한다.
 
+
+### 4.8 Game lifecycle 운영 모드
+
+현재 Application Source에는 `legacy / captured` 두 lifecycle 구성이 존재하지만, 1차 종료 시점의 Production Runtime은 **legacy**다.
+
+현재 확인:
+
+```text
+Application default
+game_lifecycle_mode = legacy
+
+GitOps backend ConfigMap
+SEOKPAN_GAME_LIFECYCLE_MODE = 미설정
+
+Actual Production mode
+legacy
+```
+
+따라서 Source가 존재한다는 이유로 captured lifecycle이 운영 중이라고 판단하지 않는다.
+
+captured 전환은 `backend/docs/game-lifecycle-rollout.md`의 Gate를 모두 만족한 경우에만 수행한다.
+
+```text
+고정 dependency 회귀
+→ 기존 Game / intent / phase / pending marker inventory
+→ backup / No-Go 확인
+→ old writer drain
+→ 모든 Backend 동일 captured 설정
+→ Provider / 2 Replica / Gateway 검증
+→ 트래픽 재개
+```
+
+1차에서는 이 전환을 실행하지 않았으며 `DEFERRED`다. 실제 전환·Recovery 검증은 `seokpan-app#112 V-06`, 2차 필요성 판단은 Docs #89에서 연결한다.
+
+단순히 ConfigMap에 환경변수만 추가하거나 한 Replica만 captured로 변경하는 것은 허용하지 않는다.
+
 ---
 
 ## 5. Application Artifact 준비
@@ -288,6 +325,36 @@ harbor.seokpan.soldesk.store/seokpan/frontend@sha256:<verified-digest>
 Digest는 실행 시점의 검증된 Harbor Artifact에서 가져온다.
 
 Kustomize Image 설정은 실제 `kubectl kustomize` 렌더 결과로 다시 확인한다.
+
+### 5.3 현재 정상 Promotion 경로
+
+2026-09-22 이후 일반적인 Application `main` 변경의 배포 경로는 사람이 GitOps Digest를 직접 고치는 방식이 아니라 **검증된 Image를 입력으로 Promotion PR을 자동 생성**하는 흐름을 사용한다.
+
+```text
+App main merge
+→ Jenkins P1 재검증 / Build / Scan / Health / Final Digest
+→ GitOps main의 component별 deployed source SHA / digest 조회
+→ deployed source SHA .. current App SHA 누적 diff로 component impact 판정
+→ 영향 Component만 digest + app-source-commit provenance 갱신
+→ Promotion Branch / Commit / Push / PR 자동 생성
+→ 사람 Review / 1 Approval
+→ Squash Merge
+→ Argo CD Sync
+→ Kubernetes Runtime
+```
+
+운영 경계:
+
+- GitOps `main` 직접 push 금지
+- Jenkins auto-merge / 자동 승인 금지
+- Backend/Frontend 비영향 Component의 불필요한 rollout 금지
+- 동일/충돌 Promotion은 fail-closed
+- Image 검증 Credential과 GitOps Repository Credential 분리
+- Merge 후 Promotion Branch 정리는 GitHub Repository 설정 사용
+
+실제 자동 생성 Evidence는 GitOps PR #132/#133/#134다. 각 PR은 App Source SHA, Jenkins Build/URL, Component Impact, old/new Source SHA와 Digest를 기록한다.
+
+아래 Backend/Frontend Manifest 직접 변경 절차는 **최초 활성화, 명시적인 Test Revision, 복구·예외 작업**에서 사용할 수 있는 Runbook으로 유지한다. 정상적인 App main release에서는 자동 Promotion PR 경로를 우선한다.
 
 ---
 
