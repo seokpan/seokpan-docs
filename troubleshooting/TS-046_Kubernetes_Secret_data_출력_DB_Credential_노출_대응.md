@@ -1,21 +1,21 @@
 [← 트러블슈팅 목차로 돌아가기](README.md)
 
-# TS-046 — Kubernetes Secret 검증 중 DB Credential을 복원할 수 있는 값이 출력된 문제
+# TS-046 — Kubernetes Secret 확인 중 DB 비밀번호를 복원할 수 있는 값이 출력된 문제
 
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-08 |
-| **상태** | **해결 / 관련 Credential 회전 완료** |
+| **상태** | **해결 / 관련 DB 비밀번호 변경 완료** |
 | **주 담당** | **정태훈 — Kubernetes 플랫폼 및 애플리케이션 통합** |
-| **영향 범위** | Backend 실행용·Migration DB Secret 공급 자동화, `identity_svc`·`game_svc`·`db_admin` Credential |
+| **영향 범위** | Backend·Migration DB Secret 자동화, `identity_svc`·`game_svc`·`db_admin` 비밀번호 |
 
 ## 최초 문제
 
-Backend 실행용·Migration DB Secret 공급 자동화를 검증하는 과정에서 Kubernetes Secret 구조를 수동으로 확인하면서 Secret의 base64 `data`까지 출력하는 방식을 사용했다.
+Backend와 Migration에서 사용할 DB Secret을 Ansible로 만드는 작업을 검증하던 중, Kubernetes Secret의 구조를 확인하기 위해 `data` 값까지 터미널에 출력했다.
 
-Kubernetes Secret의 `data`는 암호화된 값이 아니라 base64로 인코딩된 값이므로, 출력된 내용에서 기존 DB Connection Credential을 복원할 수 있었다.
+Kubernetes Secret의 `data`는 암호화된 값이 아니라 base64로 인코딩된 값이다. 따라서 출력된 값을 디코딩하면 DB 접속에 사용하는 비밀번호를 다시 얻을 수 있었다.
 
-따라서 해당 출력에 포함된 다음 세 계정의 Credential은 더 이상 안전한 값으로 간주할 수 없었다.
+해당 출력에 다음 세 계정의 비밀번호가 포함될 수 있었기 때문에 기존 값을 더 이상 안전한 값으로 사용하지 않기로 했다.
 
 ```text
 identity_svc
@@ -25,56 +25,58 @@ db_admin
 
 ## 원인
 
-문제의 원인은 Kubernetes Secret의 존재·Type·Key 구조만 확인하면 되는 검증에서 실제 `data` 값까지 출력한 것이다.
+Secret 검증에 필요한 정보보다 더 많은 값을 출력한 것이 원인이었다.
+
+필요했던 확인 항목은 다음과 같았다.
 
 ```text
-필요한 검증
-Secret 존재
-+ Namespace
-+ Type
-+ Key 이름
-
-실제 초기 검증
-Secret data까지 출력
-→ base64 값 노출
-→ DB Credential 복원 가능
+Secret 존재 여부
+Namespace
+Type
+Key 이름
 ```
 
-base64 인코딩을 민감정보 보호 수단으로 취급할 수 없으므로, 실제 값이 Git에 저장되지 않았더라도 터미널 출력에 노출된 Credential은 회전이 필요하다고 판단했다.
+하지만 초기 검증에서는 실제 `data` 값까지 출력했다.
+
+```text
+Secret data 출력
+→ base64 값 확인 가능
+→ 디코딩하면 DB 비밀번호 복원 가능
+```
+
+base64는 값을 다른 형태로 표현할 뿐 비밀번호를 보호하는 암호화 방식이 아니다.
 
 ## 조치
 
-기존 검증 방식은 즉시 폐기했다.
+기존 검증 방법은 바로 중단했다.
 
-Credential 회전은 기존 계정·권한 구조를 바꾸지 않고 다음 순서로 수행했다.
+노출 가능성이 생긴 세 계정의 비밀번호는 다음 순서로 새 값으로 변경했다.
 
 ```text
-신규 Credential 생성
-→ 기존 Ansible Vault 변수 값 갱신
+새 비밀번호 생성
+→ Ansible Vault의 기존 변수 값 변경
 → MaxScale에서 현재 MariaDB Master 확인
-→ 실제 Master의 세 계정 Password 회전
-→ Replication 상태 확인
-→ 회전된 Vault 값으로 Kubernetes Secret 재공급
-→ Secret 실제 값 없이 구조만 검증
+→ Master에서 세 계정 비밀번호 변경
+→ MariaDB 복제 상태 확인
+→ 변경한 비밀번호로 Kubernetes Secret 다시 생성
+→ Secret 실제 값은 출력하지 않고 구조만 확인
 ```
 
-기존 `mariadb_account` Role은 계정 재실행 시 Password를 자동 변경하지 않는 `update_password: on_create` 정책을 유지했다.
+기존 `mariadb_account` Role의 `update_password: on_create` 설정은 그대로 유지했다. 일반적인 Ansible 재실행 때 기존 계정 비밀번호가 자동으로 바뀌지 않도록 하기 위해서다.
 
-이번 회전은 노출 대응을 위한 일회성 작업으로 별도 임시 Playbook에서 `update_password: always`를 사용했고, 실행 후 지속적으로 관리하는 자동화에는 포함하지 않았다.
+이번 비밀번호 변경만 별도의 임시 Playbook에서 `update_password: always`로 실행했고, 작업이 끝난 뒤 해당 Playbook은 계속 사용하는 자동화에 포함하지 않았다.
 
-최종 자동화에서는 다음 기준을 적용했다.
+이후 검증 방식도 다음과 같이 바꿨다.
 
-- 실제 Password와 완성된 DB URL을 출력하지 않음
-- 민감 Task는 `no_log: true` 사용
-- 실제 DB URL 구조 검증 시 Credential-bearing 값을 `argv`로 전달하지 않고 `stdin` 사용
-- URL 인코딩 검증은 비민감 synthetic Credential로 수행
-- Kubernetes Secret은 값이 아니라 Resource 존재·Type·Key·관리 Label만 확인
+- 실제 비밀번호와 완성된 DB URL을 출력하지 않음
+- 비밀번호를 다루는 Task에 `no_log: true` 적용
+- 실제 DB URL을 검사할 때 명령행 인자로 넘기지 않고 `stdin`으로 전달
+- URL 인코딩 시험은 실제 비밀번호 대신 임의의 테스트 값으로 수행
+- Kubernetes Secret은 실제 값이 아니라 존재 여부·Type·Key 이름·관리 Label만 확인
 
 ## 검증
 
-Credential 회전 후 MariaDB와 Kubernetes Secret을 다시 확인했다.
-
-MaxScale 기준:
+비밀번호를 변경한 뒤 MariaDB 상태를 확인했다.
 
 ```text
 mariadb-01   Master, Running
@@ -82,7 +84,7 @@ mariadb-02   Slave, Running
 GTID         일치
 ```
 
-회전된 Vault 값으로 두 Secret을 다시 공급했다.
+변경한 비밀번호로 다음 Secret을 다시 만들었다.
 
 ```text
 backend-db-runtime
@@ -93,30 +95,34 @@ backend-db-migration
 - SEOKPAN_MIGRATION_DATABASE_URL
 ```
 
-재공급 시 실제 Secret 내용이 변경돼 `changed=2`가 발생했고, 동일한 상태에서 다시 실행했을 때:
+Secret 내용이 바뀐 실행에서는 다음 결과를 확인했다.
+
+```text
+changed=2
+failed=0
+```
+
+같은 설정으로 다시 실행했을 때는 다음과 같았다.
 
 ```text
 changed=0
 failed=0
 ```
 
-으로 수렴했다.
-
-최종 검증 Output에는 실제 Credential과 완성된 DB URL이 포함되지 않았고, Backend 실행용 Secret과 Migration Secret의 Key가 서로 섞이지 않았음을 확인했다.
+최종 확인 과정에서는 실제 비밀번호와 완성된 DB URL이 출력되지 않았고, Backend용 DB 정보와 Migration용 DB 정보가 서로 섞이지 않은 것도 확인했다.
 
 ## Before → After
 
 ```text
 Before
-Secret 구조 확인 과정에서 base64 data까지 출력
-→ DB Credential 복원 가능
-→ 노출된 Credential을 안전한 값으로 볼 수 없음
+Secret 구조를 확인하면서 data 값까지 출력
+→ base64 값을 디코딩하면 DB 비밀번호 복원 가능
 
 After
-노출 가능 Credential 3종 회전
-→ Vault / MariaDB / Kubernetes Secret 재공급
-→ Secret 값 비출력 검증으로 변경
-→ 동일 상태 재실행 changed=0
+관련 DB 비밀번호 3개를 새 값으로 변경
+→ Vault / MariaDB / Kubernetes Secret에 같은 값 반영
+→ 실제 Secret 값은 출력하지 않는 방식으로 검증 변경
+→ 같은 설정으로 다시 실행했을 때 changed=0
 ```
 
 ## 관련 근거
