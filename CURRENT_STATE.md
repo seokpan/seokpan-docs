@@ -1,6 +1,7 @@
 # 石나가는 판단 — 1차 프로젝트 Current State
 
-- 기준일: **2026-09-23**
+- 기준일: **2026-09-23** (1차 종료 스냅샷)
+- 후속 현행화: **2026-09-27** (GitHub 기록·Source 기준, 운영 서버 재조회 없음)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -15,7 +16,9 @@
 | `seokpan-infra` | `4d382358fbfa6fd512993442a891d19c229e01f0` | On-prem Infra, Network, DB/Storage, Secret 공급, Ansible 자동화 |
 | `seokpan-docs` | PR #156 branch가 `main` `1039bfa3722d591d26917ff81879412fb4ca3695`까지 재대조됨; 최종 상태는 본 문서가 포함된 Git revision | 공용 설계·변경·Runbook·Validation·Troubleshooting |
 
-`seokpan-app/main`의 최신 Commit은 README 정리 Commit을 포함한다. 최종 Application 제품 변경은 Room 공통 2열 Layout까지 반영된 Source Freeze 계열이며, 이후 Jenkins Image Pipeline과 GitOps Promotion으로 실제 Desired State가 갱신됐다.
+위 표의 SHA는 최초 스냅샷 작성 기준이다. 후속 App PR #113은 2026-09-26 `59c9fe6cf723aecac6622e2ef8ea47884870dd25`로 병합됐다. 해당 문서 전용 PR은 Jenkins 필수 상태 미보고·서버 접근 불가로 예외적 bypass merge했으며, 이 SHA의 Jenkins PASS를 주장하지 않는다. 이후 상태는 해당 Merge와 Issue 종료 기록을 함께 읽는다.
+
+작성 기준 `seokpan-app/main`의 Commit은 README 정리 Commit을 포함한다. 최종 Application 제품 변경은 Room 공통 2열 Layout까지 반영된 Source Freeze 계열이며, 이후 Jenkins Image Pipeline과 GitOps Promotion으로 실제 Desired State가 갱신됐다.
 
 상태 표현은 다음과 같이 사용한다.
 
@@ -247,13 +250,13 @@ Canonical: `seokpan-app#112`
 
 ### 5.2 P4 Stability / Game Lifecycle
 
-2026-09-23 Closeout에서 `seokpan-app#76/#86/#88/#85`의 구현 상태와 강화 Validation을 분리했다.
+2026-09-23 Closeout에서 `seokpan-app#76/#86/#88/#85`의 구현 상태와 강화 Validation을 분리했고, 2026-09-26 PR #113 병합 후 #88 → #76 → #3을 종료했다.
 
 현재 판정:
 
 - `#76` — F01~F16을 Complete / Source Complete / NOT REQUIRED / Deferred / Validation Pending으로 재분류 완료
 - `#86` — Game lifecycle Source 구현 완료, Issue completed
-- `#88` — Realtime Source/정책 구현 완료, App 내부 정책 문서 정합화 PR #113 이후 구현 Issue 종료 예정
+- `#88` — Realtime Source/정책 구현과 App 내부 정책 문서 정합화 PR #113 병합 완료, 구현 Issue 종료
 - `#85` — Local Operation / Realtime Presentation 구현 완료, Issue completed
 - 실제 Provider·2-Pod·Failure Boundary·Measurement는 `seokpan-app#112`가 Canonical Validation Backlog
 
@@ -261,11 +264,11 @@ Canonical: `seokpan-app#112`
 
 ```text
 Captured lifecycle Source = IMPLEMENTED / main 반영
-Production lifecycle mode = legacy
+Declared lifecycle mode = legacy (GitOps 설정·Application 기본값)
 Captured production activation = NOT PERFORMED / DEFERRED
 ```
 
-현재 `seokpan-gitops/apps/backend/configmap.yaml`에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다. 따라서 captured lifecycle이 Production에서 활성화됐다고 주장하지 않는다.
+현재 `seokpan-gitops/apps/backend/configmap.yaml`에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다. 따라서 captured lifecycle이 Production에서 활성화됐다고 주장하지 않는다. 이 문서는 2026-09-27 운영 Pod의 실효 환경변수를 재조회한 증거가 아니다.
 
 `#112`에서 추가로 추적하는 범위:
 
@@ -318,7 +321,11 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 - 전체 P4 Performance Baseline은 완료된 수치가 없는 항목을 PASS로 쓰지 않음
 - Cross-role DR 이후 Application 정상화는 동일 Run/Revision으로 연결된 Evidence가 확보된 범위만 인정
 - 현재 GitOps Promotion은 Repository write/PR 전용 Credential + 사람 승인 구조이며 자동 승인/merge는 하지 않음
-- App 내부 Realtime 설명 문서의 10초 정책 Drift 정합화는 App PR #113에서 처리 중
+- App 내부 Realtime 10초 정책 문서는 App PR #113으로 정합화·병합 완료(필수 Jenkins status 미보고에 따른 예외 기록은 PR 댓글 참조)
+
+### 7.3 MariaDB Backup 공유 Lock — 현행 구현 계약
+
+Infra PR #168에서 공유 NFS lock은 초기 `flock -w 60` 대기 방식으로 검증됐으나 최종 리뷰에서 `flock -n -x 200`으로 바뀌었다. 현재 `backup_chain.sh.j2`는 잠금 경합 시 즉시 정상 스킵하고 다음 정기 cron까지 재시도하지 않는다. 60초 대기 및 NFS 폴링 관찰은 TS-031의 당시 이력으로만 유지한다. 공유 상태의 동시 writer 방지는 PR #168의 코드·lock 실측 근거이며, 전체 백업 스크립트 동시 실행 실측 완료로 확대하지 않는다. 스킵된 주기의 Backup 미생성·RPO 영향을 운영 확인 대상으로 둔다. 실제 서버 배포 상태는 이번 문서 현행화에서 재조회하지 않았다.
 
 ## 8. 2차 프로젝트 인계 — 유지할 계약
 
@@ -359,7 +366,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 
 Network / External Infra 역할의 별도 09/11/12 문서 세트는 현재 Snapshot에서 확인되지 않는다. 별도 문서가 실제로 필요한지, 또는 Infra Repository·PROJECT_CHANGES·Troubleshooting을 공식 Source로 사용할지는 해당 Owner와 결정한다.
 
-README는 App / Infra / GitOps 모두 2026-09-23 최신 요약형 구조로 merge됐다. Current State와 충돌하는 표현이 발견되면 각 README Owner가 후속 수정한다.
+App / Infra / GitOps README의 2026-09-23 요약형 개편은 merge됐다. App README 후속 현행화는 App PR #116에서 리뷰 중이고, GitOps README의 Observability NetworkPolicy 서술도 별도 정합화가 필요하다. 리뷰·merge 전 PR 내용을 현재 main의 사실로 취급하지 않는다.
 
 ## 11. 주요 Source / Evidence Index
 
