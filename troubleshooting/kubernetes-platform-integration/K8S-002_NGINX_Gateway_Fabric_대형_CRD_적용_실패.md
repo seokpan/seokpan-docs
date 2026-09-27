@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-005 — NGINX Gateway Fabric 대형 CRD가 클라이언트 방식 적용(client-side apply) Annotation 제한에 걸림
+# K8S-002 — NGINX Gateway Fabric 대형 CRD가 클라이언트 방식 적용(client-side apply) Annotation 제한에 걸림
+
+> 이전 문서 번호: `TS-005` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-005)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -64,7 +66,7 @@ GitOps
 
 이후 Observability의 `kube-prometheus-stack` CRD 적용 과정에서도 동일한 `262144 byte` Annotation 한계가 확인됐다.
 
-이 후속 사례도 Manifest 자체 오류가 아니라 **대형 CRD를 client-side apply 방식으로 관리할 때 발생하는 동일 원인 계열**로 판단했다. 따라서 별도 Troubleshooting을 중복 생성하지 않고, 기존 TS-005의 해결 원칙을 GitOps Application 경로에 적용했다.
+이 후속 사례도 Manifest 자체 오류가 아니라 **대형 CRD를 client-side apply 방식으로 관리할 때 발생하는 동일 원인 계열**로 판단했다. 따라서 별도 Troubleshooting을 중복 생성하지 않고, 기존 K8S-002의 해결 원칙을 GitOps Application 경로에 적용했다.
 
 `seokpan-gitops` PR #30에서 Observability Application에 다음 옵션을 추가했다.
 
@@ -85,7 +87,7 @@ kube-prometheus-stack 대형 CRD
 → Argo CD Application에 ServerSideApply=true 적용
 ```
 
-Observability 전체가 이 설정 하나로 정상화됐다는 의미는 아니다. 같은 작업 흐름에서 Loki PVC/Config와 Prometheus PV/PVC처럼 서로 다른 Root Cause의 장애가 별도로 확인됐으므로, 해당 문제들을 TS-005의 원인이나 해결 결과에 포함하지 않는다.
+Observability 전체가 이 설정 하나로 정상화됐다는 의미는 아니다. 같은 작업 흐름에서 Loki PVC/Config와 Prometheus PV/PVC처럼 서로 다른 Root Cause의 장애가 별도로 확인됐으므로, 해당 문제들을 K8S-002의 원인이나 해결 결과에 포함하지 않는다.
 
 ## 관련 근거
 
