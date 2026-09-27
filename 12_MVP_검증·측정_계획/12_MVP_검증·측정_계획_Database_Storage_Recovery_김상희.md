@@ -15,7 +15,7 @@
 
 직접 기준:
 
-- [`02_石나가는_판단_핵심_문제_및_검증_목표.docx`](../01-08_기획·설계_Baseline/02_石나가는_판단_핵심_문제_및_검증_목표.docx)
+- [`02_SeokPan_핵심_문제_및_검증_목표.md`](../01-08_기획·설계_Baseline/02_SeokPan_핵심_문제_및_검증_목표.md)
 - [`09_MVP_실행·통합_실시설계_Database_Storage_Recovery_김상희.md`](../09_MVP_실행·통합_실시설계/09_MVP_실행·통합_실시설계_Database_Storage_Recovery_김상희.md)
 - [`11_MVP_구축·자동화_Runbook_Database_Storage_Recovery_김상희.md`](../11_MVP_구축·자동화_Runbook/11_MVP_구축·자동화_Runbook_Database_Storage_Recovery_김상희.md)
 - [`PROJECT_CHANGES.md`](../PROJECT_CHANGES.md)
