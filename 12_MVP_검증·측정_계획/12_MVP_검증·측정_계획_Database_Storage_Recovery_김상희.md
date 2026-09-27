@@ -364,9 +364,11 @@ PASS:
 
 Stimulus: 양쪽 호스트에서 거의 동시에 Backup 실행 시도(3회 반복).
 
-PASS: 동시 획득 0건, `flock` 기반 직렬화 확인, `lock_wait_seconds=60`으로 NFSv4 콜백 폴링 주기(약 30초)를 흡수.
+당시 결과: 공유 NFS lock 경로에 대한 두 호스트 `flock` 경쟁 3회에서 동시 획득 0건. 중간 구현의 `lock_wait_seconds=60` 대기는 약 30초 지연 관찰 뒤 적용했으나, 최종 구현에서 폐기됐다. 해당 지연의 네트워크 원인은 확정되지 않았다.
 
-현재 결과: `PASS`. Evidence: Infra #166 PR #168.
+현행 계약: Infra PR #168 최종 HEAD의 `flock -n -x 200`은 경합 시 즉시 정상 스킵하고 다음 정기 cron까지 재시도하지 않는다. 같은 NFS lock 경로의 거의 동시 요청에서 한쪽만 획득하고 반대쪽이 즉시 실패한 실측과, 상태 읽기부터 갱신까지 잠금이 유지되는 코드가 근거다. **전체 `backup_chain.sh` 두 인스턴스의 동시 실행을 직접 실측한 결과로 해석하지 않는다.** 스킵이 발생하면 백업 누락 주기와 RPO 영향을 확인한다.
+
+현재 판정: 공유 lock 상호배제·현행 non-blocking 정책은 확인됨. 과거 60초 대기 결과는 역사적 이력으로 보존. Evidence: Infra #166 / PR #168(최종 리뷰), TS-031 후속 변경 기록.
 
 ### DSR-REC-01 — MariaDB Recovery RTO/RPO(DR-01)
 
@@ -412,7 +414,7 @@ PASS: 재구성값이 사전 계산값과 완전 일치, 3케이스 판정이 �
 
 현재 결과: `PASS`(1차 Infra 레벨, 격리 환경 한정, 2026-09-18). 이슈 #115는 이 결과와 별개로 open 상태를 유지한다 — 이유는 검증 미완료가 아니라 DSR-REDIS-03(운영 자동화)이 아직 남아 있기 때문.
 
-Evidence: 이슈 #115 코멘트(절차 확정 + 최종 Evidence), `F_redis_recovery_contract.md` 갱신분.
+Evidence 판정 경계: `seokpan-infra#115`의 담당자 결과·정정 코멘트는 격리 synthetic 실험의 PASS 근거다. 다만 최종 코멘트의 Run ID, 기준 SHA, 비교 JSON, 로그, checksum, cleanup 등은 `(기입)`으로 남아 있어 Git에서 재추적 가능한 원본 Evidence 연결은 아직 미완료다. Controller-local `/root/dr03-evidence/`의 실제 파일은 이번 문서 현행화에서 읽지 못했다. `F_redis_recovery_contract.md`의 현재 위치도 별도로 확인해야 한다. 검증 범위를 운영 전체 Session/Room/Vote로 넓히지 않으며, 담당자가 원본을 확인한 후 민감값을 제외한 식별자·요약·checksum 또는 접근 가능한 보관 링크로 채운다. 재실험 여부는 원본 확보 가능성을 확인한 뒤 결정한다.
 
 ### DSR-REDIS-03 — Redis DR-03 운영 자동화
 
