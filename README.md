@@ -2,7 +2,7 @@
 
 이 저장소는 **석판팀 「石나가는 판단」 1차 프로젝트의 공용 문서 저장소**입니다.
 
-프로젝트 기획·설계 기준 문서, 구현 단계의 공용 기준, 변경 이력 및 주요 아키텍처 자료를 관리합니다.
+프로젝트 기획·설계 기준 문서, 구현 단계의 공용 기준, 변경 이력 및 주요 아키텍처 자료를 관리합니다. **1차 종료 시점에 실제 구현·검증된 범위**는 [CURRENT_STATE.md](CURRENT_STATE.md)에서 먼저 확인할 수 있습니다.
 
 ## Planning & Design
 
@@ -26,7 +26,8 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 | 문서 | 역할 |
 | --- | --- |
 | [PROJECT_CHANGES.md](PROJECT_CHANGES.md) | PDF 이후 확정된 변경·추가·삭제 결정의 이력 |
-| [MVP_IMPLEMENTATION_BASELINE.md](MVP_IMPLEMENTATION_BASELINE.md) | 현재 App·Infra·GitOps가 함께 소비하는 MVP 구현 기준과 검증 상태 |
+| [MVP_IMPLEMENTATION_BASELINE.md](MVP_IMPLEMENTATION_BASELINE.md) | App·Infra·GitOps가 함께 소비하는 MVP 구현 기준과 검증 상태 |
+| [CURRENT_STATE.md](CURRENT_STATE.md) | 2026-09-23 종료 시점의 실제 구현·검증, 미완료 강화 검증 및 2차 인계 범위 |
 
 요구사항 범위는 07의 MVP를 우선합니다. 변경 이력은 명시된 항목에만 적용하며,
 구현 기준 문서는 원 기획·설계의 범위를 임의로 확대하거나 대체하지 않습니다.
@@ -38,12 +39,12 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 
 | 순서 | 문서 | 역할 |
 | --- | --- | --- |
-| 09 | [MVP 실행·통합 실시설계 — Kubernetes & Application Integration](09_MVP_실행·통합_실시설계/09_MVP_실행·통합_실시설계_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration 책임, Current State, Provider/Consumer, Integration Gate와 Gap |
-| 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영/10_GitHub_협업_및_Repository_운영.md) | Repository·Directory 책임, GitHub 작업 흐름, Cross-Repository 변경, Evidence·Traceability 운영 기준 |
-| 11 | [MVP 구축·자동화 Runbook — Kubernetes & Application Integration](11_MVP_구축·자동화_Runbook/11_MVP_구축·자동화_Runbook_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration의 Pre-check, 실행, 재실행, Recovery, Rollback 절차 |
-| 12 | [MVP 검증·측정 계획 — Kubernetes & Application Integration](12_MVP_검증·측정_계획/12_MVP_검증·측정_계획_Kubernetes_Application_Integration_정태훈.md) | Kubernetes/Application Integration의 Test Case, Measurement, PASS·FAIL, Evidence 계획 |
+| 09 | [실행·통합 실시설계](09_MVP_실행·통합_실시설계/) | Kubernetes·애플리케이션, 데이터·스토리지·복구, 배포·관측성 영역의 역할별 현행 구성과 통합 기준 |
+| 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영/10_GitHub_협업_및_Repository_운영.md) | 저장소 책임, 협업 순서, 검증 근거를 남기는 방식 |
+| 11 | [구축·자동화 Runbook](11_MVP_구축·자동화_Runbook/) | 세 영역의 구축·재실행·복구 절차 |
+| 12 | [검증·측정 기록](12_MVP_검증·측정_계획/) | 세 영역의 검증 방법과 완료·미완료 결과 |
 
-09·11·12의 다른 역할 문서는 각 작업이 완료되는 시점에 이 탐색 구조에 추가합니다.
+네트워크·외부 인프라의 구축 코드는 [`seokpan-infra`](https://github.com/seokpan/seokpan-infra)의 Role과 Playbook에서 확인합니다. 09·11·12의 별도 역할 문서는 현재 세 영역에 대해 존재합니다.
 
 ## Historical Record → Current State Traceability
 
@@ -84,7 +85,11 @@ Historical record
 
 ## Architecture
 
-주요 아키텍처 이미지는 별도 디렉터리에서 관리합니다.
+**현재 1차 MVP 구성**은 다음 그림과 [CURRENT_STATE.md](CURRENT_STATE.md)를 함께 확인합니다.
+
+![1차 구현에 반영된 Kubernetes 워크로드와 외부 VM 서비스](https://raw.githubusercontent.com/seokpan/.github/main/profile/images/first-project-architecture.svg)
+
+아래 `logical-architecture/`와 `physical-architecture/`의 PNG는 **01~08 기획·설계 당시의 이미지**입니다. 예를 들어 전체 논리 아키텍처에는 1차에서 제외된 ANALYSIS, 추가 LB·MaxScale 이중화가 나타납니다. 기획 당시 목표를 보존하는 자료이며 현재 배포 현황을 뜻하지 않습니다.
 
 ```text
 seokpan-docs/
