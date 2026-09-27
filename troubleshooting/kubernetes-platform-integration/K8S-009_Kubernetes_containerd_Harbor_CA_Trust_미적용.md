@@ -25,7 +25,7 @@ Jenkins Rootless BuildKit을 통한 Build/Push는 이미 가능했지만 Kuberne
 
 ## 사건 경계
 
-이 사건은 OPS-005과 같은 Harbor 내부 CA를 다루지만 인증서를 검증하는 주체와 수정 지점이 다르다.
+이 사건은 OPS-005와 같은 Harbor 내부 CA를 다루지만 인증서를 검증하는 주체와 수정 지점이 다르다.
 
 ```text
 OPS-005

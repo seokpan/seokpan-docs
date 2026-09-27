@@ -149,7 +149,7 @@ Container Build
 → 실제 Build Toolchain이 공식 Version과 일치하는지 확인
 ```
 
-이 후속 사례는 OPS-004과 동일한 Frontend Node/npm 실행환경 계약 범주이므로 신규 보고서로 분리하지 않는다.
+이 후속 사례는 OPS-004와 동일한 Frontend Node/npm 실행환경 계약 범주이므로 신규 보고서로 분리하지 않는다.
 
 ## 관련 근거
 

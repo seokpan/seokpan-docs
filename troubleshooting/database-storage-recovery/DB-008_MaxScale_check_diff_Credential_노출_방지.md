@@ -100,7 +100,7 @@ maxscale --config-check → Permission denied
 
 이 문제는 `diff: false`와 관계가 없고, 공용 `tls_deploy`와 MaxScale Role이 같은 TLS 파일에 서로 다른 권한을 적용하는 문제로 분리했다.
 
-DB-008를 재검증하던 당시에는 이 문제가 해결되지 않은 상태여서 [Docs Issue #63](https://github.com/seokpan/seokpan-docs/issues/63)에서 별도로 추적했다. 이후 원인과 재발 조건을 확인해 수정·재검증까지 완료했으며, 현재는 [DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)으로 기록되어 있다.
+DB-008을 재검증하던 당시에는 이 문제가 해결되지 않은 상태여서 [Docs Issue #63](https://github.com/seokpan/seokpan-docs/issues/63)에서 별도로 추적했다. 이후 원인과 재발 조건을 확인해 수정·재검증까지 완료했으며, 현재는 [DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)으로 기록되어 있다.
 
 따라서 당시 전체 `maxscale.yml`의 최종 `changed=0` 확인은 별도 TLS 권한 문제 때문에 완료하지 못했지만, 이를 `diff: false` 수정 실패로 해석하지 않는다.
 

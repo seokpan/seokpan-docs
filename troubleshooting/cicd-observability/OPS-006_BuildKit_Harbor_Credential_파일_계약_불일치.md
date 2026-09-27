@@ -15,7 +15,7 @@
 
 이 문제는 [OPS-005 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](OPS-005_buildkit-harbor-ca-trust.md)를 해결한 뒤 Harbor 인증 단계까지 진행하면서 확인됐다.
 
-OPS-005과 같은 BuildKit → Harbor 검증 과정에서 연속으로 발견됐지만, OPS-005은 TLS 인증서 신뢰 문제이고 이번 사건은 BuildKit이 인증 파일을 찾지 못한 문제라 원인과 수정 위치가 서로 다르다.
+OPS-005와 같은 BuildKit → Harbor 검증 과정에서 연속으로 발견됐지만, OPS-005는 TLS 인증서 신뢰 문제이고 이번 사건은 BuildKit이 인증 파일을 찾지 못한 문제라 원인과 수정 위치가 서로 다르다.
 
 ## 문제 개요
 

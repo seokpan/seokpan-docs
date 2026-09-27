@@ -149,7 +149,7 @@ After
 - [OPS-006 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](OPS-006_BuildKit_Harbor_Credential_파일_계약_불일치.md)
 - [OPS-009 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨](OPS-009_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)
 
-OPS-009의 Dockerfile frontend 문제가 제거된 뒤 OPS-007의 첫 `RUN` 문제가 다음 단계에서 확인됐다. OPS-007는 DNS·TLS 인증서·Harbor 인증정보·Dockerfile frontend 선택이 아니라 **Rootless BuildKit이 Dockerfile 명령을 실행하는 환경**의 문제를 다룬다.
+OPS-009의 Dockerfile frontend 문제가 제거된 뒤 OPS-007의 첫 `RUN` 문제가 다음 단계에서 확인됐다. OPS-007은 DNS·TLS 인증서·Harbor 인증정보·Dockerfile frontend 선택이 아니라 **Rootless BuildKit이 Dockerfile 명령을 실행하는 환경**의 문제를 다룬다.
 
 ## 관련 근거
 

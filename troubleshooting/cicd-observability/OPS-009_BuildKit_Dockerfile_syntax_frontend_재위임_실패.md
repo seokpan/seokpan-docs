@@ -21,7 +21,7 @@
 # syntax=docker/dockerfile:1
 ```
 
-해당 directive를 제거한 뒤에는 이전 실패 지점을 통과해 실제 Dockerfile `RUN` 단계까지 진행했으며, 이후 별개의 Rootless BuildKit 실행환경 문제인 OPS-007가 다음 문제로 드러났다.
+해당 directive를 제거한 뒤에는 이전 실패 지점을 통과해 실제 Dockerfile `RUN` 단계까지 진행했으며, 이후 별개의 Rootless BuildKit 실행환경 문제인 OPS-007이 다음 문제로 드러났다.
 
 따라서 같은 Build 과정에서 연속으로 발생했지만 두 문제를 하나의 원인으로 처리하지 않았다.
 
@@ -138,7 +138,7 @@ After
 → 별도 OPS-007의 /proc 권한 문제 확인
 ```
 
-## OPS-007와의 사건 구분
+## OPS-007과의 사건 구분
 
 두 사건은 같은 PR #48 Build 과정에서 연속으로 드러났지만 원인과 수정 위치가 다르다.
 
