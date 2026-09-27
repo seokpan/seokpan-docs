@@ -288,7 +288,7 @@ ansible-playbook -i inventory/hosts.yml playbooks/mariadb_backup_chain.yml \
 flock -n /mnt/nfs-db-backup/.state/.backup_chain.lock -c 'echo would-block-if-locked'
 ```
 
-정상적으로는 백업 실행 중 다른 호스트의 동시 백업 시도가 Lock 대기(최대 `backup_transfer_lock_wait_seconds=60`초)로 직렬화된다.
+현재 `backup_chain.sh.j2`는 공유 NFS lock을 `flock -n -x 200`으로 즉시 획득한다. 다른 백업이 lock을 점유 중이면 후속 실행은 대기 없이 정상 스킵(`exit 0`)하며 같은 주기에 재시도하지 않는다. 위 `flock -n` 명령은 점유 확인용이며 실행 스크립트와 동일한 정책이다. 백업이 생성되지 않은 주기는 다음 정기 cron 전에 로그·체인 최신 시각과 RPO 영향을 확인한다. 과거 `backup_transfer_lock_wait_seconds=60` 대기 방식은 Infra PR #168 중간 단계에서 폐기됐다([DB-010(이전 TS-031) 후속 변경 기록](../troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md) 참조).
 
 ### 6.6 완료 후 확인
 
@@ -691,8 +691,8 @@ curl -sk -u admin:<REDACTED> https://<maxscale-host>:8989/v1/servers  # 값 노�
 | --- | --- | --- |
 | Backup mkdir EPERM | `lsattr` immutable 속성 | 원인 규명 후 수동 `chattr -i`, 재발 시 팀 공유 |
 | "이번 주 유효 체인 없음" 오판 | 공유 경로(`/mnt/nfs-db-backup/.state/`)와 로컬 스테이징(`/srv/nfs/db-backup`) 상태값 불일치 | 공유 경로(`.state/.backup_chain_state.json`) 값을 기준으로 재확인, `state_set()` 원자성 확인 |
-| Backup 이중 실행/Chain 오염 | `flock` 획득 로그, 동시 실행 여부 | Lock 대기시간(`lock_wait_seconds`) 설정값 확인 |
-| NFS 마운트 단절 | `mount`/`df` 상태, NFSv4 콜백 지연 특성 | 재마운트, 폴링 주기(약 30초) 감안한 대기 |
+| Backup 이중 실행/Chain 오염 | 공유 NFS lock 경로, `flock -n` 즉시 스킵 로그, 체인 상태 | 동시 writer 진입 여부와 다음 정기 cron 전 Backup 공백·RPO 영향 확인 |
+| NFS 마운트 단절 | `mount`/`df` 및 공유 `.state` 접근 가능 여부 | 원인 확인 후 마운트 복구; 과거 lock 대기 실험의 폴링 추정치를 현재 재시도 시간으로 사용하지 않음 |
 | Recovery 시 Master 경로 fatal(register 안 된 변수 참조) | `replication_setup.yml:117` Gate 태스크의 `when` 조건 | PR #197 반영 여부 확인, 최신 `main` 사용 |
 | Replication 재구성 실패 | GTID 갈림 여부 | auto_rejoin 실패 시 mariadb-backup 기반 수동 재구축 |
 | DCL 복제 에러 | `slave_ddl_exec_mode=IDEMPOTENT` 미적용 대상(DROP USER 등) | `sql_slave_skip_counter=1` 적용 |
