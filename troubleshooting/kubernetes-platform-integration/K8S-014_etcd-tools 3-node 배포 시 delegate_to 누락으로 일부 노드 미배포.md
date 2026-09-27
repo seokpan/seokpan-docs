@@ -2,7 +2,7 @@
 
 # K8S-014 — etcd-tools 배포 태스크의 delegate_to 미적용으로 3-node 중 일부 노드 배포 누락
 
-> 이전 문서 번호: `TS-041` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-041)
+> 이전 문서 번호: `TS-041` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-041)
 
 | 항목 | 내용 |
 |---|---|

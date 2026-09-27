@@ -2,7 +2,7 @@
 
 # OPS-013 — Jenkins Plugin Lock 파일 확장자(.lock)를 jenkins-plugin-cli가 인식하지 못해 Controller CrashLoopBackOff 발생
 
-> 이전 문서 번호: `TS-035` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-035)
+> 이전 문서 번호: `TS-035` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-035)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 

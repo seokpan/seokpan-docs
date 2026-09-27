@@ -2,7 +2,7 @@
 
 # DB-010 — MariaDB 백업 체인 상태(state)가 호스트 로컬에 종속되어 auto_failover 시 체인을 인식 못 하던 문제
 
-> 이전 문서 번호: `TS-031` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-031)
+> 이전 문서 번호: `TS-031` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-031)
 
 | 항목 | 내용 |
 |---|---|

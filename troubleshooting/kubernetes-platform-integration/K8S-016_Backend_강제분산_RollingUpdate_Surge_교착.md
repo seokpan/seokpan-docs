@@ -2,7 +2,7 @@
 
 # K8S-016 — Backend 2 Replica 강제 분산과 RollingUpdate가 충돌해 Rollout이 교착된 문제
 
-> 이전 문서 번호: `TS-049` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-049)
+> 이전 문서 번호: `TS-049` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-049)
 
 | 항목 | 내용 |
 |---|---|

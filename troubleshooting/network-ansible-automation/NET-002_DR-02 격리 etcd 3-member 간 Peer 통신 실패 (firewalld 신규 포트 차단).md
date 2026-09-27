@@ -2,7 +2,7 @@
 
 # NET-002 — DR-02 격리 etcd 3-member 간 Peer 통신 실패(firewalld 신규 포트 차단)
 
-> 이전 문서 번호: `TS-036` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-036)
+> 이전 문서 번호: `TS-036` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-036)
 
 | 항목 | 내용 |
 |---|---|

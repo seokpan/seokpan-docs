@@ -2,7 +2,7 @@
 
 # OPS-012: Harbor Tag Immutability에서 Candidate Tag(scan-*) 예외 정책이 두 차례 무력화된 문제
 
-> 이전 문서 번호: `TS-034` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-034)
+> 이전 문서 번호: `TS-034` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-034)
 
 ## 개요
 
