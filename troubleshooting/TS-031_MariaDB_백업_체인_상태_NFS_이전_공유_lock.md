@@ -75,6 +75,7 @@ After
 - Issue #166: https://github.com/seokpan/seokpan-infra/issues/166
 - PR #168: https://github.com/seokpan/seokpan-infra/pull/168
 - 상위 Issue #143, 관련 Issue #129/#114/#55
+
 ## 후속 정책 변경 (2026-09-10, Infra PR #168 최종 리뷰)
 
 위 30초 폴링 관찰과 60초 대기 조정은 **당시 `flock -w` 구현의 실험 이력**이다. 후속 리뷰에서 대기 중 먼저 실행한 백업이 끝나면 두 번째 실행도 순차 진입할 수 있다는 정책 불일치를 확인했다. 최종 `backup_chain.sh.j2`는 `flock -n -x 200`으로 바뀌고 `backup_transfer_lock_wait_seconds`는 제거됐다. 현재는 lock 경합 시 즉시 정상 스킵하고, 같은 주기에 재시도하지 않고 다음 정기 cron을 기다린다. NFS 콜백 채널 제약은 당시 추정이었으며 Root Cause로 확정하지 않는다.
