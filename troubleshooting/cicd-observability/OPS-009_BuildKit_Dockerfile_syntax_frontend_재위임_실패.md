@@ -2,8 +2,6 @@
 
 # OPS-009 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨
 
-> 이전 문서 번호: `TS-028` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-028)
-
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
@@ -23,7 +21,7 @@
 # syntax=docker/dockerfile:1
 ```
 
-해당 directive를 제거한 뒤에는 이전 실패 지점을 통과해 실제 Dockerfile `RUN` 단계까지 진행했으며, 이후 별개의 Rootless BuildKit 실행환경 문제인 TS-022가 다음 문제로 드러났다.
+해당 directive를 제거한 뒤에는 이전 실패 지점을 통과해 실제 Dockerfile `RUN` 단계까지 진행했으며, 이후 별개의 Rootless BuildKit 실행환경 문제인 OPS-007이 다음 문제로 드러났다.
 
 따라서 같은 Build 과정에서 연속으로 발생했지만 두 문제를 하나의 원인으로 처리하지 않았다.
 
@@ -65,9 +63,9 @@ Backend와 Frontend Dockerfile에서 다음 directive를 제거했다.
 
 PR #48의 수정 이후 Rootless BuildKit 검증은 기존 frontend 실패 지점을 넘어 다음 단계로 진행했다.
 
-이후 Dockerfile 첫 `RUN` 단계에서 `/proc mount ... operation not permitted` 오류가 발생했고, 이 문제는 Jenkins BuildKit Agent 설정을 수정한 TS-022로 별도 분리됐다.
+이후 Dockerfile 첫 `RUN` 단계에서 `/proc mount ... operation not permitted` 오류가 발생했고, 이 문제는 Jenkins BuildKit Agent 설정을 수정한 OPS-007로 별도 분리됐다.
 
-최종적으로 TS-022 조치까지 적용된 Rootless BuildKit Agent에서 Backend/Frontend Build+Push가 모두 성공했다.
+최종적으로 OPS-007 조치까지 적용된 Rootless BuildKit Agent에서 Backend/Frontend Build+Push가 모두 성공했다.
 
 ### 후속 A/B 재현
 
@@ -120,7 +118,7 @@ AFTER_RC=1
 
 이었다.
 
-이 오류는 기존 TS-022에서 기록한 Rootless BuildKit의 `/proc` 권한과 process sandbox 문제에 해당한다.
+이 오류는 기존 OPS-007에서 기록한 Rootless BuildKit의 `/proc` 권한과 process sandbox 문제에 해당한다.
 
 ## Before → Change → After
 
@@ -137,32 +135,32 @@ After
 기존 frontend 문제 해소
 → Build Context / Base Image 처리
 → 실제 첫 RUN 단계 진입
-→ 별도 TS-022의 /proc 권한 문제 확인
+→ 별도 OPS-007의 /proc 권한 문제 확인
 ```
 
-## TS-022와의 사건 구분
+## OPS-007과의 사건 구분
 
 두 사건은 같은 PR #48 Build 과정에서 연속으로 드러났지만 원인과 수정 위치가 다르다.
 
 ```text
-TS-028
+OPS-009
 원인: Dockerfile의 외부 frontend 지정
 수정: Backend/Frontend Dockerfile
 실패 지점: Dockerfile frontend 처리 단계
 
-TS-022
+OPS-007
 원인: Rootless BuildKit의 /proc 권한과 process sandbox 제약
 수정: Jenkins BuildKit Agent 설정(JCasC)
 실패 지점: Dockerfile 첫 RUN 단계
 ```
 
-따라서 syntax directive 제거와 TS-022의 BuildKit Agent 설정 변경은 서로 다른 실패 지점을 해결한 독립 수정으로 기록한다.
+따라서 syntax directive 제거와 OPS-007의 BuildKit Agent 설정 변경은 서로 다른 실패 지점을 해결한 독립 수정으로 기록한다.
 
 ## 관련 사건
 
 - [OPS-007 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](OPS-007_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)
 
-TS-028의 Dockerfile frontend 문제가 제거된 뒤 TS-022의 첫 `RUN` 문제가 다음 단계에서 확인됐다.
+OPS-009의 Dockerfile frontend 문제가 제거된 뒤 OPS-007의 첫 `RUN` 문제가 다음 단계에서 확인됐다.
 
 ## 관련 근거
 

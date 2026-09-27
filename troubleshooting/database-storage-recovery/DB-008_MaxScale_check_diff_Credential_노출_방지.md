@@ -2,8 +2,6 @@
 
 # DB-008 — MaxScale 설정 배포의 `--check --diff`에서 인증정보 노출 위험
 
-> 이전 문서 번호: `TS-025` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-025)
-
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경·영향·원인·조치·검증 결과를 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
@@ -102,7 +100,7 @@ maxscale --config-check → Permission denied
 
 이 문제는 `diff: false`와 관계가 없고, 공용 `tls_deploy`와 MaxScale Role이 같은 TLS 파일에 서로 다른 권한을 적용하는 문제로 분리했다.
 
-TS-025를 재검증하던 당시에는 이 문제가 해결되지 않은 상태여서 [Docs Issue #63](https://github.com/seokpan/seokpan-docs/issues/63)에서 별도로 추적했다. 이후 원인과 재발 조건을 확인해 수정·재검증까지 완료했으며, 현재는 [DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)으로 기록되어 있다.
+DB-008을 재검증하던 당시에는 이 문제가 해결되지 않은 상태여서 [Docs Issue #63](https://github.com/seokpan/seokpan-docs/issues/63)에서 별도로 추적했다. 이후 원인과 재발 조건을 확인해 수정·재검증까지 완료했으며, 현재는 [DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)으로 기록되어 있다.
 
 따라서 당시 전체 `maxscale.yml`의 최종 `changed=0` 확인은 별도 TLS 권한 문제 때문에 완료하지 못했지만, 이를 `diff: false` 수정 실패로 해석하지 않는다.
 
@@ -130,7 +128,7 @@ After
 ## 관련 사건
 
 - [DB-006 — MaxScale TLS 적용 중 인증서 파일 권한과 SAN 검증 문제](DB-006_MaxScale_TLS_인증서_권한_SAN_검증.md): 같은 MaxScale 영역이지만 최초 TLS 적용 당시의 파일 권한·SAN 문제로 원인이 다르다.
-- [DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md): TS-025 재검증 중 발견됐던 후속 TLS 권한 문제가 이후 해결·게시된 사례다.
+- [DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md): DB-008 재검증 중 발견됐던 후속 TLS 권한 문제가 이후 해결·게시된 사례다.
 
 ## 관련 근거
 

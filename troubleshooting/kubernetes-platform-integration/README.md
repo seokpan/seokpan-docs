@@ -1,6 +1,6 @@
 # Kubernetes·플랫폼 통합
 
-[← 전체 트러블슈팅](../README.md) · [이전 번호 대응표](../LEGACY_ID_MAP.md)
+[← 전체 트러블슈팅](../README.md)
 
 Kubernetes 클러스터와 애플리케이션 런타임의 플랫폼 통합 관련 사례를 기록합니다.
 

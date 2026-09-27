@@ -2,8 +2,6 @@
 
 # K8S-008 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생
 
-> 이전 문서 번호: `TS-023` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-023)
-
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경·영향·원인·조치·검증 결과를 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
@@ -15,7 +13,7 @@
 
 ## 문제 개요
 
-TS-021의 프로젝트 도메인/CoreDNS 자동화를 처음 적용하는 과정에서 Ansible이 CoreDNS `hosts` 관리 Block을 삽입한 뒤, 생성된 Corefile의 줄바꿈 구조가 깨졌다.
+K8S-007의 프로젝트 도메인/CoreDNS 자동화를 처음 적용하는 과정에서 Ansible이 CoreDNS `hosts` 관리 Block을 삽입한 뒤, 생성된 Corefile의 줄바꿈 구조가 깨졌다.
 
 문제가 발생한 Corefile의 핵심 형태는 다음과 같았다.
 
@@ -37,15 +35,15 @@ CoreDNS Log:
 
 ## 사건 경계
 
-이 장애는 TS-021의 원래 `SERVFAIL` 원인과 다르다.
+이 장애는 K8S-007의 원래 `SERVFAIL` 원인과 다르다.
 
 ```text
-TS-021
+K8S-007
 Pod가 프로젝트 FQDN을 CoreDNS로 조회
 → 상위 DNS에 Record 없음
 → SERVFAIL
 
-TS-023
+K8S-008
 SERVFAIL 해결을 위해 CoreDNS hosts Block 자동화 적용
 → 줄바꿈 처리 오류
 → Corefile Parsing 실패
@@ -175,11 +173,11 @@ CoreDNS처럼 한 줄의 구문 오류가 Kubernetes 전체 이름해석에 영�
 
 - [K8S-007 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md)
 
-TS-021은 본 장애가 발생한 배경 작업이며, TS-023은 그 해결 자동화 구현 중 새로 발생한 독립적인 CoreDNS 설정 생성 오류다.
+K8S-007은 본 장애가 발생한 배경 작업이며, K8S-008은 그 해결 자동화 구현 중 새로 발생한 독립적인 CoreDNS 설정 생성 오류다.
 
 ## 관련 근거
 
 - Docs Issue #57: https://github.com/seokpan/seokpan-docs/issues/57
 - Infra Issue #99: https://github.com/seokpan/seokpan-infra/issues/99
 - Infra PR #108: https://github.com/seokpan/seokpan-infra/pull/108
-- 선행 사건 TS-021: [K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md](K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md)
+- 선행 사건 K8S-007: [K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md](K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md)

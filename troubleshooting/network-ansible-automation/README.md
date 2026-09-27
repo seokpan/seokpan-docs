@@ -1,6 +1,6 @@
 # 네트워크·Ansible 자동화
 
-[← 전체 트러블슈팅](../README.md) · [이전 번호 대응표](../LEGACY_ID_MAP.md)
+[← 전체 트러블슈팅](../README.md)
 
 네트워크와 공용 Ansible 실행환경·Inventory·공통 변수·통합 자동화 기반 관련 사례를 기록합니다.
 

@@ -83,7 +83,6 @@ Historical record
 - [Kubernetes·플랫폼 통합](troubleshooting/kubernetes-platform-integration/README.md)
 - [데이터베이스·스토리지·백업·복구](troubleshooting/database-storage-recovery/README.md)
 - [CI/CD·관측](troubleshooting/cicd-observability/README.md)
-- [이전 TS 번호 대응표](troubleshooting/LEGACY_ID_MAP.md)
 - 각 사례는 발생/발견 시기, 담당 역할, 영향 범위, 원인, 조치, 검증 결과와 GitHub 근거를 포함합니다.
 - 진행 중인 문제는 각 구현 Repository의 Issue/Pull Request에서 추적하며, 해결이 검증된 뒤 트러블슈팅 보고서로 게시합니다.
 

@@ -2,8 +2,6 @@
 
 # OPS-006 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생
 
-> 이전 문서 번호: `TS-020` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-020)
-
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
@@ -17,7 +15,7 @@
 
 이 문제는 [OPS-005 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](OPS-005_buildkit-harbor-ca-trust.md)를 해결한 뒤 Harbor 인증 단계까지 진행하면서 확인됐다.
 
-TS-017과 같은 BuildKit → Harbor 검증 과정에서 연속으로 발견됐지만, TS-017은 TLS 인증서 신뢰 문제이고 이번 사건은 BuildKit이 인증 파일을 찾지 못한 문제라 원인과 수정 위치가 서로 다르다.
+OPS-005와 같은 BuildKit → Harbor 검증 과정에서 연속으로 발견됐지만, OPS-005는 TLS 인증서 신뢰 문제이고 이번 사건은 BuildKit이 인증 파일을 찾지 못한 문제라 원인과 수정 위치가 서로 다르다.
 
 ## 문제 개요
 

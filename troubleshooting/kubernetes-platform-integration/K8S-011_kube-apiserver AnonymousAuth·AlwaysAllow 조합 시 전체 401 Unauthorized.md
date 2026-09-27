@@ -2,8 +2,6 @@
 
 # K8S-011 — kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized
 
-> 이전 문서 번호: `TS-038` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-038)
-
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-11 |
