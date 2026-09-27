@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-038 — kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized
+# K8S-011 — kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized
+
+> 이전 문서 번호: `TS-038` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-038)
 
 | 항목 | 내용 |
 |---|---|

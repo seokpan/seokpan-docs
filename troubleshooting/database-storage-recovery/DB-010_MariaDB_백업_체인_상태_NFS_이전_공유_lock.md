@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [데이터베이스·스토리지·백업·복구 목차](README.md)
 
-# TS-031 — MariaDB 백업 체인 상태(state)가 호스트 로컬에 종속되어 auto_failover 시 체인을 인식 못 하던 문제
+# DB-010 — MariaDB 백업 체인 상태(state)가 호스트 로컬에 종속되어 auto_failover 시 체인을 인식 못 하던 문제
+
+> 이전 문서 번호: `TS-031` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-031)
 
 | 항목 | 내용 |
 |---|---|

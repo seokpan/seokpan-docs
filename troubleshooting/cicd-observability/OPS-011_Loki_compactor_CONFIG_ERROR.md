@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [CI/CD·관측 목차](README.md)
 
-# TS-030 — Loki compactor의 `delete_request_store` 누락으로 CONFIG ERROR 발생
+# OPS-011 — Loki compactor의 `delete_request_store` 누락으로 CONFIG ERROR 발생
+
+> 이전 문서 번호: `TS-030` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-030)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -118,9 +120,9 @@ Grafana → Loki Query API status=success
 
 ## 관련 사건
 
-- [TS-029 — Loki Deployment가 프로젝트에서 정의한 PVC와 다른 PVC를 참조함](TS-029_Loki_PVC_Desired_State_불일치.md)
+- [OPS-010 — Loki Deployment가 프로젝트에서 정의한 PVC와 다른 PVC를 참조함](OPS-010_Loki_PVC_Desired_State_불일치.md)
   - Loki Deployment가 잘못된 PVC를 참조한 문제로, 본 설정 누락과 원인이 다르다.
-- [TS-005 — NGINX Gateway Fabric 대형 CRD가 클라이언트 방식 적용(client-side apply) Annotation 제한에 걸림](TS-005_NGINX_Gateway_Fabric_대형_CRD_적용_실패.md)
+- [K8S-002 — NGINX Gateway Fabric 대형 CRD가 클라이언트 방식 적용(client-side apply) Annotation 제한에 걸림](../kubernetes-platform-integration/K8S-002_NGINX_Gateway_Fabric_대형_CRD_적용_실패.md)
   - Argo CD의 대형 CRD 적용 방식 문제로, Loki compactor 설정 누락과 원인이 다르다.
 
 ## 관련 근거

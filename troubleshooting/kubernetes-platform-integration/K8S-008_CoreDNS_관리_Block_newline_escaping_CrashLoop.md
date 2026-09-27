@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-023 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생
+# K8S-008 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생
+
+> 이전 문서 번호: `TS-023` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-023)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경·영향·원인·조치·검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -171,7 +173,7 @@ CoreDNS처럼 한 줄의 구문 오류가 Kubernetes 전체 이름해석에 영�
 
 ## 관련 사건
 
-- [TS-021 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)
+- [K8S-007 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md)
 
 TS-021은 본 장애가 발생한 배경 작업이며, TS-023은 그 해결 자동화 구현 중 새로 발생한 독립적인 CoreDNS 설정 생성 오류다.
 
@@ -180,4 +182,4 @@ TS-021은 본 장애가 발생한 배경 작업이며, TS-023은 그 해결 자�
 - Docs Issue #57: https://github.com/seokpan/seokpan-docs/issues/57
 - Infra Issue #99: https://github.com/seokpan/seokpan-infra/issues/99
 - Infra PR #108: https://github.com/seokpan/seokpan-infra/pull/108
-- 선행 사건 TS-021: [TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)
+- 선행 사건 TS-021: [K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md](K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md)

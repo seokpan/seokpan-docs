@@ -275,7 +275,7 @@ seokpan-docs/
 
 `PROJECT_CHANGES.md`는 Baseline 이후 확정된 변경을 기록하고, `MVP_IMPLEMENTATION_BASELINE.md`는 구현 Repository들이 함께 소비하는 공통 구현 기준과 검증 상태를 연결한다.
 
-`troubleshooting/`은 해결과 재검증이 끝난 사건성 기록을 사례별로 보존한다.
+`troubleshooting/`은 해결과 필요한 사후 검증이 끝난 인프라·운영·자동화·DevOps·Kubernetes 플랫폼 통합 사례를 영역별로 보존한다. 신규 문서는 해당 영역의 다음 번호를 사용하고, 전체·영역별 README의 등록 건수를 갱신한다. 기존 `TS-xxx` 번호는 `troubleshooting/LEGACY_ID_MAP.md`에서 찾는다.
 
 `mentoring/`은 피드백 자체뿐 아니라 후속 판단·구현·검증의 변화를 추적한다.
 
@@ -644,7 +644,7 @@ Historical Record는 이후 상태가 달라졌다고 해서 당시 내용을 �
 
 문제가 해결되었다는 이유만으로 모든 Issue를 Troubleshooting 문서화하지 않는다.
 
-다음과 같은 가치가 있는 사례를 우선 `seokpan-docs/troubleshooting/`에 승격한다.
+다음과 같은 가치가 있는 사례를 해결·사후 검증을 마친 뒤 `seokpan-docs/troubleshooting/`의 해당 영역에 게시한다. 애플리케이션 기능 개발 자체의 문제는 신규 보고서 대상에서 제외한다.
 
 - 원인 추적 과정이 재사용 가능함
 - 여러 구성요소의 책임 경계를 보여줌

@@ -22,7 +22,7 @@
 - [`PROJECT_CHANGES.md`](../PROJECT_CHANGES.md) / [`MVP_IMPLEMENTATION_BASELINE.md`](../MVP_IMPLEMENTATION_BASELINE.md)
 - `seokpan-infra` / `seokpan-gitops` / `seokpan-app` 현재 `main`
 - seokpan-gitops Issue #57/#69/#91/#103/#117/#177, seokpan-infra Issue #205, seokpan-app Issue #58/#98
-- TS-010/017/020/022/024/027/028/029/030/034/035
+- OPS-003 / OPS-005 / OPS-006 / OPS-007 / K8S-009 / OPS-008 / OPS-009 / OPS-010 / OPS-011 / OPS-012 / OPS-013
 
 현재 상태는 계속 변할 수 있으므로 실행 직전에는 반드시 해당 Repository의 최신 `main`과 열린 Issue/PR을 다시 확인한다.
 
@@ -99,11 +99,11 @@ git log --oneline origin/main..HEAD   # 비어 있어야 함
 
 | 영역 | 상태 | 근거 |
 | --- | --- | --- |
-| Harbor v2.15.2 설치·systemd 자동 기동·GC | Validated | Infra PR #21/#69/#74, TS-010 |
-| Harbor TLS / 내부 CA 신뢰(BuildKit·containerd) | Validated | TS-017 / TS-024 |
+| Harbor v2.15.2 설치·systemd 자동 기동·GC | Validated | Infra PR #21/#69/#74, OPS-003 |
+| Harbor TLS / 내부 CA 신뢰(BuildKit·containerd) | Validated | OPS-005 / K8S-009 |
 | Robot Account 분리(CI / API / Runtime Pull) | Validated | Infra PR #47/#161/#183 |
-| Tag Immutability + `scan-*` 예외 | Validated | Infra PR #157, TS-034 |
-| Jenkins JCasC·Plugin Lock(76)·Agent Digest 고정 | Validated | GitOps PR #65, TS-035 |
+| Tag Immutability + `scan-*` 예외 | Validated | Infra PR #157, OPS-012 |
+| Jenkins JCasC·Plugin Lock(76)·Agent Digest 고정 | Validated | GitOps PR #65, OPS-013 |
 | Credential 주입(Vault → Secret → env → JCasC) | Validated | Infra PR #98/#154/#213, GitOps PR #127 |
 | PR Pipeline / main Image Pipeline | Validated | App PR #65/#68, main Build #18 |
 | Argo CD v3.4.7 Bootstrap | Validated | Infra PR #193/#196/#202/#209 |
@@ -180,7 +180,7 @@ kubectl -n argocd get secret argocd-secret \
   -o go-template='{{range $k,$v := .data}}{{$k}}{{"\n"}}{{end}}' | grep -c 'webhook.github.secret'
 ```
 
-`harbor-robot-dockerconfig`는 반드시 `Opaque` / `config.json` 키여야 한다(TS-020).
+`harbor-robot-dockerconfig`는 반드시 `Opaque` / `config.json` 키여야 한다(OPS-006).
 
 ### 4.6 Harbor 상태
 
@@ -207,7 +207,7 @@ cd seokpan-infra/ansible
 
 ```text
 main.yml                 설치(offline installer, harbor_version 고정), harbor.yml 템플릿
-systemd_unit.yml         VM 재부팅 후 자동 기동 (TS-010)
+systemd_unit.yml         VM 재부팅 후 자동 기동 (OPS-003)
 harbor_project.yml       seokpan Project (Private)
 robot_account.yml        robot$seokpan+seokpan-ci (Push/Pull)
 robot_account_api.yml    robot$seokpan+seokpan-api (API)
@@ -231,7 +231,7 @@ curl -s --cacert /etc/seokpan/pki/ca.crt -u '<api-robot>:<REDACTED>' \
   "https://harbor.seokpan.soldesk.store/api/v2.0/projects/seokpan/immutabletagrules" | python3 -m json.tool
 ```
 
-기대: 활성 Rule 1개, `tag_selectors`가 `excludes: "scan-**"` **단일 항목**. `matches`와 `excludes`를 한 Rule에 함께 넣으면 저장은 `200`이지만 평가 시 예외가 무력화된다(TS-034). PUT 시 body에 URL과 같은 `id`가 없으면 `400`이 발생한다.
+기대: 활성 Rule 1개, `tag_selectors`가 `excludes: "scan-**"` **단일 항목**. `matches`와 `excludes`를 한 Rule에 함께 넣으면 저장은 `200`이지만 평가 시 예외가 무력화된다(OPS-012). PUT 시 body에 URL과 같은 `id`가 없으면 `400`이 발생한다.
 
 ### 5.3 내부 CA 신뢰
 
@@ -249,12 +249,12 @@ ssh worker-01 "sudo crictl pull harbor.seokpan.soldesk.store/seokpan/frontend@<d
 ### 5.4 실패 시
 
 ```text
-x509 unknown authority (BuildKit Push)  → JCasC buildkit env SSL_CERT_FILE 확인 (TS-017)
-x509 unknown authority (Node Pull)      → ca_trust 적용 + update-ca-trust 확인 (TS-024)
-401 Unauthorized (BuildKit)             → harbor-robot-dockerconfig 형식(Opaque/config.json) (TS-020)
-Robot API 404 분기 오류                  → 조회 결과 기반 분기 확인 (TS-007)
-412 PRECONDITION (scan-* 삭제 거부)      → Immutability selector 구성 (TS-034)
-재부팅 후 Harbor 미기동                  → systemd unit enabled 확인 (TS-010)
+x509 unknown authority (BuildKit Push)  → JCasC buildkit env SSL_CERT_FILE 확인 (OPS-005)
+x509 unknown authority (Node Pull)      → ca_trust 적용 + update-ca-trust 확인 (K8S-009)
+401 Unauthorized (BuildKit)             → harbor-robot-dockerconfig 형식(Opaque/config.json) (OPS-006)
+Robot API 404 분기 오류                  → 조회 결과 기반 분기 확인 (OPS-002)
+412 PRECONDITION (scan-* 삭제 거부)      → Immutability selector 구성 (OPS-012)
+재부팅 후 Harbor 미기동                  → systemd unit enabled 확인 (OPS-003)
 ```
 
 ---
@@ -302,7 +302,7 @@ Manage Jenkins → Credentials → harbor-robot-account / harbor-api-robot-accou
 
 ### 6.3 Plugin 변경
 
-`jenkins-plugin-cli`는 `--plugin-file`의 확장자를 `.txt/.yaml/.yml`만 허용한다. ConfigMap 데이터 키 이름이 곧 파일명이므로 키는 반드시 `plugins-lock.txt`처럼 `.txt`로 끝나야 한다(TS-035).
+`jenkins-plugin-cli`는 `--plugin-file`의 확장자를 `.txt/.yaml/.yml`만 허용한다. ConfigMap 데이터 키 이름이 곧 파일명이므로 키는 반드시 `plugins-lock.txt`처럼 `.txt`로 끝나야 한다(OPS-013).
 
 Merge 전 실행 가능성 검증:
 
@@ -336,13 +336,13 @@ env DOCKER_CONFIG=/home/user/.docker
 ```text
 Controller CrashLoopBackOff (Init:Error)
   → install-plugins initContainer 로그 확인
-  → 원인 불명 시 즉시 git revert PR (TS-035: 19:41 Merge → 19:50 Revert)
+  → 원인 불명 시 즉시 git revert PR (OPS-013: 19:41 Merge → 19:50 Revert)
 JCasC ConfiguratorException "Item isn't a Scalar"
-  → containerTemplate.args 등 Scalar 필드를 List로 쓴 경우 (TS-017 과정)
+  → containerTemplate.args 등 Scalar 필드를 List로 쓴 경우 (OPS-005 과정)
 Dockerfile 1행에서 Build 중단
-  → # syntax= directive 외부 frontend 재위임 (TS-028)
+  → # syntax= directive 외부 frontend 재위임 (OPS-009)
 첫 RUN에서 /proc mount operation not permitted
-  → seccomp + no-process-sandbox 조합 (TS-022)
+  → seccomp + no-process-sandbox 조합 (OPS-007)
 ```
 
 ---
@@ -623,7 +623,7 @@ ssh worker-01 'df -h /mnt/observability/prometheus'
 ssh worker-02 'df -h /mnt/observability/loki'
 ```
 
-Prometheus는 `worker-01`, Loki는 `worker-02` 고정이다. Deployment/StatefulSet이 참조하는 PVC 이름이 Local PV와 짝을 이루는지 먼저 확인한다(TS-029).
+Prometheus는 `worker-01`, Loki는 `worker-02` 고정이다. Deployment/StatefulSet이 참조하는 PVC 이름이 Local PV와 짝을 이루는지 먼저 확인한다(OPS-010).
 
 ---
 
@@ -864,11 +864,11 @@ sidecar가 ConfigMap을 못 읽으면 Grafana Egress의 kube-apiserver 6443(CP 3
 
 | 증상 | 우선 확인 | 기본 조치 |
 | --- | --- | --- |
-| BuildKit Push x509 | JCasC buildkit `SSL_CERT_FILE` | TS-017 기준 복원 |
-| BuildKit 401 | `harbor-robot-dockerconfig` type/key | Opaque/`config.json`로 재생성(TS-020) |
-| Node ImagePull x509 | Node Trust Anchor | `ca_trust` 재적용(TS-024) |
+| BuildKit Push x509 | JCasC buildkit `SSL_CERT_FILE` | OPS-005 기준 복원 |
+| BuildKit 401 | `harbor-robot-dockerconfig` type/key | Opaque/`config.json`로 재생성(OPS-006) |
+| Node ImagePull x509 | Node Trust Anchor | `ca_trust` 재적용(K8S-009) |
 | ImagePullBackOff(not found) | GitOps Digest가 Harbor에 존재하는지 | Git Revert(9.2) |
-| Jenkins Controller Init:Error | install-plugins 로그 | 즉시 git revert → 원인 수정(TS-035) |
+| Jenkins Controller Init:Error | install-plugins 로그 | 즉시 git revert → 원인 수정(OPS-013) |
 | JCasC 변경 미반영 | Controller 재로드 여부 | Reload 또는 Controller 재생성 |
 | Promotion `OPEN_PR_REQUIRES_REVIEW` | 기존 open PR 내용 | 사람이 기존 PR 처리 후 Pipeline 재실행 |
 | Promotion 후 Sync 지연 | Webhook Recent Deliveries, argocd-server 로그 | 수동 Hard Refresh, Secret/Route 확인 |
@@ -876,8 +876,8 @@ sidecar가 ConfigMap을 못 읽으면 Grafana Egress의 kube-apiserver 6443(CP 3
 | Prometheus Target 대량 Down | NetworkPolicy 쌍 / 6443 Egress | 정책 보완 PR |
 | 외부 Target `no route to host` | VRouter zone별 규칙 | `vrouter_firewall` Role로 반영 |
 | 외부 Target 0/0 | Exporter 설치 여부, EndpointSlice exclusion | 설치 / argocd-cm 확인 |
-| Loki CONFIG ERROR | compactor `delete_request_store` | TS-030 |
-| Loki Pending | PVC 이름 ↔ Local PV | TS-029 |
+| Loki CONFIG ERROR | compactor `delete_request_store` | OPS-011 |
+| Loki Pending | PVC 이름 ↔ Local PV | OPS-010 |
 | Grafana 패널 빈 화면 | sidecar 6443 Egress, 중복 isDefault | PR #75/#77 기준 |
 | Alert 메일 미수신 | `/api/v2/status` 설정, Secret 마운트, Preflight | 12장 순서로 재확인 |
 | Watchdog 메일 수신 | Route 순서 | null Route 복원 |

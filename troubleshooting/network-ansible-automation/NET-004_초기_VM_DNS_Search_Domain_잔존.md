@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [네트워크·Ansible 자동화 목차](README.md)
 
-# TS-047 — 초기 VM의 DNS Search Domain 설정이 Pod까지 남아 있던 문제
+# NET-004 — 초기 VM의 DNS Search Domain 설정이 Pod까지 남아 있던 문제
+
+> 이전 문서 번호: `TS-047` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-047)
 
 | 항목 | 내용 |
 |---|---|

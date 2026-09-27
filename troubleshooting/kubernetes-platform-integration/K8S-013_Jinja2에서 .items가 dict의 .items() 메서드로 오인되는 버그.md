@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-040 — Jinja2 JSON 파싱 시 `.items`가 dict.items() 메서드로 오인됨
+# K8S-013 — Jinja2 JSON 파싱 시 `.items`가 dict.items() 메서드로 오인됨
+
+> 이전 문서 번호: `TS-040` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-040)
 
 | 항목 | 내용 |
 |---|---|

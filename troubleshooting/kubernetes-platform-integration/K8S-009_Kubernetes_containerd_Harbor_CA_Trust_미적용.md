@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패
+# K8S-009 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패
+
+> 이전 문서 번호: `TS-024` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-024)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경·영향·원인·조치·검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -158,8 +160,8 @@ CP 3 + Worker 2 전체에서 실제 Harbor Pull PASS
 
 ## 관련 사건
 
-- [TS-017 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](TS-017_buildkit-harbor-ca-trust.md): 같은 Harbor 내부 CA를 다루지만 BuildKit에서 발생한 문제
-- [TS-022 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md): Image Build 실행환경 문제
+- [OPS-005 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](../cicd-observability/OPS-005_buildkit-harbor-ca-trust.md): 같은 Harbor 내부 CA를 다루지만 BuildKit에서 발생한 문제
+- [OPS-007 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](../cicd-observability/OPS-007_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md): Image Build 실행환경 문제
 
 TS-024는 **Kubernetes Node의 containerd가 Harbor Image를 Pull할 때 내부 CA를 신뢰하지 못한 문제**만 다룬다.
 

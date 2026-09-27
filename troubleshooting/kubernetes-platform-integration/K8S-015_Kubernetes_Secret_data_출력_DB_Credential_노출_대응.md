@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-046 — Kubernetes Secret 확인 중 DB 비밀번호를 복원할 수 있는 값이 출력된 문제
+# K8S-015 — Kubernetes Secret 확인 중 DB 비밀번호를 복원할 수 있는 값이 출력된 문제
+
+> 이전 문서 번호: `TS-046` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-046)
 
 | 항목 | 내용 |
 |---|---|

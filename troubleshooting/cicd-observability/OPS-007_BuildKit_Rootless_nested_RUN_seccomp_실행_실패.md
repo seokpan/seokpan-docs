@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [CI/CD·관측 목차](README.md)
 
-# TS-022 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패
+# OPS-007 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패
+
+> 이전 문서 번호: `TS-022` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-022)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -144,10 +146,10 @@ After
 
 같은 Jenkins/BuildKit → Harbor 검증 과정에서 다음 사건들이 앞서 발생했지만 원인은 각각 다르다.
 
-- [TS-021 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)
-- [TS-017 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](TS-017_buildkit-harbor-ca-trust.md)
-- [TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)
-- [TS-028 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)
+- [K8S-007 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](../kubernetes-platform-integration/K8S-007_CoreDNS_Project_Endpoint_SERVFAIL.md)
+- [OPS-005 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](OPS-005_buildkit-harbor-ca-trust.md)
+- [OPS-006 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](OPS-006_BuildKit_Harbor_Credential_파일_계약_불일치.md)
+- [OPS-009 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨](OPS-009_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)
 
 TS-028의 Dockerfile frontend 문제가 제거된 뒤 TS-022의 첫 `RUN` 문제가 다음 단계에서 확인됐다. TS-022는 DNS·TLS 인증서·Harbor 인증정보·Dockerfile frontend 선택이 아니라 **Rootless BuildKit이 Dockerfile 명령을 실행하는 환경**의 문제를 다룬다.
 

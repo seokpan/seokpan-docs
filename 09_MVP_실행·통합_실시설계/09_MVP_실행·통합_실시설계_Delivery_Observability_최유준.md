@@ -161,7 +161,7 @@ Alertmanager Running
 ≠ resolved E-mail 수신
 ```
 
-**추가 원칙**: ArgoCD가 `selfHeal: true`로 관리하는 리소스는 `kubectl edit/patch`로 고친 상태를 결과로 인정하지 않는다. Git 변경 → Review → Merge → Argo CD Sync를 거친 상태만 Current State로 기록한다(TS-035에서 실증된 원칙).
+**추가 원칙**: ArgoCD가 `selfHeal: true`로 관리하는 리소스는 `kubectl edit/patch`로 고친 상태를 결과로 인정하지 않는다. Git 변경 → Review → Merge → Argo CD Sync를 거친 상태만 Current State로 기록한다(OPS-013에서 실증된 원칙).
 
 ---
 
@@ -208,7 +208,7 @@ Delivery / Observability 영역(담당: 최유준)은 **Application Source가 �
 | FQDN | `harbor.seokpan.soldesk.store`(SAN: DNS + IP 포함) |
 | 버전 | v2.15.2(offline installer, `harbor_version` 고정) |
 | Project | `seokpan`(Private) |
-| 기동 | systemd Unit으로 VM 재부팅 후 자동 기동(TS-010) |
+| 기동 | systemd Unit으로 VM 재부팅 후 자동 기동(OPS-003) |
 | GC | GC Policy 자동화(Infra PR #69) |
 | Metric | Harbor 자체 `/metrics`(9090) → Prometheus `harbor-metrics` Job |
 
@@ -229,7 +229,7 @@ Final Tag  : git-<main-sha-12>        → immutable (덮어쓰기·삭제 거부
 Candidate  : scan-<main-sha-12>-<BUILD_NUMBER> → 예외 (Scan 실패 시 정리 가능)
 ```
 
-Harbor Immutability Rule의 `tag_selectors`는 selector 1개만 유효하게 평가되므로 `excludes: "scan-**"` 단일 selector 방식으로 구현했다(TS-034). 동일 Tag 재Push 거부는 TS-027에서 실증됐다.
+Harbor Immutability Rule의 `tag_selectors`는 selector 1개만 유효하게 평가되므로 `excludes: "scan-**"` 단일 selector 방식으로 구현했다(OPS-012). 동일 Tag 재Push 거부는 OPS-008에서 실증됐다.
 
 판정: `Validated`.
 
@@ -240,9 +240,9 @@ Harbor Immutability Rule의 `tag_selectors`는 selector 1개만 유효하게 평
 Harbor TLS 인증서는 프로젝트 내부 Root CA로 서명되어 있으며, 인증서를 검증하는 주체가 셋으로 나뉘어 각각 별도로 신뢰 경로를 구성했다.
 
 ```text
-Jenkins BuildKit Token 요청   → SSL_CERT_FILE=/etc/buildkit/certs/ca.crt (TS-017)
+Jenkins BuildKit Token 요청   → SSL_CERT_FILE=/etc/buildkit/certs/ca.crt (OPS-005)
 Jenkins Trivy/Harbor API 호출 → SSL_CERT_FILE 동일 경로 사용
-Kubernetes Node containerd    → ca_trust Role로 OS Trust Anchor 배포 (TS-024)
+Kubernetes Node containerd    → ca_trust Role로 OS Trust Anchor 배포 (K8S-009)
 ```
 
 동일한 `x509: certificate signed by unknown authority` 증상이라도 검증 주체가 다르면 별도 사건으로 관리한다.
@@ -271,7 +271,7 @@ Kubernetes Node containerd    → ca_trust Role로 OS Trust Anchor 배포 (TS-02
 | `app-ci-check` | `app-ci`(Backend/Frontend/Browser 검사 통합 Image) | PR/main P1 검사, GitOps Promotion |
 | `buildkit-rootless-pr` | `buildkit` | PR Build Verify(Push 없음) |
 
-모든 Agent Image는 Tag가 아니라 Digest로 고정한다. Rootless BuildKit은 `seccompProfile: Unconfined` + `BUILDKITD_FLAGS=--oci-worker-no-process-sandbox` 조합을 BuildKit 컨테이너에만 적용한다(TS-022).
+모든 Agent Image는 Tag가 아니라 Digest로 고정한다. Rootless BuildKit은 `seccompProfile: Unconfined` + `BUILDKITD_FLAGS=--oci-worker-no-process-sandbox` 조합을 BuildKit 컨테이너에만 적용한다(OPS-007).
 
 ### Credential 주입 경계
 
@@ -292,7 +292,7 @@ Jenkinsfile credentialsId 참조
 | `harbor-robot-account` | `jenkins-harbor-credential` | Push/Pull, Trivy |
 | `harbor-api-robot-account` | `jenkins-harbor-api-credential` | Harbor API |
 | `gitops-promotion-github` | `jenkins-gitops-promotion-credential` | GitOps Promotion PR |
-| (파일 마운트) | `harbor-robot-dockerconfig`(Opaque, `config.json`) | BuildKit `DOCKER_CONFIG`(TS-020) |
+| (파일 마운트) | `harbor-robot-dockerconfig`(Opaque, `config.json`) | BuildKit `DOCKER_CONFIG`(OPS-006) |
 
 판정: `Validated`.
 
@@ -538,7 +538,7 @@ Grafana Loki Datasource
 - Alloy DaemonSet DESIRED/READY 5/5, `totalLinesProcessed` 증가 확인(GitOps PR #81)
 - Node Journal 5 Node(cp-01/02/03, worker-01/02) 연속 수집, 기존 Pod Log 경로 회귀 없음(GitOps PR #99)
 - Loki Query API(`query_range`, `labels`) HTTP 200 / `status: success`
-- Loki PVC 참조 불일치(TS-029), compactor `delete_request_store` 누락(TS-030)은 해결됨
+- Loki PVC 참조 불일치(OPS-010), compactor `delete_request_store` 누락(OPS-011)은 해결됨
 
 노드가 SELinux enforcing이라 hostPath 접근은 `runAsUser: 0`만으로 충분하지 않다. Journal 수집 추가 전 격리 Canary Pod로 AVC Denial 여부를 먼저 확인한 뒤 DaemonSet에 반영했다.
 
@@ -661,7 +661,7 @@ DNS Egress는 `kube-system` namespace로 좁혔다. 최초 파일은 Egress만 �
 | --- | --- | --- |
 | Backend `/metrics` | 정태훈(`seokpan-app#78`) | Service label `app.kubernetes.io/name: backend`, port `http:8000`, path `/metrics` |
 | Application stdout Log | 정태훈(`seokpan-app#92`) | 민감정보 Raw Log 미출력 |
-| mysqld_exporter / node_exporter(DB·NFS) | 김상희(Infra #199/#201) | 9104 / 9100, `exporter_svc` 계정(`SLAVE MONITOR` 포함, TS-043) |
+| mysqld_exporter / node_exporter(DB·NFS) | 김상희(Infra #199/#201) | 9104 / 9100, `exporter_svc` 계정(`SLAVE MONITOR` 포함, DB-013) |
 | VRouter·LB 방화벽 / HAProxy 설정 | 이유빈 | Worker 대역 → 9100·8404 허용 |
 | Kubernetes Node·Gateway | 정태훈 | Webhook HTTPRoute가 `seokpan-gateway` 재사용 |
 | Ansible 실행환경 | 이유빈 | ansible-core 2.20.8 / kubernetes.core 6.5.0 / kubernetes client 36.0.3 / Python 3.12.13, `ansible-safe-run` |
@@ -863,8 +863,8 @@ Grafana Provisioning Dashboard
 
 | Gate | 대상 | 현재 상태 | 핵심 Evidence |
 | --- | --- | --- | --- |
-| A | Harbor Registry | `Validated` | TS-010/017/024/027/034, Infra PR #21/#69/#157/#161 |
-| B | CI Build & Artifact | `Validated` | App PR #68, main Build #18, TS-020/022/028/035 |
+| A | Harbor Registry | `Validated` | OPS-003 / OPS-005 / K8S-009 / OPS-008 / OPS-012, Infra PR #21/#69/#157/#161 |
+| B | CI Build & Artifact | `Validated` | App PR #68, main Build #18, OPS-006 / OPS-007 / OPS-009 / OPS-013 |
 | C | GitOps CD | `Validated` | seokpan-gitops#57 Step 2~8, GitOps PR #119/#120 |
 | D | Delivery Automation(G-06) | `Validated` | App PR #103, GitOps PR #127, #132~#134, GitOps #117/#123 |
 | E | Metric | `Validated` | GitOps PR #70/#71/#106/#107, #103/#205, Infra PR #206/#208 |
@@ -890,7 +890,7 @@ MVP Acceptance를 막는 **Blocker는 없다**. 아래는 "완료"로 확대 해
 | ID | 시나리오 | 상태 |
 | --- | --- | --- |
 | F-10 | Harbor 중단 — 실행 Pod 유지 vs 신규 Pull/Deploy 실패 분리 | `Not Tested` |
-| F-11 | Jenkins Controller/Agent 중단 — Runtime 무영향·CI 재개·PVC 재연결 | `Not Tested`(TS-035에서 우발적 Controller 다운·복구 1회 관찰, 계획 시험 아님) |
+| F-11 | Jenkins Controller/Agent 중단 — Runtime 무영향·CI 재개·PVC 재연결 | `Not Tested`(OPS-013에서 우발적 Controller 다운·복구 1회 관찰, 계획 시험 아님) |
 | F-12 | Alertmanager 중단 — 게임 유지·통보 공백·복구 후 resolved | `Not Tested` |
 | F-13 | Prometheus/Loki Node 유실 — 관측 공백·Local 데이터 유실 | `Not Tested` |
 
@@ -910,8 +910,8 @@ PROJECT_CHANGES 2026-09-11 "Jenkins는 GitOps PR 생성 안 함"
 | --- | --- | --- |
 | 외부 VM Log 수집(`alloy_linux`) | `Not Implemented` | Role·Loki 외부 노출 모두 없음 |
 | 프로젝트 전용 PrometheusRule | `Partial` | 복제 중단·지연 Rule은 PROJECT_CHANGES 2026-09-21에서 2차 이관 확정 |
-| MariaDB Replication 패널 | `Deferred` | TS-043 수정으로 복제 Metric 조회 가능해졌으므로 2차에서 패널 추가 가능 |
-| maxscale_exporter | `Deferred` | Data 영역 소유, 소스 빌드 방식 2차(TS-045) |
+| MariaDB Replication 패널 | `Deferred` | DB-013 수정으로 복제 Metric 조회 가능해졌으므로 2차에서 패널 추가 가능 |
+| maxscale_exporter | `Deferred` | Data 영역 소유, 소스 빌드 방식 2차(OPS-014) |
 | Grafana / Jenkins 외부 Route | `Not Implemented` | `grafana.seokpan.soldesk.store`는 이름 해석만 적용, Jenkins는 미적용 — 현재 port-forward로 접근 |
 
 ## 10.4 Delivery 잔여 범위
@@ -1008,8 +1008,8 @@ M4 Delivery / Observability Acceptance
 | 항목 | 추적 대상 | 목적 |
 | --- | --- | --- |
 | Harbor Role | Infra PR #21 / #47 / #69 / #74 | 설치·Robot·GC·자동 기동 |
-| Harbor TLS/CA | Infra PR #34 / #87 / #127 / #140 / #163, TS-002/017/024 | 내부 CA·SAN·신뢰 경로 |
-| Harbor Immutability | Infra PR #157, TS-027 / TS-034 | Final 보호, Candidate 예외 |
+| Harbor TLS/CA | Infra PR #34 / #87 / #127 / #140 / #163, OPS-001 / OPS-005 / K8S-009 | 내부 CA·SAN·신뢰 경로 |
+| Harbor Immutability | Infra PR #157, OPS-008 / OPS-012 | Final 보호, Candidate 예외 |
 | Harbor API Robot | Infra PR #161, GitOps PR #49 | Pipeline API 전용 Credential |
 | Jenkins Secret | Infra PR #98 / #154 / #212 / #213 | Credential 주입 |
 | Jenkins Manifest | GitOps PR #19 / #34 / #37 / #41 / #54 / #62·#64·#65 | BuildKit·JCasC·Plugin Lock |
@@ -1024,7 +1024,7 @@ M4 Delivery / Observability Acceptance
 
 | 항목 | 추적 대상 | 목적 |
 | --- | --- | --- |
-| Stack 정상화 | GitOps PR #30 / #32, TS-029 / TS-030 | Loki·Prometheus PV·Config |
+| Stack 정상화 | GitOps PR #30 / #32, OPS-010 / OPS-011 | Loki·Prometheus PV·Config |
 | Target 정상화 | Issue #69 → GitOps PR #68 / #70, Issue #177 → PR #71 | 19건 Down 해소 |
 | Grafana | GitOps PR #73 / #75 / #77 / #114 | Dashboard·Datasource |
 | Log | GitOps PR #81 / #99 | Pod Log·Journal |

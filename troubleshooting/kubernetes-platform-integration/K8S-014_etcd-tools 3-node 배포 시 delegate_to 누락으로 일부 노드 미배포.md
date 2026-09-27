@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-041 — etcd-tools 배포 태스크의 delegate_to 미적용으로 3-node 중 일부 노드 배포 누락
+# K8S-014 — etcd-tools 배포 태스크의 delegate_to 미적용으로 3-node 중 일부 노드 배포 누락
+
+> 이전 문서 번호: `TS-041` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-041)
 
 | 항목 | 내용 |
 |---|---|

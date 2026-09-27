@@ -1,4 +1,8 @@
-## TS-044: MariaDB CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 — 버림 쿼리 선행 기법
+[← 전체 트러블슈팅](../README.md) · [데이터베이스·스토리지·백업·복구 목차](README.md)
+
+# DB-014: MariaDB CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 — 버림 쿼리 선행 기법
+
+> 이전 문서 번호: `TS-044` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-044)
 
 **증상**: `mariadb` CLI로 접속한 세션이 60초 이상 idle 상태에서 다음 쿼리
 실행 시 `ERROR 2013 (HY000): Lost connection to server during query` 또는

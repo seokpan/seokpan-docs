@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [CI/CD·관측 목차](README.md)
 
-# TS-028 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨
+# OPS-009 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨
+
+> 이전 문서 번호: `TS-028` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-028)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -158,7 +160,7 @@ TS-022
 
 ## 관련 사건
 
-- [TS-022 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)
+- [OPS-007 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](OPS-007_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)
 
 TS-028의 Dockerfile frontend 문제가 제거된 뒤 TS-022의 첫 `RUN` 문제가 다음 단계에서 확인됐다.
 

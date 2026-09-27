@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [네트워크·Ansible 자동화 목차](README.md)
 
-# TS-036 — DR-02 격리 etcd 3-member 간 Peer 통신 실패(firewalld 신규 포트 차단)
+# NET-002 — DR-02 격리 etcd 3-member 간 Peer 통신 실패(firewalld 신규 포트 차단)
+
+> 이전 문서 번호: `TS-036` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-036)
 
 | 항목 | 내용 |
 |---|---|

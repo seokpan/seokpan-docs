@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [데이터베이스·스토리지·백업·복구 목차](README.md)
 
-# TS-026 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐
+# DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐
+
+> 이전 문서 번호: `TS-026` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-026)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -29,7 +31,7 @@ maxscale-01.key               root:root 0600
 
 ## 기존 TS-018과의 사건 구분
 
-[TS-018](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)은 MaxScale TLS를 **처음 적용하던 당시** 공용 `tls_deploy`가 배포한 root 전용 권한과 `maxscale` 서비스 계정이 필요로 하는 권한이 맞지 않았던 문제를 다룬다.
+[DB-006](DB-006_MaxScale_TLS_인증서_권한_SAN_검증.md)은 MaxScale TLS를 **처음 적용하던 당시** 공용 `tls_deploy`가 배포한 root 전용 권한과 `maxscale` 서비스 계정이 필요로 하는 권한이 맞지 않았던 문제를 다룬다.
 
 당시에는 MaxScale Role이 나중에 실행되면서 다음 권한으로 다시 맞춰 정상화했다.
 
@@ -224,7 +226,7 @@ MaxScale Role
 ## 관련 근거
 
 - Docs Issue #63: https://github.com/seokpan/seokpan-docs/issues/63
-- 기존 최초 TLS 권한 사건 TS-018: TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md
+- 기존 최초 TLS 권한 사건 TS-018: DB-006_MaxScale_TLS_인증서_권한_SAN_검증.md
 - Infra Issue #146: https://github.com/seokpan/seokpan-infra/issues/146
 - Infra PR #148: https://github.com/seokpan/seokpan-infra/pull/148
 - Infra Issue #147: https://github.com/seokpan/seokpan-infra/issues/147

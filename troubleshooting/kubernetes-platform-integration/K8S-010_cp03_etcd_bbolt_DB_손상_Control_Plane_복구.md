@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-033 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제
+# K8S-010 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제
+
+> 이전 문서 번호: `TS-033` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-033)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하고 복구까지 완료한 장애를 기록합니다. 당시 실행 결과로 확인한 사실과 확인하지 못한 원인을 구분해 작성합니다.
 

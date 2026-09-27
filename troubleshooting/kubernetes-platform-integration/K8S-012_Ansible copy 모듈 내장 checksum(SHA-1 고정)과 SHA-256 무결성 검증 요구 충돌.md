@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-039 — Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌
+# K8S-012 — Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌
+
+> 이전 문서 번호: `TS-039` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-039)
 
 | 항목 | 내용 |
 |---|---|

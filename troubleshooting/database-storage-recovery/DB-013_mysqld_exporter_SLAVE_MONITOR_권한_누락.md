@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [데이터베이스·스토리지·백업·복구 목차](README.md)
 
-# TS-043 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생
+# DB-013 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생
+
+> 이전 문서 번호: `TS-043` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-043)
 
 | 항목 | 내용 |
 |---|---|

@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [네트워크·Ansible 자동화 목차](README.md)
 
-# TS-037 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)
+# NET-003 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)
+
+> 이전 문서 번호: `TS-037` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-037)
 
 | 항목 | 내용 |
 |---|---|

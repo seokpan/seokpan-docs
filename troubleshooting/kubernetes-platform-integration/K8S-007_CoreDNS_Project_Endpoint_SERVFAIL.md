@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [Kubernetes·플랫폼 통합 목차](README.md)
 
-# TS-021 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패
+# K8S-007 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패
+
+> 이전 문서 번호: `TS-021` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-021)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -111,7 +113,7 @@ CoreDNS 전체 Corefile을 새 Template로 덮어쓰지 않고, 프로젝트가 
 
 변경 전 Backup으로 기존 Corefile을 복구한 뒤 줄 단위 검증과 복구 절차를 보완해 다시 적용했다.
 
-이 문제는 원래 BuildKit `SERVFAIL`의 원인과 다른 구현 결함이므로 본 보고서의 해결 원인으로 합치지 않는다. 해결·재검증된 별도 사건은 [TS-023 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)에서 기록한다.
+이 문제는 원래 BuildKit `SERVFAIL`의 원인과 다른 구현 결함이므로 본 보고서의 해결 원인으로 합치지 않는다. 해결·재검증된 별도 사건은 [K8S-008 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생](K8S-008_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)에서 기록한다.
 
 ## 검증
 
@@ -191,9 +193,9 @@ Pod에서 프로젝트 도메인 DNS 정상
 
 이 사건 해결 및 구현 과정에서 다음 독립 문제가 이어졌다.
 
-- [TS-023 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)
-- [TS-017 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](TS-017_buildkit-harbor-ca-trust.md)
-- [TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)
+- [K8S-008 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생](K8S-008_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)
+- [OPS-005 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](../cicd-observability/OPS-005_buildkit-harbor-ca-trust.md)
+- [OPS-006 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](../cicd-observability/OPS-006_BuildKit_Harbor_Credential_파일_계약_불일치.md)
 
 각 사건은 같은 구현·Pipeline 과정에서 순차적으로 드러났지만 원인과 수정 지점이 달라 별도 TS로 관리한다.
 
@@ -205,4 +207,4 @@ Pod에서 프로젝트 도메인 DNS 정상
 - GitOps Issue #21: https://github.com/seokpan/seokpan-gitops/issues/21
 - GitOps PR #19: https://github.com/seokpan/seokpan-gitops/pull/19
 - GitOps PR #24: https://github.com/seokpan/seokpan-gitops/pull/24
-- 프로젝트 도메인 변경 이력: [PROJECT_CHANGES.md](../PROJECT_CHANGES.md)
+- 프로젝트 도메인 변경 이력: [PROJECT_CHANGES.md](../../PROJECT_CHANGES.md)

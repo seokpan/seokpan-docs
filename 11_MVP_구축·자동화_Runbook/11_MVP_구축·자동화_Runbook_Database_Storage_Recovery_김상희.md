@@ -661,7 +661,7 @@ mysql -h <mariadb-host> -u exporter_svc -p -e "SHOW GRANTS;"
 curl -s http://<mariadb-host>:9104/metrics | grep -E 'mysql_up|slave_status'
 ```
 
-**기지 버그(TS-043, 수정 완료)**: 배포 초기 `exporter_svc` GRANT에 `SLAVE MONITOR` 권한이 누락되어 `slave_status` collector가 `Access denied(1227)`를 발생시켰다. 재배포 시 이 권한이 GRANT에 포함되어 있는지 확인한다.
+**기지 버그(DB-013, 수정 완료)**: 배포 초기 `exporter_svc` GRANT에 `SLAVE MONITOR` 권한이 누락되어 `slave_status` collector가 `Access denied(1227)`를 발생시켰다. 재배포 시 이 권한이 GRANT에 포함되어 있는지 확인한다.
 
 ```bash
 mysql -h <mariadb-host> -u exporter_svc -p -e "SHOW GRANTS;" | grep -i "SLAVE MONITOR"
@@ -700,7 +700,7 @@ curl -sk -u admin:<REDACTED> https://<maxscale-host>:8989/v1/servers  # 값 노�
 | etcd Restore Quorum 미성립 | 격리 클러스터 구성 파일 | `initial-cluster` 등 파라미터 재확인 |
 | Redis Pod 재시작만으로 복구 안 됨 | AOF 설정(`appendfsync`), PVC bound 상태 | PVC 유지 여부 확인, 정상이면 §8.2로 재시도 |
 | Redis PVC 자체 손상/유실 | MariaDB 최신 Move와 Redis 상태 비교(§8.4) | §8.3 재구성 절차를 격리 환경에서 우선 재현 후 운영 반영 여부는 §8.6 선행조건 충족 후 판단 |
-| mysqld_exporter 인증/수집 실패 | `exporter_svc` GRANT에 `SLAVE MONITOR` 포함 여부 | TS-043 패턴 재확인, 계정 권한 재확인 |
+| mysqld_exporter 인증/수집 실패 | `exporter_svc` GRANT에 `SLAVE MONITOR` 포함 여부 | DB-013 패턴 재확인, 계정 권한 재확인 |
 | Vault 값 참조 오류 | 여러 PR에 걸친 vault 값 변경 이력 | 최신 merge 커밋 기준 vault 값 재확인 |
 
 장애 복구의 공식 측정값과 Evidence는 12에서 관리한다.

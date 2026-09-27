@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [데이터베이스·스토리지·백업·복구 목차](README.md)
 
-# TS-018 — MaxScale TLS 적용 중 인증서 파일 권한과 SAN 검증 문제
+# DB-006 — MaxScale TLS 적용 중 인증서 파일 권한과 SAN 검증 문제
+
+> 이전 문서 번호: `TS-018` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-018)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -135,9 +137,9 @@ SAN 변경 시 수동 인증서 삭제가 필요했던 한계
 
 ## 관련 독립 사건
 
-MaxScale 계정 인증정보를 Ansible Vault로 관리한 뒤에도 `maxscale.cnf` Template의 Diff 출력에서 민감값이 노출될 수 있었던 문제는 TLS 인증서 사건과 원인이 다르다. 해당 사건은 [TS-025 — MaxScale 설정 배포의 `--check --diff`에서 인증정보 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)에서 독립적으로 기록한다.
+MaxScale 계정 인증정보를 Ansible Vault로 관리한 뒤에도 `maxscale.cnf` Template의 Diff 출력에서 민감값이 노출될 수 있었던 문제는 TLS 인증서 사건과 원인이 다르다. 해당 사건은 [DB-008 — MaxScale 설정 배포의 `--check --diff`에서 인증정보 노출 위험](DB-008_MaxScale_check_diff_Credential_노출_방지.md)에서 독립적으로 기록한다.
 
-TS-025 재검증 과정에서는 이후 MaxScale 인증서와 개인키의 접근 권한이 다시 사라진 별도 문제가 확인됐다. 이 사건은 최초 TLS 적용 당시의 권한 누락과 달리, 공용 `tls_deploy`와 MaxScale Role이 같은 파일과 디렉터리에 서로 다른 권한을 적용해 실행 순서에 따라 최종 권한이 달라질 수 있었던 구조가 원인이었다. `seokpan-infra#146` / PR #148에서 공용 TLS Role에 서비스별 권한 설정을 추가하고, `#147` / PR #149에서 MaxScale도 같은 권한 설정을 사용하도록 맞춘 뒤 재실행 검증까지 완료했다. 해당 사건은 [TS-026 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)에서 독립적으로 기록한다.
+TS-025 재검증 과정에서는 이후 MaxScale 인증서와 개인키의 접근 권한이 다시 사라진 별도 문제가 확인됐다. 이 사건은 최초 TLS 적용 당시의 권한 누락과 달리, 공용 `tls_deploy`와 MaxScale Role이 같은 파일과 디렉터리에 서로 다른 권한을 적용해 실행 순서에 따라 최종 권한이 달라질 수 있었던 구조가 원인이었다. `seokpan-infra#146` / PR #148에서 공용 TLS Role에 서비스별 권한 설정을 추가하고, `#147` / PR #149에서 MaxScale도 같은 권한 설정을 사용하도록 맞춘 뒤 재실행 검증까지 완료했다. 해당 사건은 [DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)에서 독립적으로 기록한다.
 
 ## 관련 근거
 
@@ -145,6 +147,6 @@ TS-025 재검증 과정에서는 이후 MaxScale 인증서와 개인키의 접�
 - PR #137: https://github.com/seokpan/seokpan-infra/pull/137
 - 후속 Issue #138: https://github.com/seokpan/seokpan-infra/issues/138
 - 후속 PR #140: https://github.com/seokpan/seokpan-infra/pull/140
-- 독립 인증정보 Diff 사건 TS-025: TS-025_MaxScale_check_diff_Credential_노출_방지.md
+- 독립 인증정보 Diff 사건 TS-025: DB-008_MaxScale_check_diff_Credential_노출_방지.md
 - 후속 TLS 권한 문제 Docs Issue #63: https://github.com/seokpan/seokpan-docs/issues/63
-- 후속 TLS 권한 문제 TS-026: TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md
+- 후속 TLS 권한 문제 TS-026: DB-009_MaxScale_TLS_권한_Desired_State_충돌_Drift.md

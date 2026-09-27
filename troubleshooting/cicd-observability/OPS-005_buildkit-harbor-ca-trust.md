@@ -1,6 +1,8 @@
-[← 트러블슈팅 목차로 돌아가기](README.md)
+[← 전체 트러블슈팅](../README.md) · [CI/CD·관측 목차](README.md)
 
-# TS-017 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패
+# OPS-005 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패
+
+> 이전 문서 번호: `TS-017` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-017)
 
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
@@ -74,13 +76,13 @@ buildctl의 Harbor Token 요청
 
 CA 신뢰 문제를 해결한 뒤 Harbor 인증 단계에서 `401 Unauthorized`가 새로 확인됐다.
 
-해당 문제는 Harbor Robot Account 인증정보가 저장된 Kubernetes Secret의 파일명 `.dockerconfigjson`과 BuildKit이 찾는 `config.json` 파일명이 달랐던 별도 원인이었다. 같은 BuildKit → Harbor 검증 과정에서 연속으로 발견됐지만 수정 위치와 검증 단계가 다르므로 [TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)에서 별도 사례로 관리한다.
+해당 문제는 Harbor Robot Account 인증정보가 저장된 Kubernetes Secret의 파일명 `.dockerconfigjson`과 BuildKit이 찾는 `config.json` 파일명이 달랐던 별도 원인이었다. 같은 BuildKit → Harbor 검증 과정에서 연속으로 발견됐지만 수정 위치와 검증 단계가 다르므로 [OPS-006 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](OPS-006_BuildKit_Harbor_Credential_파일_계약_불일치.md)에서 별도 사례로 관리한다.
 
 ## 관련 독립 CA 사건
 
 이후 Kubernetes에서 Harbor Image를 실제 Pull하는 단계에서는 각 Node의 containerd가 같은 내부 CA를 신뢰하지 못하는 별도 문제가 확인됐다.
 
-BuildKit의 Harbor Token 요청과 Kubernetes Node의 containerd Image Pull은 인증서를 검증하는 주체와 수정 위치가 다르므로 [TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](TS-024_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)에서 독립 사례로 관리한다.
+BuildKit의 Harbor Token 요청과 Kubernetes Node의 containerd Image Pull은 인증서를 검증하는 주체와 수정 위치가 다르므로 [K8S-009 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](../kubernetes-platform-integration/K8S-009_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)에서 독립 사례로 관리한다.
 
 ## Before → After
 
