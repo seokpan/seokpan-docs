@@ -68,7 +68,7 @@ Historical record
 
 ## Troubleshooting
 
-프로젝트 구현 과정에서 발생한 문제 가운데 **원인·조치·재검증까지 완료된 사례**를 사례별 Markdown 보고서로 관리합니다.
+프로젝트 구현 과정의 등록 보고서 49건을 기술 영역별로 찾을 수 있습니다. 각 보고서의 상태와 검증 범위는 해당 문서에서 확인합니다. 새 보고서는 해결과 필요한 사후 검증이 완료된 인프라·운영·자동화·DevOps·Kubernetes 플랫폼 통합 사례를 게시합니다.
 
 - [트러블슈팅 보고서 목차](troubleshooting/README.md)
 - [네트워크·Ansible 자동화](troubleshooting/network-ansible-automation/README.md)
