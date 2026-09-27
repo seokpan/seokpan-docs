@@ -362,7 +362,7 @@ PASS:
 
 ### DSR-BAK-02 — Backup 동시 실행 보호
 
-Stimulus: 양쪽 호스트에서 거의 동시에 Backup 실행 시도(3회 반복).
+Stimulus: 양쪽 호스트에서 동일한 프로덕션 NFS lock 파일에 거의 동시에 `flock` 획득 요청(3회 반복). 전체 `backup_chain.sh` 동시 실행과 구분한다.
 
 당시 결과: 공유 NFS lock 경로에 대한 두 호스트 `flock` 경쟁 3회에서 동시 획득 0건. 중간 구현의 `lock_wait_seconds=60` 대기는 약 30초 지연 관찰 뒤 적용했으나, 최종 구현에서 폐기됐다. 해당 지연의 네트워크 원인은 확정되지 않았다.
 
