@@ -2,8 +2,6 @@
 
 # NET-003 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)
 
-> 이전 문서 번호: `TS-037` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-037)
-
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-11 |
@@ -13,7 +11,7 @@
 
 ## 최초 문제
 
-TS-036 조치(firewalld 정지) 후 3-member etcd의 peer 연결 자체는
+NET-002 조치(firewalld 정지) 후 3-member etcd의 peer 연결 자체는
 성공했으나, 로그에 다음과 같은 clock drift 경고가 다수 발생했다.
 
 ```

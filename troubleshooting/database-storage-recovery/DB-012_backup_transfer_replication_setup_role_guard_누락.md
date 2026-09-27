@@ -2,8 +2,6 @@
 
 # DB-012 — MariaDB DR 복구 replication_setup의 role Guard 누락으로 master 경로 fatal 실패
 
-> 이전 문서 번호: `TS-042` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-042)
-
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-16 |

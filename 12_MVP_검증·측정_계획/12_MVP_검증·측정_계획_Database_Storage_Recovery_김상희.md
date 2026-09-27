@@ -368,7 +368,7 @@ Stimulus: 양쪽 호스트에서 동일한 프로덕션 NFS lock 파일에 거�
 
 현행 계약: Infra PR #168 최종 HEAD의 `flock -n -x 200`은 경합 시 즉시 정상 스킵하고 다음 정기 cron까지 재시도하지 않는다. 같은 NFS lock 경로의 거의 동시 요청에서 한쪽만 획득하고 반대쪽이 즉시 실패한 실측과, 상태 읽기부터 갱신까지 잠금이 유지되는 코드가 근거다. **전체 `backup_chain.sh` 두 인스턴스의 동시 실행을 직접 실측한 결과로 해석하지 않는다.** 스킵이 발생하면 백업 누락 주기와 RPO 영향을 확인한다.
 
-현재 판정: 공유 lock 상호배제·현행 non-blocking 정책은 확인됨. 과거 60초 대기 결과는 역사적 이력으로 보존. Evidence: Infra #166 / PR #168(최종 리뷰), [DB-010(이전 TS-031) 후속 변경 기록](../troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md).
+현재 판정: 공유 lock 상호배제·현행 non-blocking 정책은 확인됨. 과거 60초 대기 결과는 역사적 이력으로 보존. Evidence: Infra #166 / PR #168(최종 리뷰), [DB-010 후속 변경 기록](../troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md).
 
 ### DSR-REC-01 — MariaDB Recovery RTO/RPO(DR-01)
 

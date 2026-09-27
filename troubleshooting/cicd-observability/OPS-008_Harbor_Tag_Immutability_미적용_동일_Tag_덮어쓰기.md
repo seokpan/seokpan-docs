@@ -2,8 +2,6 @@
 
 # OPS-008 — Harbor Tag Immutability 미적용으로 동일 Tag 덮어쓰기가 허용됨
 
-> 이전 문서 번호: `TS-027` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-027)
-
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
@@ -172,12 +170,12 @@ After
 
 다음 사건들과 Harbor라는 공통 영역은 있지만 원인은 다르다.
 
-- TS-007 — Harbor Robot API 404·멱등성 분기 오류
-- TS-017 — Jenkins Rootless BuildKit의 Harbor 내부 CA 신뢰 문제
-- TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못한 문제
-- TS-024 — Kubernetes containerd의 Harbor 내부 CA 신뢰 문제
+- OPS-002 — Harbor Robot API 404·멱등성 분기 오류
+- OPS-005 — Jenkins Rootless BuildKit의 Harbor 내부 CA 신뢰 문제
+- OPS-006 — BuildKit이 Harbor Robot 인증 파일을 찾지 못한 문제
+- K8S-009 — Kubernetes containerd의 Harbor 내부 CA 신뢰 문제
 
-TS-027은 TLS 인증서나 Robot Account 인증정보 문제가 아니라 **Harbor Project에 Tag 덮어쓰기 방지 정책이 적용되지 않았던 문제**를 다룬다.
+OPS-008은 TLS 인증서나 Robot Account 인증정보 문제가 아니라 **Harbor Project에 Tag 덮어쓰기 방지 정책이 적용되지 않았던 문제**를 다룬다.
 
 ## 관련 근거
 

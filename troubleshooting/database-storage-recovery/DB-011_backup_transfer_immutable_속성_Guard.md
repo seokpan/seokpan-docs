@@ -2,8 +2,6 @@
 
 # DB-011 — 원인 불명의 immutable(chattr +i)로 백업 디렉터리 생성이 EPERM으로 실패
 
-> 이전 문서 번호: `TS-032` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-032)
-
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-10 02:00 |
@@ -70,4 +68,4 @@ mariadb-01에만 왜 이 속성이 걸려 있었는지 원인은 여전히 미�
 
 - Issue #167: https://github.com/seokpan/seokpan-infra/issues/167
 - PR #171: https://github.com/seokpan/seokpan-infra/pull/171
-- TS-011(Check Mode 검증 Skip 선례), TS-031(같은 장애의 근본 원인 쪽)
+- K8S-004(Check Mode 검증 Skip 선례), DB-010(같은 장애의 근본 원인 쪽)

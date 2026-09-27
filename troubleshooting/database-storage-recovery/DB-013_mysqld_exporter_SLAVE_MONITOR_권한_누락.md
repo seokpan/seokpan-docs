@@ -2,8 +2,6 @@
 
 # DB-013 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생
 
-> 이전 문서 번호: `TS-043` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-043)
-
 | 항목 | 내용 |
 |---|---|
 | **발생/발견 시기** | 2026-09-16 |

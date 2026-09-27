@@ -1024,7 +1024,7 @@
   - MariaDB 모니터링은 `mysqld_exporter 0.20.0`을 채택한다. MariaDB
     11.8.9의 `slave_status` collector 실행에는 `PROCESS/SELECT/
     BINLOG MONITOR` 외에 `SLAVE MONITOR` 권한이 추가로 필요함을 실측으로
-    확인했다(TS-043).
+    확인했다(DB-013).
   - MariaDB 모니터링 전용 계정 `exporter_svc`를 신설한다. 기존
     `mariadb_account` role의 `detect_master.yml` 패턴대로 MaxScale
     기반 현재 Master를 동적 판별해 Master에서만 계정 DDL을 수행하고,
@@ -1051,7 +1051,7 @@
   - `seokpan/seokpan-infra#199`
   - `seokpan/seokpan-infra` PR #200
   - `seokpan/seokpan-infra` PR #201
-  - `seokpan/seokpan-docs` TS-043
+  - `seokpan/seokpan-docs` DB-013
 
 ### DR-03 Redis AOF/PVC Recovery 검증 완료, Redis Key Schema 확정
 
@@ -1134,7 +1134,7 @@ turn_no 등)를 재구성할 수 있음을 격리 환경에서 실증.
   - `seokpan/seokpan-infra#211`
   - `seokpan/seokpan-infra#199`
   - `seokpan/seokpan-infra` PR #214
-  - `seokpan/seokpan-docs` TS-045
+  - `seokpan/seokpan-docs` OPS-014
 
 
 

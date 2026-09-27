@@ -288,7 +288,7 @@ ansible-playbook -i inventory/hosts.yml playbooks/mariadb_backup_chain.yml \
 flock -n /mnt/nfs-db-backup/.state/.backup_chain.lock -c 'echo would-block-if-locked'
 ```
 
-현재 `backup_chain.sh.j2`는 공유 NFS lock을 `flock -n -x 200`으로 즉시 획득한다. 다른 백업이 lock을 점유 중이면 후속 실행은 대기 없이 정상 스킵(`exit 0`)하며 같은 주기에 재시도하지 않는다. 위 `flock -n` 명령은 점유 확인용이며 실행 스크립트와 동일한 정책이다. 백업이 생성되지 않은 주기는 다음 정기 cron 전에 로그·체인 최신 시각과 RPO 영향을 확인한다. 과거 `backup_transfer_lock_wait_seconds=60` 대기 방식은 Infra PR #168 중간 단계에서 폐기됐다([DB-010(이전 TS-031) 후속 변경 기록](../troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md) 참조).
+현재 `backup_chain.sh.j2`는 공유 NFS lock을 `flock -n -x 200`으로 즉시 획득한다. 다른 백업이 lock을 점유 중이면 후속 실행은 대기 없이 정상 스킵(`exit 0`)하며 같은 주기에 재시도하지 않는다. 위 `flock -n` 명령은 점유 확인용이며 실행 스크립트와 동일한 정책이다. 백업이 생성되지 않은 주기는 다음 정기 cron 전에 로그·체인 최신 시각과 RPO 영향을 확인한다. 과거 `backup_transfer_lock_wait_seconds=60` 대기 방식은 Infra PR #168 중간 단계에서 폐기됐다([DB-010 후속 변경 기록](../troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md) 참조).
 
 ### 6.6 완료 후 확인
 

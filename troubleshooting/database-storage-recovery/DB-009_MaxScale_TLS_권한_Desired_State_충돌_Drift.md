@@ -2,8 +2,6 @@
 
 # DB-009 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐
 
-> 이전 문서 번호: `TS-026` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-026)
-
 > 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
 
 | 항목 | 내용 |
@@ -15,7 +13,7 @@
 
 ## 문제 개요
 
-TS-025의 MaxScale `--check --diff` 인증정보 미노출 재검증 과정에서 `maxscale-01`의 TLS 인증서와 개인키 권한이 MaxScale 서비스 계정이 읽을 수 없는 상태로 확인됐다.
+DB-008의 MaxScale `--check --diff` 인증정보 미노출 재검증 과정에서 `maxscale-01`의 TLS 인증서와 개인키 권한이 MaxScale 서비스 계정이 읽을 수 없는 상태로 확인됐다.
 
 당시 실제 파일 권한은 다음과 같았다.
 
@@ -29,7 +27,7 @@ maxscale-01.key               root:root 0600
 
 한편 실행 중인 MaxScale Service와 `Read-Write-Listener:3306`은 계속 동작하고 있었다. 기존 프로세스가 이미 읽어 둔 인증서와 키를 사용 중일 가능성이 있으므로 단순 확인을 위해 임의로 restart/reload하지 않고 파일 권한이 다시 바뀐 원인부터 확인했다.
 
-## 기존 TS-018과의 사건 구분
+## 기존 DB-006과의 사건 구분
 
 [DB-006](DB-006_MaxScale_TLS_인증서_권한_SAN_검증.md)은 MaxScale TLS를 **처음 적용하던 당시** 공용 `tls_deploy`가 배포한 root 전용 권한과 `maxscale` 서비스 계정이 필요로 하는 권한이 맞지 않았던 문제를 다룬다.
 
@@ -44,7 +42,7 @@ maxscale-01.key               root:maxscale 0640
 이번 사건은 그 이후에 같은 권한 문제가 다시 나타났다는 점이 다르다. 코드를 대조한 결과 공용 `tls_deploy`와 MaxScale Role이 동일한 파일과 디렉터리에 서로 다른 권한을 적용하고 있었다.
 
 ```text
-TS-018
+DB-006
 → 최초 TLS 적용 시 MaxScale 서비스 계정용 권한이 부족
 → MaxScale Role이 나중에 권한을 다시 맞춤
 → TLS 정상화
@@ -187,7 +185,7 @@ root:maxscale   640  /etc/pki/seokpan-ca/services/maxscale-01.key
 
 ```text
 Before
-TS-018에서 MaxScale Role이 나중에 권한을 다시 맞춰 정상화
+DB-006에서 MaxScale Role이 나중에 권한을 다시 맞춰 정상화
 → 공용 tls_deploy와 MaxScale Role은 서로 다른 권한 설정을 계속 사용
 → 실행 순서에 따라 최종 권한이 달라질 수 있음
 → 실제 cert/key read 실패 + config-check Permission denied 확인
@@ -226,7 +224,7 @@ MaxScale Role
 ## 관련 근거
 
 - Docs Issue #63: https://github.com/seokpan/seokpan-docs/issues/63
-- 기존 최초 TLS 권한 사건 TS-018: DB-006_MaxScale_TLS_인증서_권한_SAN_검증.md
+- 기존 최초 TLS 권한 사건 DB-006: DB-006_MaxScale_TLS_인증서_권한_SAN_검증.md
 - Infra Issue #146: https://github.com/seokpan/seokpan-infra/issues/146
 - Infra PR #148: https://github.com/seokpan/seokpan-infra/pull/148
 - Infra Issue #147: https://github.com/seokpan/seokpan-infra/issues/147
