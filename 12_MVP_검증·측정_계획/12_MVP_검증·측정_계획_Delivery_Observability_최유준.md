@@ -194,7 +194,7 @@ DOB-CD-04-20260922-1918-7746f71
 → 재실행
 ```
 
-FAIL을 수정해서 PASS로 덮어쓰지 않는다. 예: TS-035의 Plugin Lock 1차 배포 실패(GitOps PR #62 → Revert #64)는 삭제하지 않고, 수정된 PR #65의 성공 Run과 함께 보존한다.
+FAIL을 수정해서 PASS로 덮어쓰지 않는다. 예: OPS-013의 Plugin Lock 1차 배포 실패(GitOps PR #62 → Revert #64)는 삭제하지 않고, 수정된 PR #65의 성공 Run과 함께 보존한다.
 
 ---
 
@@ -285,7 +285,7 @@ Argo CD 버전 변경 또는 재설치
 | Self-Heal 복귀 | 수 초(scale 2→3 → 2) | seokpan-gitops#57 Step 7 |
 | 불량 Digest Merge → Revert Merge | 11분(10:04 → 10:15, 원인 확인 포함) | GitOps #119 / #120 |
 | Rollback 중 최저 가용 Replica | 1/2 | seokpan-gitops#57 Step 8 |
-| Jenkins Controller 비가용(TS-035) | 약 9분(19:41 Merge → 19:50 Revert) | GitOps #62 / #64 |
+| Jenkins Controller 비가용(OPS-013) | 약 9분(19:41 Merge → 19:50 Revert) | GitOps #62 / #64 |
 | Prometheus Target Down 해소 | 19건 → 0(비활성 4종 제외) | Issue #69, GitOps PR #70/#71 |
 | 외부 VM node_exporter | 7/7 UP | seokpan-gitops#103, Issue #205 |
 | mariadb-exporter / harbor-metrics | 2/2 / 1/1 UP | GitOps PR #106 |
@@ -340,11 +340,11 @@ Argo CD 버전 변경 또는 재설치
 | Test | Preconditions | Stimulus / Fault | Observation | PASS 핵심 | Evidence |
 | --- | --- | --- | --- | --- | --- |
 | DOB-PRE-01 | 대상 Revision 식별 | 없음, Snapshot | Argo App / Secret Key / Harbor health | Dependency와 Revision 일치 | Snapshot / Commit |
-| DOB-REG-01 | Harbor 설치 | 재부팅 / Push / Pull | systemd, TLS 검증, Robot 권한 | 자동 기동, x509 없음, 권한 분리 | TS-010/017/024, Infra PR #161 |
-| DOB-REG-02 | Immutability Rule | `git-*` 재Push·삭제, `scan-*` 생성·삭제 | HTTP 코드 | `git-*` 412 거부, `scan-*` 201/200 | TS-027/034 |
+| DOB-REG-01 | Harbor 설치 | 재부팅 / Push / Pull | systemd, TLS 검증, Robot 권한 | 자동 기동, x509 없음, 권한 분리 | OPS-003 / OPS-005 / K8S-009, Infra PR #161 |
+| DOB-REG-02 | Immutability Rule | `git-*` 재Push·삭제, `scan-*` 생성·삭제 | HTTP 코드 | `git-*` 412 거부, `scan-*` 201/200 | OPS-008 / OPS-012 |
 | DOB-CI-01 | PR 생성 | PR Pipeline 실행 | Stage 결과, Push 여부 | 검사·Build PASS, Push 없음 | Jenkins PR Build |
 | DOB-CI-02 | main Merge | main Pipeline 실행 | Scan / Smoke / Promote / Digest / Evidence | 전 Stage PASS, Final Digest == Candidate | image-metadata.json |
-| DOB-CI-03 | Plugin Lock, Digest 고정 | Controller 재생성 | Plugin 설치, Credential 등록 | 76 Plugin 설치, Credential ID 3종 | TS-035, GitOps PR #65/#127 |
+| DOB-CI-03 | Plugin Lock, Digest 고정 | Controller 재생성 | Plugin 설치, Credential 등록 | 76 Plugin 설치, Credential ID 3종 | OPS-013, GitOps PR #65/#127 |
 | DOB-CD-01 | 검증 Digest | GitOps Digest 반영 | Argo revision, Pod imageID | Digest 일치, Ready | seokpan-gitops#57 |
 | DOB-CD-02 | Synced 상태 | Live Drift(replicas) | OutOfSync → Synced | Git 상태로 복귀 | seokpan-gitops#57 Step 7 |
 | DOB-CD-03 | 정상 Baseline Digest | 불량 Digest Merge → Revert | ImagePullBackOff → 복구, 가용 Replica | Baseline Digest 복귀, Healthy | GitOps #119/#120 |
@@ -379,7 +379,7 @@ PASS:
 - BuildKit Push / Node Pull 모두 x509 오류 없음.
 - CI Robot(Push/Pull), API Robot, Runtime pull-only Robot이 분리되어 있고 Pipeline에서 Admin Credential 미사용.
 
-현재 결과: `PASS`. Evidence: TS-010 / TS-017 / TS-024, Infra PR #47 / #161 / #183.
+현재 결과: `PASS`. Evidence: OPS-003 / OPS-005 / K8S-009, Infra PR #47 / #161 / #183.
 
 ### DOB-REG-02 — Tag Immutability + `scan-*` 예외
 
@@ -391,7 +391,7 @@ PASS:
 - `git-*` 삭제 `412 PRECONDITION`.
 - `scan-*` 생성 `201`, 삭제 `200`.
 
-현재 결과: `PASS`. 1차 시도(`matches`+`excludes` 동시 사용)는 저장 `200`에도 예외가 무력화된 **실패 Run으로 보존**한다. Evidence: TS-027 / TS-034, Infra PR #110 / #157.
+현재 결과: `PASS`. 1차 시도(`matches`+`excludes` 동시 사용)는 저장 `200`에도 예외가 무력화된 **실패 Run으로 보존**한다. Evidence: OPS-008 / OPS-012, Infra PR #110 / #157.
 
 ### DOB-CI-01 — PR Pipeline
 
@@ -638,7 +638,7 @@ PASS:
 - 외부 VM / MariaDB 패널에서 Down 인스턴스 자동 제외.
 - 목표 임계값 미설정.
 
-현재 결과: `PASS`. MariaDB Replication 패널은 작성 시점에 Metric 노출 원인 미확정으로 보류했으며, TS-043 수정 후 조회가 가능해졌으므로 2차 추가 대상이다.
+현재 결과: `PASS`. MariaDB Replication 패널은 작성 시점에 Metric 노출 원인 미확정으로 보류했으며, DB-013 수정 후 조회가 가능해졌으므로 2차 추가 대상이다.
 
 ### DOB-AUT-01 — 본 영역 Ansible Role 멱등성
 
@@ -661,7 +661,7 @@ PASS:
 | Test | 06 정의 | 비고 |
 | --- | --- | --- |
 | DOB-FLT-01 | Harbor 중단: 실행 Pod 유지 vs 신규 Pull/Scale/Deploy 실패 분리 | — |
-| DOB-FLT-02 | Jenkins 중단: Runtime 무영향·CI 재개·PVC 재연결 | TS-035 우발 장애 1회(약 9분)는 계획 시험이 아니므로 PASS 근거로 쓰지 않음 |
+| DOB-FLT-02 | Jenkins 중단: Runtime 무영향·CI 재개·PVC 재연결 | OPS-013 우발 장애 1회(약 9분)는 계획 시험이 아니므로 PASS 근거로 쓰지 않음 |
 | DOB-FLT-03 | Alertmanager 중단: 게임 유지·통보 공백·복구 후 resolved | — |
 | DOB-FLT-04 | Prometheus/Loki Node 유실: 관측 공백·Local 데이터 유실·Evidence 보존 | Local PV 설계상 유실 수용 |
 

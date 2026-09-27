@@ -325,7 +325,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 
 ### 7.3 MariaDB Backup 공유 Lock — 현행 구현 계약
 
-Infra PR #168에서 공유 NFS lock은 초기 `flock -w 60` 대기 방식으로 검증됐으나 최종 리뷰에서 `flock -n -x 200`으로 바뀌었다. 현재 `backup_chain.sh.j2`는 잠금 경합 시 즉시 정상 스킵하고 다음 정기 cron까지 재시도하지 않는다. 60초 대기 및 NFS 폴링 관찰은 TS-031의 당시 이력으로만 유지한다. 공유 상태의 동시 writer 방지는 PR #168의 코드·lock 실측 근거이며, 전체 백업 스크립트 동시 실행 실측 완료로 확대하지 않는다. 스킵된 주기의 Backup 미생성·RPO 영향을 운영 확인 대상으로 둔다. 실제 서버 배포 상태는 이번 문서 현행화에서 재조회하지 않았다.
+Infra PR #168에서 공유 NFS lock은 초기 `flock -w 60` 대기 방식으로 검증됐으나 최종 리뷰에서 `flock -n -x 200`으로 바뀌었다. 현재 `backup_chain.sh.j2`는 잠금 경합 시 즉시 정상 스킵하고 다음 정기 cron까지 재시도하지 않는다. 60초 대기 및 NFS 폴링 관찰은 [DB-010(이전 TS-031)](troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md)의 당시 이력으로만 유지한다. 공유 상태의 동시 writer 방지는 PR #168의 코드·lock 실측 근거이며, 전체 백업 스크립트 동시 실행 실측 완료로 확대하지 않는다. 스킵된 주기의 Backup 미생성·RPO 영향을 운영 확인 대상으로 둔다. 실제 서버 배포 상태는 이번 문서 현행화에서 재조회하지 않았다.
 
 ## 8. 2차 프로젝트 인계 — 유지할 계약
 

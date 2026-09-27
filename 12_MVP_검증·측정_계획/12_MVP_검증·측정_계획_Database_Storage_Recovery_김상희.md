@@ -252,7 +252,7 @@ Evidence Revision 불일치
 | etcd DR-02 E2E 수동(Gate G) | Validated | PASS, RTO 38분44초(트러블슈팅 포함) — 이슈 #156 |
 | etcd DR-02 E2E 자동화(Gate G) | Validated | PASS, RTO 52초 — 이슈 #176, PR #191(2026-09-16 merged) |
 | node_exporter(4대) | Validated | PASS |
-| mysqld_exporter 수집 | Validated(수집까지) | PASS for 수집 경로(TS-043 SLAVE MONITOR 권한 버그 수정 완료), Alert Rule은 범위 밖 |
+| mysqld_exporter 수집 | Validated(수집까지) | PASS for 수집 경로(DB-013 SLAVE MONITOR 권한 버그 수정 완료), Alert Rule은 범위 밖 |
 | maxscale_exporter | Deferred | Not Tested, 2차 프로젝트 |
 | 레거시 cron orphan 코드 정리 | Not Done | Not Tested |
 | Application Data Consumer(Backend→DB/Redis) | Cross-role Validated(A-10 기준) | 재사용 가능, 변경 시 재검증 |
@@ -306,7 +306,7 @@ DR-01/DR-02(etcd)는 실측까지 종결됐지만, Redis DR-03의 "검증 완료
 | DSR-ETCD-02 | DSR-ETCD-01 PASS, 별도 물리PC 격리망 | 수동 3-member Restore→API→Object | Quorum/Object 수/RTO | 원본과 일치, RTO 기록 | 이슈 #156 코멘트 |
 | DSR-ETCD-03 | DSR-ETCD-01 PASS, Safety Guard/Restore Decision Gate | 자동화 Playbook 실행 | Quorum/Object 수/RTO(자동 기록) | 원본과 일치, Object diff 0 | PR #191, dr-evidence/ |
 | DSR-OBS-01 | Role 배포 | 재실행(`--check --diff`) | changed count | 2회차 changed=0 | ansible 출력 |
-| DSR-OBS-02 | exporter_svc 계정 배포(`SLAVE MONITOR` 포함) | Metric 수집 확인 | GRANT 목록, Prometheus 수집 여부 | 필요 권한 보유, 수집 확인 | GRANT 출력/Prometheus, TS-043 |
+| DSR-OBS-02 | exporter_svc 계정 배포(`SLAVE MONITOR` 포함) | Metric 수집 확인 | GRANT 목록, Prometheus 수집 여부 | 필요 권한 보유, 수집 확인 | GRANT 출력/Prometheus, DB-013 |
 | DSR-OBS-03 | (Deferred) | — | — | — | — |
 | DSR-CFG-01 | 스케줄 변경 이력 | `crontab -l` 조회 | orphan 항목 존재 여부 | orphan 0건(코드 정리 완료 시) | crontab 출력 |
 | DSR-DAT-01 | Backend Runtime | 실제 요청 | DB/Redis 실제 데이터 반영 | Application 흐름에서 정상 반영 | Backend 로그/DB 조회 |
@@ -368,7 +368,7 @@ Stimulus: 양쪽 호스트에서 동일한 프로덕션 NFS lock 파일에 거�
 
 현행 계약: Infra PR #168 최종 HEAD의 `flock -n -x 200`은 경합 시 즉시 정상 스킵하고 다음 정기 cron까지 재시도하지 않는다. 같은 NFS lock 경로의 거의 동시 요청에서 한쪽만 획득하고 반대쪽이 즉시 실패한 실측과, 상태 읽기부터 갱신까지 잠금이 유지되는 코드가 근거다. **전체 `backup_chain.sh` 두 인스턴스의 동시 실행을 직접 실측한 결과로 해석하지 않는다.** 스킵이 발생하면 백업 누락 주기와 RPO 영향을 확인한다.
 
-현재 판정: 공유 lock 상호배제·현행 non-blocking 정책은 확인됨. 과거 60초 대기 결과는 역사적 이력으로 보존. Evidence: Infra #166 / PR #168(최종 리뷰), TS-031 후속 변경 기록.
+현재 판정: 공유 lock 상호배제·현행 non-blocking 정책은 확인됨. 과거 60초 대기 결과는 역사적 이력으로 보존. Evidence: Infra #166 / PR #168(최종 리뷰), [DB-010(이전 TS-031) 후속 변경 기록](../troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md).
 
 ### DSR-REC-01 — MariaDB Recovery RTO/RPO(DR-01)
 
@@ -392,7 +392,7 @@ Stimulus: DSR-REC-01의 Production 모드 실행이 Master 경로, Replica 경�
 
 PASS: 두 경로 모두 `failed=0`(`replication_setup.yml:117` Gate 태스크의 `when` 조건 수정 반영 확인).
 
-현재 결과: `PASS`. Evidence: PR #197(리뷰어 ggbun2 승인, TS-042).
+현재 결과: `PASS`. Evidence: PR #197(리뷰어 ggbun2 승인, DB-012).
 
 ### DSR-REDIS-01 — Redis Persistence
 
@@ -466,7 +466,7 @@ PASS: 2회차 `changed=0`.
 
 PASS: `exporter_svc` 계정이 쓰기 권한 없이 수집에 필요한 권한(`SLAVE MONITOR` 포함)만 보유, Prometheus Target에서 수집 확인(`mysql_up 1`, `slave_status` collector 정상).
 
-현재 결과: `PASS`(수집 경로). 배포 초기 `SLAVE MONITOR` 권한 누락 버그(TS-043)는 발견·수정 완료. Alert Rule 등록은 2차 프로젝트로 이관되어 본 Test 범위 밖. Evidence: Infra #199/PR #201, Infra #211(2026-09-21 스코프 확정).
+현재 결과: `PASS`(수집 경로). 배포 초기 `SLAVE MONITOR` 권한 누락 버그(DB-013)는 발견·수정 완료. Alert Rule 등록은 2차 프로젝트로 이관되어 본 Test 범위 밖. Evidence: Infra #199/PR #201, Infra #211(2026-09-21 스코프 확정).
 
 ### DSR-OBS-03 — maxscale_exporter
 

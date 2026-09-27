@@ -68,9 +68,14 @@ Historical record
 
 ## Troubleshooting
 
-프로젝트 구현 과정에서 발생한 문제 가운데 **원인·조치·재검증까지 완료된 사례**를 사례별 Markdown 보고서로 관리합니다.
+프로젝트 구현 과정의 등록 보고서 49건을 기술 영역별로 찾을 수 있습니다. 각 보고서의 상태와 검증 범위는 해당 문서에서 확인합니다. 새 보고서는 해결과 필요한 사후 검증이 완료된 인프라·운영·자동화·DevOps·Kubernetes 플랫폼 통합 사례를 게시합니다.
 
 - [트러블슈팅 보고서 목차](troubleshooting/README.md)
+- [네트워크·Ansible 자동화](troubleshooting/network-ansible-automation/README.md)
+- [Kubernetes·플랫폼 통합](troubleshooting/kubernetes-platform-integration/README.md)
+- [데이터베이스·스토리지·백업·복구](troubleshooting/database-storage-recovery/README.md)
+- [CI/CD·관측](troubleshooting/cicd-observability/README.md)
+- [이전 TS 번호 대응표](troubleshooting/LEGACY_ID_MAP.md)
 - 각 사례는 발생/발견 시기, 담당 역할, 영향 범위, 원인, 조치, 검증 결과와 GitHub 근거를 포함합니다.
 - 진행 중인 문제는 각 구현 Repository의 Issue/Pull Request에서 추적하며, 해결이 검증된 뒤 트러블슈팅 보고서로 게시합니다.
 

@@ -1,76 +1,22 @@
-# 트러블슈팅 보고서 목차
+# 트러블슈팅 보고서
 
-> 이 디렉토리는 「石나가는 판단」 프로젝트 진행 중 발생한 문제 가운데 **원인·조치·검증까지 완료된 사례**를 공식 트러블슈팅 보고서로 관리합니다.  
-> 각 사례는 하나의 독립적인 Markdown 보고서로 작성하며, 이 목차에서 해당 보고서로 바로 이동할 수 있습니다.
+「石나가는 판단」 프로젝트에서 등록된 트러블슈팅 보고서 **49건**을 기술 영역별로 찾아볼 수 있습니다. 문서 상태와 검증 범위는 각 보고서에 적힌 그대로입니다.
 
-## 기록 원칙
+## 기록과 번호 운영
 
-- 실제 장애 또는 검토 과정에서 확인된 기술적 결함 중 **해결 완료가 검증된 사례만 게시**합니다.
-- 진행 중인 문제는 Issue·Pull Request에서 추적하고, 해결과 재검증이 완료된 뒤 보고서로 게시합니다.
-- 단순 오타나 표현 수정처럼 기술적 판단 가치가 없는 변경은 기록하지 않습니다.
-- 실제 장애와 사전 검토에서 발견해 수정한 예방형 문제를 구분합니다.
-- 판단이 추가 검증으로 바뀐 경우 변경 과정을 지우지 않고, 날짜·실제 작업·근거를 명시하여 기록합니다.
-- 각 보고서는 다른 문서나 대화를 읽지 않아도 사건의 배경·영향·원인·조치와 검증 결과를 이해할 수 있어야 합니다.
-- 기술 용어가 정확한 식별에 유리할 때는 쉬운 설명과 기술 용어를 함께 표기하고, 불필요한 내부식 표현은 사용하지 않습니다.
-- GitHub Issue, Pull Request, 검토, Commit, 실제 실행 결과를 사실관계 확인 근거로 연결합니다.
-- 사건 해결 이후 동일 영역의 운영 기준이 변경된 경우에도 당시 원인·조치·검증은 현재 상태로 덮어쓰지 않습니다. 대신 `후속 운영 기준` 또는 관련 근거를 추가하여 [PROJECT_CHANGES.md](../PROJECT_CHANGES.md)와 현재 Issue/PR까지 추적할 수 있게 합니다.
-- 단순히 오래된 보고서라는 이유만으로 후속 상태 안내를 추가하지 않으며, 실제 후속 결정이나 기준 변경이 확인된 경우에만 연결합니다.
-- 새로 해결 완료된 사례가 생기면 기존 TS 번호를 변경하지 않고 다음 번호로 추가합니다.
+- 신규 보고서는 인프라·운영·자동화·DevOps·Kubernetes 플랫폼 통합 범위에서 해결과 필요한 사후 검증이 끝난 사례만 게시합니다. 애플리케이션 기능 개발 자체의 문제는 게시 대상에서 제외합니다. 이 기준은 앞으로 작성할 보고서에 적용하며, 기존 49건의 이관 여부를 바꾸지 않습니다.
+- 사건 당시의 원인·조치·검증과 담당·기여 기록을 보존합니다. 이후 운영 기준이 바뀌면 기존 결과를 덮어쓰지 않고 후속 근거를 연결합니다.
+- 신규 사례는 해당 영역의 다음 번호를 사용합니다. 번호는 등록 순서이고 사건 발생일은 각 문서에서 확인합니다. 열린 Issue 단계에서는 번호를 예약하지 않습니다.
+- 다른 영역과 연관된 사건도 보고서 본문은 한 영역에 두고 관련 영역의 목차에서 연결합니다.
+- 과거 `TS-xxx` 기록은 [이전 번호 대응표](LEGACY_ID_MAP.md)에서 찾을 수 있습니다. 이전 번호를 과거 커밋의 기록에 적용할 때는 제목·경로·시점을 함께 확인합니다.
 
-## 목차
+## 영역별 목차
 
-1. **[TS-001 — Calico Pod CIDR 후보 설정과 프로젝트 사설망 중첩](TS-001_Calico_Pod_CIDR_사설망_중첩.md)**
-2. **[TS-002 — Harbor TLS 인증서 선행조건과 내부 CA 연동](TS-002_Harbor_TLS_인증서_선행조건.md)**
-3. **[TS-003 — MariaDB Master 역전과 DCL 복제 충돌](TS-003_MariaDB_Master_역전_DCL_복제_충돌.md)**
-4. **[TS-004 — Ansible 공용 실행환경 버전 고정](TS-004_Ansible_공용_실행환경_Version_Lock.md)**
-5. **[TS-005 — NGINX Gateway Fabric 대형 CRD 적용 실패](TS-005_NGINX_Gateway_Fabric_대형_CRD_적용_실패.md)**
-6. **[TS-006 — Argo CD ApplicationSet CRD 누락과 Controller 장애](TS-006_ArgoCD_ApplicationSet_CRD_누락.md)**
-7. **[TS-007 — Harbor Robot API 404와 멱등성 분기 오류](TS-007_Harbor_Robot_API_404_멱등성_오류.md)**
-8. **[TS-008 — MariaDB/MaxScale 버전 불일치와 업그레이드 후 복제 문제](TS-008_MariaDB_MaxScale_Version_Drift_Major_Upgrade.md)**
-9. **[TS-009 — MariaDB 정적 Master/Replica Inventory 모델 오류](TS-009_MariaDB_정적_Master_Replica_Inventory_오류.md)**
-10. **[TS-010 — Harbor VM 재부팅 후 컨테이너 자동기동 실패](TS-010_Harbor_VM_재부팅_컨테이너_자동기동_실패.md)**
-11. **[TS-011 — Kubernetes Check Mode 검증 Skip 문제](TS-011_Kubernetes_Check_Mode_검증_Skip.md)**
-12. **[TS-012 — NFS Provisioner RBAC 불필요 Node 권한 제거](TS-012_NFS_Provisioner_RBAC_불필요_Node_권한.md)**
-13. **[TS-013 — NFS Export Handler·Check Mode 검증 결함](TS-013_NFS_Export_Handler_Check_Mode_검증_결함.md)**
-14. **[TS-014 — GitOps Root 전환 중 Argo CD Bootstrap 연쇄 오류](TS-014_ArgoCD_Root_전환_kubeconfig_tmp_충돌.md)**
-15. **[TS-015 — MariaDB read_only·Auto Failover·GTID 충돌](TS-015_MariaDB_read_only_Auto_Failover_GTID_충돌.md)**
-16. **[TS-016 — Frontend Node.js 버전 실행환경 검증 결함](TS-016_Frontend_Nodejs_Version_실행환경_검증_결함.md)**
-17. **[TS-017 — Jenkins Rootless BuildKit이 Harbor 내부 CA를 신뢰하지 못해 Push가 실패](TS-017_buildkit-harbor-ca-trust.md)**
-18. **[TS-018 — MaxScale TLS 적용 중 인증서 파일 권한과 SAN 검증 문제](TS-018_MaxScale_TLS_인증서_권한_SAN_검증.md)**
-19. **[TS-019 — MariaDB/MaxScale 패키지 저장소 버전 확인 오류로 Dry-run 결과가 실제 실행과 달라짐](TS-019_MariaDB_MaxScale_repo_버전_확인_awk_버그.md)**
-20. **[TS-020 — BuildKit이 Harbor Robot 인증 파일을 찾지 못해 401 Unauthorized 발생](TS-020_BuildKit_Harbor_Credential_파일_계약_불일치.md)**
-21. **[TS-021 — Kubernetes Pod에서 프로젝트 도메인이 CoreDNS SERVFAIL로 조회 실패](TS-021_CoreDNS_Project_Endpoint_SERVFAIL.md)**
-22. **[TS-022 — Rootless BuildKit이 Dockerfile 첫 RUN에서 /proc 권한 문제로 실패](TS-022_BuildKit_Rootless_nested_RUN_seccomp_실행_실패.md)**
-23. **[TS-023 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생](TS-023_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)**
-24. **[TS-024 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](TS-024_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)**
-25. **[TS-025 — MaxScale 설정 배포의 `--check --diff`에서 인증정보 노출 위험](TS-025_MaxScale_check_diff_Credential_노출_방지.md)**
-26. **[TS-026 — 공용 TLS Role과 MaxScale Role의 권한 설정 충돌로 인증서 접근 권한이 다시 사라짐](TS-026_MaxScale_TLS_권한_Desired_State_충돌_Drift.md)**
-27. **[TS-027 — Harbor Tag Immutability 미적용으로 동일 Tag 덮어쓰기가 허용됨](TS-027_Harbor_Tag_Immutability_미적용_동일_Tag_덮어쓰기.md)**
-28. **[TS-028 — Dockerfile syntax directive가 외부 frontend를 사용하게 해 Rootless BuildKit Build가 중단됨](TS-028_BuildKit_Dockerfile_syntax_frontend_재위임_실패.md)**
-29. **[TS-029 — Loki Deployment가 프로젝트에서 정의한 PVC와 다른 PVC를 참조함](TS-029_Loki_PVC_Desired_State_불일치.md)**
-30. **[TS-030 — Loki compactor의 `delete_request_store` 누락으로 CONFIG ERROR 발생](TS-030_Loki_compactor_CONFIG_ERROR.md)**
-31. **[TS-031 — MariaDB 백업 체인 상태(state)가 호스트 로컬에 종속되어 auto_failover 시 체인을 인식 못 하던 문제](TS-031_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md)**
-32. **[TS-032 — 원인 불명의 immutable(chattr +i)로 백업 디렉터리 생성이 EPERM으로 실패](TS-032_backup_transfer_immutable_속성_Guard.md)**
-33. **[TS-033 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제](TS-033_cp03_etcd_bbolt_DB_손상_Control_Plane_복구.md)**
-34. **[TS-034: Harbor Tag Immutability에서 Candidate Tag(scan-*) 예외 정책이 두 차례 무력화된 문제](TS-034_Harbor_Tag_Immutability-Candidate_Tag_예외정책_무력화_issue.md)**
-35. **[TS-035 — Jenkins Plugin Lock 파일 확장자(.lock)를 jenkins-plugin-cli가 인식하지 못해 Controller CrashLoopBackOff 발생](TS-035_Jenkins_Plugin_Lock_파일_확장자를_jenkins-plugin-cli가_인식하지_못해_ControllerCrashLoopBackOff_발생.md)**
-36. **[TS-036 — DR-02 격리 etcd 3-member 간 Peer 통신 실패(firewalld 신규 포트 차단)](TS-036_DR-02 격리 etcd 3-member 간 Peer 통신 실패 (firewalld 신규 포트 차단).md)**
-37. **[TS-037 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)](TS-037_DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존).md)**
-38. **[TS-038 — kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized](TS-038_kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized.md)**
-39. **[TS-039 — Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌](TS-039_Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌.md)**
-40. **[TS-040 — Jinja2에서 `.items`가 dict의 `.items()` 메서드로 오인되는 버그](TS-040_Jinja2에서 .items가 dict의 .items() 메서드로 오인되는 버그.md)**
-41. **[TS-041 — etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포](TS-041_etcd-tools 3-node 배포 시 delegate_to 누락으로 일부 노드 미배포.md)**
-42. **[TS-042 — MariaDB DR 복구 replication_setup의 role Guard 누락으로 master 경로 fatal 실패](TS-042_backup_transfer_replication_setup_role_guard_누락.md)**
-43. **[TS-043 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생](TS-043_mysqld_exporter_SLAVE_MONITOR_권한_누락.md)**
-44. **[TS-044 — MariaDB_CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 발생]
-(TS-044_MariaDB CLI(ad-hoc) 세션의 HAProxy idle timeout 회피 — 버림 쿼리 선행 기법.md)**
-45. **[TS-045 — 원 계획의 maxscale_exporter(공식 REST API exporter)가 존재하지 않아 소스 빌드 방식으로 2차 이관](TS-045_maxscale_exporter_공식_exporter_부재_소스빌드_2차_이관.md)**
-46. **[TS-046 — Kubernetes Secret 확인 중 DB 비밀번호를 복원할 수 있는 값이 출력된 문제](TS-046_Kubernetes_Secret_data_출력_DB_Credential_노출_대응.md)**
-47. **[TS-047 — 초기 VM의 DNS Search Domain 설정이 Pod까지 남아 있던 문제](TS-047_초기_VM_DNS_Search_Domain_잔존.md)**
-48. **[TS-048 — Ansible Vault의 DB 비밀번호가 실제 MariaDB·Kubernetes Secret과 달라진 문제](TS-048_Ansible_Vault_DB_Credential_불일치.md)**
-49. **[TS-049 — Backend 2 Replica 강제 분산과 RollingUpdate가 충돌해 Rollout이 교착된 문제](TS-049_Backend_강제분산_RollingUpdate_Surge_교착.md)**
+| 영역 | 범위 | 등록 문서 |
+|---|---|---:|
+| [네트워크·Ansible 자동화](network-ansible-automation/README.md) | 네트워크와 공용 Ansible 실행환경·Inventory·공통 변수·통합 자동화 기반 | 4건 |
+| [Kubernetes·플랫폼 통합](kubernetes-platform-integration/README.md) | Kubernetes 클러스터와 애플리케이션 런타임의 플랫폼 통합 | 16건 |
+| [데이터베이스·스토리지·백업·복구](database-storage-recovery/README.md) | 데이터베이스와 스토리지 운영, 백업·복원, 데이터 보존 및 DR(재해 복구) | 15건 |
+| [CI/CD·관측](cicd-observability/README.md) | Registry·빌드·배포와 로그·지표 등 관측 경로 | 14건 |
 
----
-
-현재 목차에 연결된 해결 완료 트러블슈팅 보고서: **49건**  
-기준 시점: **2026-09-23**
+전체 **49건**. README, 이전 번호 대응표, 이동 안내 파일은 보고서 수에 포함하지 않습니다.

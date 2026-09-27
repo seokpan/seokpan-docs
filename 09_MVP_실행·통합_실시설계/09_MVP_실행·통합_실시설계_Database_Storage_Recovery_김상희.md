@@ -235,7 +235,7 @@ mariadb-01/02, maxscale-01, nfs 4대에는 서버 자체 자원(CPU/메모리/
 디스크/네트워크) 수집을 위한 node_exporter(`1.12.1-distroless`)가 배포되어 있다.
 
 mariadb-01/02에는 추가로 MariaDB 서비스 자체 상태(쿼리/복제 통계) 수집을
-위한 mysqld_exporter(`0.20.0`)가 `exporter_svc` 계정으로 배포되어 있으며, 배포 검증 중 발견한 `SLAVE MONITOR` 권한 누락 버그는 수정 완료했다(TS-043). Prometheus Scrape 연동은 확인 완료됐으나 Alert Rule 등록은 팀 결정으로 보류된 상태다.
+위한 mysqld_exporter(`0.20.0`)가 `exporter_svc` 계정으로 배포되어 있으며, 배포 검증 중 발견한 `SLAVE MONITOR` 권한 누락 버그는 수정 완료했다(DB-013). Prometheus Scrape 연동은 확인 완료됐으나 Alert Rule 등록은 팀 결정으로 보류된 상태다.
 
 maxscale-01의 MaxScale 서비스 상태(라우팅/Failover) 수집용
 maxscale_exporter는 REST read-only 계정과 Role 골격까지만 코드화됐고, 실제 바이너리 배포는 2차 프로젝트로 이관됐다. 현재도 `maxctrl list
@@ -458,7 +458,7 @@ Isolated 모드는 Count/CHECKSUM/FK Gate 7개 테이블·7개 관계 전부 PAS
 
 > **주의**: 이 두 시나리오의 RTO/RPO는 서로 다른 조건(격리 검증 vs 실제 유실 복구)에서 나온 값이므로 하나의 수치로 합치거나 서로 대체하지 않는다. 두 값 모두 위 표를 최종 값으로 사용하며, 이전에 이 절이 "최종 실측값 반영 필요"로 표시했던 것은 이 표로 대체됐다.
 
-DR-01 실측 과정에서는 `roles/backup_transfer/tasks/replication_setup.yml:117`("복제 정상 기동 Gate" 태스크)에 `when: backup_restore_role == 'replica'` 조건이 누락되어 있어, `backup_restore_role=master` 경로 실행 시 register되지 않은 `dr_slave_status.query_result`를 참조하다 fatal 처리되는 버그가 발견되었다(같은 파일의 다른 3개 태스크는 이미 정상적으로 조건이 걸려 있었음). PR #197에서 조건을 추가해 수정했으며, 수정 후 Master/Replica 양쪽에서 재검증해 두 경로 모두 `failed=0`으로 정상 완료되는 것을 확인했다(리뷰어 이유빈, TS-042로 게시).
+DR-01 실측 과정에서는 `roles/backup_transfer/tasks/replication_setup.yml:117`("복제 정상 기동 Gate" 태스크)에 `when: backup_restore_role == 'replica'` 조건이 누락되어 있어, `backup_restore_role=master` 경로 실행 시 register되지 않은 `dr_slave_status.query_result`를 참조하다 fatal 처리되는 버그가 발견되었다(같은 파일의 다른 3개 태스크는 이미 정상적으로 조건이 걸려 있었음). PR #197에서 조건을 추가해 수정했으며, 수정 후 Master/Replica 양쪽에서 재검증해 두 경로 모두 `failed=0`으로 정상 완료되는 것을 확인했다(리뷰어 이유빈, DB-012로 게시).
 
 같은 실측 중 3.6절의 NFS 공유 경로 표기 오류(`/mnt/nfs-db-backup` 루트가 아니라 `.state/` 서브디렉터리)도 함께 발견·정정됐다.
 

@@ -288,7 +288,7 @@ ansible-playbook -i inventory/hosts.yml playbooks/mariadb_backup_chain.yml \
 flock -n /mnt/nfs-db-backup/.state/.backup_chain.lock -c 'echo would-block-if-locked'
 ```
 
-현재 `backup_chain.sh.j2`는 공유 NFS lock을 `flock -n -x 200`으로 즉시 획득한다. 다른 백업이 lock을 점유 중이면 후속 실행은 대기 없이 정상 스킵(`exit 0`)하며 같은 주기에 재시도하지 않는다. 위 `flock -n` 명령은 점유 확인용이며 실행 스크립트와 동일한 정책이다. 백업이 생성되지 않은 주기는 다음 정기 cron 전에 로그·체인 최신 시각과 RPO 영향을 확인한다. 과거 `backup_transfer_lock_wait_seconds=60` 대기 방식은 Infra PR #168 중간 단계에서 폐기됐다(TS-031 후속 변경 기록 참조).
+현재 `backup_chain.sh.j2`는 공유 NFS lock을 `flock -n -x 200`으로 즉시 획득한다. 다른 백업이 lock을 점유 중이면 후속 실행은 대기 없이 정상 스킵(`exit 0`)하며 같은 주기에 재시도하지 않는다. 위 `flock -n` 명령은 점유 확인용이며 실행 스크립트와 동일한 정책이다. 백업이 생성되지 않은 주기는 다음 정기 cron 전에 로그·체인 최신 시각과 RPO 영향을 확인한다. 과거 `backup_transfer_lock_wait_seconds=60` 대기 방식은 Infra PR #168 중간 단계에서 폐기됐다([DB-010(이전 TS-031) 후속 변경 기록](../troubleshooting/database-storage-recovery/DB-010_MariaDB_백업_체인_상태_NFS_이전_공유_lock.md) 참조).
 
 ### 6.6 완료 후 확인
 
@@ -661,7 +661,7 @@ mysql -h <mariadb-host> -u exporter_svc -p -e "SHOW GRANTS;"
 curl -s http://<mariadb-host>:9104/metrics | grep -E 'mysql_up|slave_status'
 ```
 
-**기지 버그(TS-043, 수정 완료)**: 배포 초기 `exporter_svc` GRANT에 `SLAVE MONITOR` 권한이 누락되어 `slave_status` collector가 `Access denied(1227)`를 발생시켰다. 재배포 시 이 권한이 GRANT에 포함되어 있는지 확인한다.
+**기지 버그(DB-013, 수정 완료)**: 배포 초기 `exporter_svc` GRANT에 `SLAVE MONITOR` 권한이 누락되어 `slave_status` collector가 `Access denied(1227)`를 발생시켰다. 재배포 시 이 권한이 GRANT에 포함되어 있는지 확인한다.
 
 ```bash
 mysql -h <mariadb-host> -u exporter_svc -p -e "SHOW GRANTS;" | grep -i "SLAVE MONITOR"
@@ -700,7 +700,7 @@ curl -sk -u admin:<REDACTED> https://<maxscale-host>:8989/v1/servers  # 값 노�
 | etcd Restore Quorum 미성립 | 격리 클러스터 구성 파일 | `initial-cluster` 등 파라미터 재확인 |
 | Redis Pod 재시작만으로 복구 안 됨 | AOF 설정(`appendfsync`), PVC bound 상태 | PVC 유지 여부 확인, 정상이면 §8.2로 재시도 |
 | Redis PVC 자체 손상/유실 | MariaDB 최신 Move와 Redis 상태 비교(§8.4) | §8.3 재구성 절차를 격리 환경에서 우선 재현 후 운영 반영 여부는 §8.6 선행조건 충족 후 판단 |
-| mysqld_exporter 인증/수집 실패 | `exporter_svc` GRANT에 `SLAVE MONITOR` 포함 여부 | TS-043 패턴 재확인, 계정 권한 재확인 |
+| mysqld_exporter 인증/수집 실패 | `exporter_svc` GRANT에 `SLAVE MONITOR` 포함 여부 | DB-013 패턴 재확인, 계정 권한 재확인 |
 | Vault 값 참조 오류 | 여러 PR에 걸친 vault 값 변경 이력 | 최신 merge 커밋 기준 vault 값 재확인 |
 
 장애 복구의 공식 측정값과 Evidence는 12에서 관리한다.
