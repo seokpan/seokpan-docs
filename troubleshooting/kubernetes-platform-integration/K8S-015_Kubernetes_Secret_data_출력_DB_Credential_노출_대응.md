@@ -2,7 +2,7 @@
 
 # K8S-015 — Kubernetes Secret 확인 중 DB 비밀번호를 복원할 수 있는 값이 출력된 문제
 
-> 이전 문서 번호: `TS-046` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-046)
+> 이전 문서 번호: `TS-046` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-046)
 
 | 항목 | 내용 |
 |---|---|

@@ -2,7 +2,7 @@
 
 # K8S-012 — Ansible copy 모듈 내장 checksum(SHA-1 고정)과 SHA-256 무결성 검증 요구 충돌
 
-> 이전 문서 번호: `TS-039` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-039)
+> 이전 문서 번호: `TS-039` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-039)
 
 | 항목 | 내용 |
 |---|---|

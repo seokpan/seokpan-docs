@@ -2,7 +2,7 @@
 
 # DB-011 — 원인 불명의 immutable(chattr +i)로 백업 디렉터리 생성이 EPERM으로 실패
 
-> 이전 문서 번호: `TS-032` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-032)
+> 이전 문서 번호: `TS-032` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-032)
 
 | 항목 | 내용 |
 |---|---|

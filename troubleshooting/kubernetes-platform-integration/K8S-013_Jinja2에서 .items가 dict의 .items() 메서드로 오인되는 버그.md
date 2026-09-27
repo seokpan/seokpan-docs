@@ -2,7 +2,7 @@
 
 # K8S-013 — Jinja2 JSON 파싱 시 `.items`가 dict.items() 메서드로 오인됨
 
-> 이전 문서 번호: `TS-040` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-040)
+> 이전 문서 번호: `TS-040` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-040)
 
 | 항목 | 내용 |
 |---|---|

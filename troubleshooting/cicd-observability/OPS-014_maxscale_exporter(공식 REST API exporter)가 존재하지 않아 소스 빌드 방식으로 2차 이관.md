@@ -2,7 +2,7 @@
 
 # OPS-014 — 원 계획의 maxscale_exporter(공식 REST API exporter)가 존재하지 않아 소스 빌드 방식으로 2차 이관
 
-> 이전 문서 번호: `TS-045` · [이전 번호 대응표](../LEGACY_ID_MAP.md#user-content-ts-045)
+> 이전 문서 번호: `TS-045` · [이전 번호 대응표](../LEGACY_ID_MAP.md#ts-045)
 
 | 항목 | 내용 |
 |---|---|
