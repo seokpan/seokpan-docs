@@ -4,6 +4,14 @@
 
 프로젝트 기획·설계 기준 문서, 구현 단계의 공용 기준, 변경 이력 및 주요 아키텍처 자료를 관리합니다. **1차 종료 시점에 실제 구현·검증된 범위**는 [CURRENT_STATE.md](CURRENT_STATE.md)에서 먼저 확인할 수 있습니다.
 
+## Architecture
+
+**현재 1차 MVP 구성**은 다음 그림과 [CURRENT_STATE.md](CURRENT_STATE.md)를 함께 확인합니다.
+
+![1차 구현에 반영된 Kubernetes 워크로드와 외부 VM 서비스](https://raw.githubusercontent.com/seokpan/.github/main/profile/images/first-project-architecture.svg)
+
+[`logical-architecture/`](logical-architecture/)와 [`physical-architecture/`](physical-architecture/)의 PNG는 **01~08 기획·설계 당시의 이미지**입니다. 전체 논리 아키텍처에는 1차에서 제외된 ANALYSIS와 추가 LB·MaxScale 이중화도 나타납니다. 이 이미지는 당시 목표를 보존하며 현재 배포 현황을 뜻하지 않습니다.
+
 ## Planning & Design
 
 01~08 문서는 1차 프로젝트의 기획·설계 기준입니다. 기본 탐색과 참조에는 Markdown을 사용하며, Markdown Reference Mirror는 [`01-08_기획·설계_Baseline/`](01-08_기획·설계_Baseline/)에서 관리합니다. 확정 당시 PDF는 [`baseline-pdf/`](baseline-pdf/)에 동일 Baseline의 고정 Snapshot으로 보존합니다.
@@ -88,13 +96,7 @@ Historical record
 - 멘토 의견, 해당 시점의 GitHub 실제 상태, 다음 멘토링까지의 반영 추적과 변화 기록을 함께 관리합니다.
 - 단순 회의록이 아니라 `피드백 → 판단 → 구현/조치 → 검증 → 변화`를 연결해 팀 공유 및 포트폴리오 근거로 활용합니다.
 
-## Architecture
-
-**현재 1차 MVP 구성**은 다음 그림과 [CURRENT_STATE.md](CURRENT_STATE.md)를 함께 확인합니다.
-
-![1차 구현에 반영된 Kubernetes 워크로드와 외부 VM 서비스](https://raw.githubusercontent.com/seokpan/.github/main/profile/images/first-project-architecture.svg)
-
-아래 `logical-architecture/`와 `physical-architecture/`의 PNG는 **01~08 기획·설계 당시의 이미지**입니다. 예를 들어 전체 논리 아키텍처에는 1차에서 제외된 ANALYSIS, 추가 LB·MaxScale 이중화가 나타납니다. 기획 당시 목표를 보존하는 자료이며 현재 배포 현황을 뜻하지 않습니다.
+## 문서 구조
 
 ```text
 seokpan-docs/
