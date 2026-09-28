@@ -47,12 +47,12 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 
 | 순서 | 문서 | 역할 |
 | --- | --- | --- |
-| 09 | [실행·통합 실시설계](09_MVP_실행·통합_실시설계/) | Kubernetes·애플리케이션, 데이터·스토리지·복구, 배포·관측성 영역의 역할별 현행 구성과 통합 기준 |
+| 09 | [실행·통합 실시설계](09_MVP_실행·통합_실시설계/) | 네트워크·Ansible·외부 인프라, Kubernetes·애플리케이션, 데이터·스토리지·복구, 배포·관측성 영역의 역할별 현행 구성과 통합 기준 |
 | 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영/10_GitHub_협업_및_Repository_운영.md) | 저장소 책임, 협업 순서, 검증 근거를 남기는 방식 |
 | 11 | [구축·자동화 Runbook](11_MVP_구축·자동화_Runbook/) | 세 영역의 구축·재실행·복구 절차 |
 | 12 | [검증·측정 기록](12_MVP_검증·측정_계획/) | 세 영역의 검증 방법과 완료·미완료 결과 |
 
-네트워크·외부 인프라의 구축 코드는 [`seokpan-infra`](https://github.com/seokpan/seokpan-infra)의 Role과 Playbook에서 확인합니다. 09·11·12의 별도 역할 문서는 현재 세 영역에 대해 존재합니다.
+네트워크·외부 인프라의 구축 코드는 [`seokpan-infra`](https://github.com/seokpan/seokpan-infra)의 Role과 Playbook에서 확인합니다. 09는 네 영역, 11·12는 현재 세 영역의 역할별 문서가 존재합니다.
 
 ## Historical Record → Current State Traceability
 
