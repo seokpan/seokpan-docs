@@ -420,7 +420,7 @@ Safe Runner가 현재 Source 또는 Evidence 경계 때문에 실행을 중단�
 | NAE-VR-02 | 정상 2회차 멱등성 | B | 6 / 14 | 과거 PASS / Revision별 재측정 |
 | NAE-VR-03 | Route Drift 복원 | B | 6 / 13~15 | 과거 PASS / 현재 재실행 분리 |
 | NAE-FW-01 | zone·Policy·선택적 NAT | C | 7 | Partial |
-| NAE-FW-02 | Worker→VRouter `9100/tcp` Network Boundary | C | 7 / 11 | 과거 PASS |
+| NAE-FW-02 | Worker→VRouter `9100/tcp` Network Boundary | C | 7 / 11 | 과거 PASS — Cross-VRouter Evidence 범위 |
 | NAE-LB-01 | VIP·Prefix·Return Route | D | 8 | Partial |
 | NAE-LB-02 | HAProxy Listener·Backend | D | 9 | Partial |
 | NAE-END-01 | Game/DB/Harbor 등 Project Endpoint | D | 10 | Endpoint별 판정 |
@@ -450,7 +450,7 @@ Safe Runner가 현재 Source 또는 Evidence 경계 때문에 실행을 중단�
 | NAE-VR-02 | NAE-VR-01 PASS | 동일 Revision 재실행 | changed/failed/unreachable | 불필요 변경 없음, failed=0, unreachable=0 | Infra PR #134 |
 | NAE-VR-03 | 승인된 대상 | Persistent Route Drift | Drift 전/후, Runtime 통신 | 목표 상태 복원 및 재실행 멱등 | Infra PR #134 추가 검증 Evidence |
 | NAE-FW-01 | Route 정상 | Firewall 검증 | zone/policy/NAT | 목표 Source/Port·NAT 제외 일치 | Role Source / Runtime Evidence |
-| NAE-FW-02 | Worker/VRouter 준비 | Worker→VRouter `:9100` | TCP/HTTP | 의도한 Source CIDR에서 HTTP 접근 성공 | Infra #205 / PR #206 |
+| NAE-FW-02 | Worker/VRouter 준비 | Worker→VRouter `:9100` | TCP/HTTP | Cross-VRouter 경로에서 대상 `external` zone 유입 및 HTTP 접근 성공 | Infra #205 / PR #206 |
 | NAE-LB-01 | lb-01 접근 | VIP/Route 검증 | VIP Prefix, 네 Return Route | Inventory 목표와 일치 | `lb_network` Source / Runtime Evidence |
 | NAE-LB-02 | LB Network 정상 | Listener/Backend 검증 | 80/443/6443/3306 | 의도한 Listener와 Backend 경로 확인 | `lb_haproxy` Source / Consumer Evidence |
 | NAE-END-01 | Consumer 준비 | Endpoint 접속 | DNS/hosts/TCP/HTTP | Endpoint별 정의된 Consumer 성공 | Infra #188 / Cross-role Evidence |
@@ -1479,7 +1479,7 @@ Dependency Evidence:
 | VRouter 정상 2회차 | PASS — 과거 Revision Evidence | Infra PR #134 |
 | Route Drift 복원 | PASS — 과거 Revision Evidence | Infra PR #134 추가 검증 |
 | Firewall zone / Policy / NAT | Partial | `vrouter_firewall` Source / PR #206 일부 경로 |
-| Worker→VRouter `9100/tcp` | PASS — 과거 Runtime Evidence | Infra #205 / PR #206 |
+| Worker→VRouter `9100/tcp` | PASS — 과거 Cross-VRouter Runtime Evidence 범위 | Infra #205 / PR #206 |
 | `lb-01` VIP / Return Route | Partial — 현재 Runner 재검증 필요 | `lb_network` Source |
 | HAProxy Listener / Backend | Partial | `lb_haproxy` Source / Consumer Evidence |
 | Game External Endpoint | PASS — Cross-role 확인 범위 | Infra #188 / KAI Evidence |
