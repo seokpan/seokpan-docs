@@ -16,6 +16,20 @@
 - [NET-006 — VRouter 영구 정적 Route 멱등성 오류](NET-006_VRouter_영구_정적_Route_멱등성_오류.md)
 - [NET-007 — VRouter node_exporter 방화벽 Zone 불일치](NET-007_VRouter_node_exporter_방화벽_Zone_불일치.md)
 
+## 권장 읽기 순서
+
+- [실행환경 — NET-001](NET-001_Ansible_공용_실행환경_Version_Lock.md)
+- [공통 시간 — Chrony 공통 NTP 및 상태 기반 검증 기준](../../PROJECT_CHANGES.md#chrony-공통-ntp-및-상태-기반-검증-기준-확정)
+- [NIC Fact — NET-005](NET-005_Network_Role_NIC_Fact_자료형_가정_오류.md)
+- [Route 멱등성 — NET-006](NET-006_VRouter_영구_정적_Route_멱등성_오류.md)
+- [관측 통신 — NET-007](NET-007_VRouter_node_exporter_방화벽_Zone_불일치.md)
+- [안전 실행 — Ansible 공용 안전 실행기 및 Credential 공급 기준](../../PROJECT_CHANGES.md#ansible-공용-안전-실행기-및-credential-공급-기준-확정)
+
+- 관련 읽을거리:
+  - [NET-002 — DR-02 격리 etcd Peer 통신](NET-002_DR-02%20%EA%B2%A9%EB%A6%AC%20etcd%203-member%20%EA%B0%84%20Peer%20%ED%86%B5%EC%8B%A0%20%EC%8B%A4%ED%8C%A8%20%28firewalld%20%EC%8B%A0%EA%B7%9C%20%ED%8F%AC%ED%8A%B8%20%EC%B0%A8%EB%8B%A8%29.md)
+  - [NET-003 — DR-02 격리 VM Clock Drift](NET-003_DR-02%20%EA%B2%A9%EB%A6%AC%20VM%20%EA%B0%84%209%EC%8B%9C%EA%B0%84%20Clock%20Drift%28%ED%83%80%EC%9E%84%EC%A1%B4%20UTC%20%EC%9E%94%EC%A1%B4%29.md)
+  - [NET-004 — DNS Search Domain 잔존](NET-004_초기_VM_DNS_Search_Domain_잔존.md)
+
 ## 다른 영역의 관련 사례
 
 - [K8S-010 — cp-03 etcd bbolt DB 손상으로 etcd와 kube-apiserver가 기동하지 못한 문제](../kubernetes-platform-integration/K8S-010_cp03_etcd_bbolt_DB_손상_Control_Plane_복구.md)
