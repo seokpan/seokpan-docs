@@ -1,13 +1,15 @@
-# NET-006 VRouter 영구 정적 Route 멱등성 오류
+[← 전체 트러블슈팅](../README.md) · [네트워크·Ansible 자동화 목차](README.md)
 
-## 개요
+# NET-006 — VRouter 영구 정적 Route 멱등성 오류
 
-- 발생/발견 시기: 2026-09-04
-- 영역: Network / Ansible Automation
-- 대상: VRouter-01 ~ VRouter-04
-- 주 담당: 이유빈 — 네트워크 및 공통 인프라·Ansible 통합
-- 관련 Infra Issue: #132 `[Ansible] vrouter_network Persistent Static Route 멱등성 보완`
-- 관련 Infra PR: #134 `[Ansible] vrouter 영구 정적 라우트 멱등성 보완 (#132)`
+> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
+
+| 항목 | 내용 |
+|---|---|
+| **발생/발견 시기** | 2026-09-04 |
+| **상태** | **해결** |
+| **주 담당** | **이유빈 — 네트워크 및 공통 인프라·Ansible 통합** |
+| **영향 범위** | VRouter-01~04의 `vrouter_network` Persistent Static Route 변경 판정 및 반복 실행 멱등성 |
 
 ## 문제
 
@@ -253,3 +255,11 @@ Persistent Route 변경 판정 오류
 
 이를 통해 단순히 변경 Task가 실행되지 않는 것이 아니라,
 **필요할 때는 변경하고 필요하지 않을 때는 변경하지 않는 상태**를 검증했다.
+
+## 관련 근거
+
+- Infra Issue #132 — VRouter Persistent Static Route 멱등성 보완: https://github.com/seokpan/seokpan-infra/issues/132
+- Infra PR #134 — VRouter 영구 정적 라우트 멱등성 보완: https://github.com/seokpan/seokpan-infra/pull/134
+- Parent Smoke Test Issue #84: https://github.com/seokpan/seokpan-infra/issues/84
+- Docs Issue #48 — VRouter 영구 정적 Route 멱등성 문제 문서화: https://github.com/seokpan/seokpan-docs/issues/48
+- 관련 선행 사례: [NET-005 — Network Role의 NIC Fact 탐색에서 IPv4 자료형을 잘못 가정해 실패](NET-005_Network_Role_NIC_Fact_자료형_가정_오류.md)

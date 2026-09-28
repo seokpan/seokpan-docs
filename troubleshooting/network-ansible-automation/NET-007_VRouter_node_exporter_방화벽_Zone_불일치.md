@@ -1,14 +1,16 @@
-# NET-007 VRouter node_exporter 방화벽 Zone 불일치
+[← 전체 트러블슈팅](../README.md) · [네트워크·Ansible 자동화 목차](README.md)
 
-## 개요
+# NET-007 — VRouter node_exporter 방화벽 Zone 불일치
 
-- 영역: Network / Firewall / Observability 연계
-- 대상: VRouter-02 ~ VRouter-04 node_exporter
-- 증상: Prometheus에서 VRouter node_exporter Target Down
-- 원인 조사: 이유빈(ggbun2) — tcpdump / firewalld 기반 Network Root Cause 조사
-- 구현: 최유준(cyj200115-prog) — `vrouter_firewall` Role 수정
-- 관련 Infra Issue: #205
-- 관련 Infra PR: #206 `fix(vrouter): external zone에 node_exporter(9100/tcp) worker 대역 최소 허용`
+> 이 문서는 「石나가는 판단」 프로젝트에서 실제로 발생하거나 검증 과정에서 발견된 문제를 기록한 개별 트러블슈팅 보고서입니다. 링크를 열지 않아도 사건의 배경, 영향, 원인, 조치와 검증 결과를 이해할 수 있도록 작성합니다.
+
+| 항목 | 내용 |
+|---|---|
+| **발생/발견 시기** | 2026-09-17 |
+| **상태** | **해결** |
+| **원인 조사** | **이유빈(ggbun2) — tcpdump / firewalld 기반 Network Root Cause 조사** |
+| **구현** | **최유준(cyj200115-prog) — `vrouter_firewall` Role 수정** |
+| **영향 범위** | VRouter-02~04의 `node_exporter` 9100/tcp 접근 및 Prometheus `node-exporter-external` 수집 경로 |
 
 ## 문제
 
@@ -81,9 +83,30 @@ tcpdump와 firewalld 상태를 기준으로 확인한 결과,
 worker에서 VRouter 관리 IP로 전달되는 요청이
 `ens160`을 통해 들어오는 것을 확인했다.
 
-그리고 `ens160`은 `external` Zone에 연결돼 있었기 때문에
-기존 `internal` Zone의 `9100/tcp` 허용 규칙이
-해당 트래픽에는 적용되지 않았다.
+실제 원인 조사에서는 worker-01(`192.168.51.30`)에서
+vrouter-02 관리 IP(`192.168.52.10`):`9100`으로 접근할 때
+패킷이 `ens160`으로 유입되는 것을 tcpdump로 확인했다.
+
+`ens160`은 `external` Zone에 속해 있었고,
+해당 요청에 대해 VRouter가 ICMP `admin prohibited`를 반환하며
+연결을 거부하는 것도 확인됐다.
+
+```text
+worker-01 (192.168.51.30)
+        ↓
+vrouter-02 (192.168.52.10:9100)
+        ↓
+ens160
+        ↓
+external zone
+        ↓
+기존 9100/tcp 허용 규칙 없음
+        ↓
+ICMP admin prohibited
+```
+
+따라서 기존 `internal` Zone의 `9100/tcp` 허용 규칙은
+실제 worker 요청에 적용되지 않았다.
 
 이를 통해 다음을 구분했다.
 
@@ -255,3 +278,12 @@ external Zone에서 9100/tcp 전체 개방
 이 사례의 본문은 Network Troubleshooting에 한 번만 유지하며,
 CI/CD·Observability 영역에서는 별도 중복 Troubleshooting을 생성하지 않고
 관련 Network 사례로 연결한다.
+
+## 관련 근거
+
+- Infra Issue #205 — VRouter-02/03/04 node_exporter Target Down: https://github.com/seokpan/seokpan-infra/issues/205
+- Infra Issue #205 — ggbun2 tcpdump/firewalld 원인 조사 및 ICMP `admin prohibited` 확인: https://github.com/seokpan/seokpan-infra/issues/205#issuecomment-5709689567
+- Infra PR #206 — external Zone에 node_exporter 9100/tcp worker 대역 최소 허용: https://github.com/seokpan/seokpan-infra/pull/206
+- Infra PR #206 — 허용 CIDR·external Zone·재현성 검토: https://github.com/seokpan/seokpan-infra/pull/206#issuecomment-5709937802
+- Infra PR #206 — `vrouter_firewall` 적용 후 Prometheus UP 유지 확인: https://github.com/seokpan/seokpan-infra/pull/206#issuecomment-5710275503
+- Docs Issue #141 — VRouter node_exporter 방화벽 Zone 불일치 문서화: https://github.com/seokpan/seokpan-docs/issues/141
