@@ -4,7 +4,7 @@
 
 Registry·빌드·배포와 로그·지표 등 관측 경로 관련 사례를 기록합니다.
 
-등록 문서: **14건**
+등록 문서: **15건**
 
 ## 문서 목록
 
@@ -22,6 +22,7 @@ Registry·빌드·배포와 로그·지표 등 관측 경로 관련 사례를 �
 - [OPS-012: Harbor Tag Immutability에서 Candidate Tag(scan-*) 예외 정책이 두 차례 무력화된 문제](OPS-012_Harbor_Tag_Immutability-Candidate_Tag_예외정책_무력화_issue.md)
 - [OPS-013 — Jenkins Plugin Lock 파일 확장자(.lock)를 jenkins-plugin-cli가 인식하지 못해 Controller CrashLoopBackOff 발생](OPS-013_Jenkins_Plugin_Lock_파일_확장자를_jenkins-plugin-cli가_인식하지_못해_ControllerCrashLoopBackOff_발생.md)
 - [OPS-014 — 원 계획의 maxscale_exporter(공식 REST API exporter)가 존재하지 않아 소스 빌드 방식으로 2차 이관](OPS-014_maxscale_exporter%28%EA%B3%B5%EC%8B%9D%20REST%20API%20exporter%29%EA%B0%80%20%EC%A1%B4%EC%9E%AC%ED%95%98%EC%A7%80%20%EC%95%8A%EC%95%84%20%EC%86%8C%EC%8A%A4%20%EB%B9%8C%EB%93%9C%20%EB%B0%A9%EC%8B%9D%EC%9C%BC%EB%A1%9C%202%EC%B0%A8%20%EC%9D%B4%EA%B4%80.md)
+- [OPS-015 — Jenkins Location URL 미설정으로 `BUILD_URL`을 생성하지 못한 문제](OPS-015_Jenkins_Location_URL_미설정_BUILD_URL_missing.md)
 
 ## 다른 영역의 관련 사례
 
