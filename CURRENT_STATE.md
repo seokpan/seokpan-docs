@@ -366,7 +366,7 @@ Infra PR #168에서 공유 NFS lock은 초기 `flock -w 60` 대기 방식으로 
 
 Network / External Infra 역할의 별도 09/11/12 문서 세트는 현재 Snapshot에서 확인되지 않는다. 별도 문서가 실제로 필요한지, 또는 Infra Repository·PROJECT_CHANGES·Troubleshooting을 공식 Source로 사용할지는 해당 Owner와 결정한다.
 
-App / Infra / GitOps README의 2026-09-23 요약형 개편은 merge됐다. App README 후속 현행화는 App PR #116에서 리뷰 중이고, GitOps README의 Observability NetworkPolicy 서술도 별도 정합화가 필요하다. 리뷰·merge 전 PR 내용을 현재 main의 사실로 취급하지 않는다.
+App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(애플리케이션 구조·배포 안내), GitOps PR #136(배포 흐름·NetworkPolicy 서술), Infra PR #218(실제 VM 구성도)이 2026-09-28 각 저장소 main에 병합됐다. 이 세 변경은 README·SVG 문서 범위이며 운영 VM·Cluster 상태를 다시 측정한 결과가 아니다.
 
 ## 11. 주요 Source / Evidence Index
 
