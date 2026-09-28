@@ -11,7 +11,7 @@
 
 ## 최초 문제
 
-A-09 실패 경로 시험의 첫 Jenkins Build에서 다음 오류로 검증 흐름이 중단됐다.
+GitOps Issue #61과 PR #63에는 A-09 실패 경로 시험의 첫 Jenkins Build가 다음 상태로 중단됐다고 기록되어 있다.
 
 ```text
 Build URL missing
@@ -19,7 +19,7 @@ Build URL missing
 
 당시 Jenkins Kubernetes Cloud에는 Agent가 Controller에 접근할 때 사용하는 `jenkinsUrl`이 이미 존재했다. 그러나 이 값은 Jenkins가 Job/Build 링크를 생성할 때 사용하는 **Jenkins Location URL**과는 다른 설정이다.
 
-즉, Agent 연결에 필요한 URL이 설정되어 있다는 이유만으로 Jenkins의 `BUILD_URL`이 만들어지는 것은 아니었다.
+이번 재검토에서 연결된 App Issue #58의 원 댓글은 실패 시험의 준비 범위만 확인됐고 위 오류 문자열 자체는 포함하지 않았다. 따라서 이 문서에서 최초 실패 문자열의 직접 근거는 GitOps Issue #61과 PR #63의 사건 기록으로 한정한다.
 
 ## 원인
 
@@ -46,6 +46,14 @@ Jenkins Location URL 미설정
 
 따라서 Kubernetes Cloud의 `jenkinsUrl`과 Jenkins Location은 같은 값을 사용할 수 있더라도 책임이 다른 설정으로 구분해야 했다.
 
+Jenkins 공식 자료도 이 구분을 뒷받침한다.
+
+- Jenkins Pipeline 문서는 `BUILD_URL`을 현재 Build 결과의 URL로 설명하고, `JENKINS_URL`은 Jenkins URL이 System Configuration에 설정된 경우에만 제공된다고 설명한다.
+- Jenkins Core의 `JenkinsLocationConfiguration`은 Jenkins의 HTTP URL을 저장하는 전역 설정이다.
+- Jenkins Kubernetes Plugin은 Cloud의 Jenkins URL을 해당 Cloud에서 시작한 Agent가 Controller에 연결할 때 사용하는 URL로 설명한다.
+
+이 공식 자료는 프로젝트의 실제 장애 Evidence를 대신하지 않으며, #61/#63에서 구분한 두 설정의 기술적 역할을 교차검증하는 근거로만 사용한다.
+
 ## 조치
 
 GitOps PR #63에서 `cicd/jenkins-jcasc-configmap.yaml`의 JCasC 설정에 Jenkins Location을 추가했다.
@@ -56,7 +64,7 @@ unclassified:
     url: "http://jenkins-controller.cicd.svc.cluster.local:8080/"
 ```
 
-현재 프로젝트에서는 Jenkins를 외부에 별도 hostname으로 노출하지 않았으므로 기존 내부 Service 주소를 기준 URL로 사용했다.
+당시 프로젝트에서는 Jenkins의 별도 공식 hostname을 사용하지 않았으므로 기존 내부 Service 주소를 기준 URL로 사용했다.
 
 변경 범위는 Jenkins Location 한 항목으로 제한했다.
 
@@ -111,9 +119,9 @@ GitOps Promotion PR #134
 http://jenkins-controller.cicd.svc.cluster.local:8080/job/.../<build>/
 ```
 
-같은 기간 Jenkins Job/Agent를 사용하는 Image Pipeline과 GitOps Promotion 자동화가 정상 수행된 것도 함께 확인했다.
+PR #132, #133, #134의 본문에는 각각 Jenkins Build #21, #22, #23과 내부 Service 주소를 기준으로 한 Build URL이 기록되어 있다. 세 PR은 모두 병합됐다.
 
-따라서 초기의 `Build URL missing` 상태는 후속 Production Workflow에서 반복 재현되지 않았고, Jenkins Location 설정이 실제 `BUILD_URL` 생성에 소비되는 것까지 확인했다.
+따라서 후속 Promotion 흐름에서 Jenkins가 `BUILD_URL`을 생성하고, 그 값이 Promotion PR 본문까지 전달되는 경로를 반복 확인했다. 이 결과를 전체 Jenkins 기능 또는 모든 CI/CD 실패 경로의 정상화로 확대하지 않는다.
 
 별도 복구 실행은 필요 상황이 발생하지 않아 수행하지 않았다.
 
@@ -138,7 +146,7 @@ JCasC unclassified.location.url 추가
 
 Location에는 Kubernetes 내부 Service 주소를 사용하므로 Windows Host에서 해당 주소를 직접 열 수 없다.
 
-이 프로젝트에서는 기존 localhost tunnel을 통해 동일한 Job/Build 경로에 접근한다. 이는 `BUILD_URL` 생성 실패와는 별개의 접근 제약이며, Issue #61 Closeout에서는 기능 미완료로 보지 않았다.
+당시 운영에서는 기존 localhost tunnel을 통해 동일한 Job/Build 경로에 접근했다. 이는 `BUILD_URL` 생성 실패와는 별개의 접근 제약이며, Issue #61 Closeout에서는 기능 미완료로 보지 않았다.
 
 또한 같은 시기에 진행된 Jenkins Plugin Lock 문제는 Controller 재생성을 포함할 수 있어 작업 시간을 조율했지만, Plugin Lock 파일 문제는 본 사건의 Root Cause가 아니다.
 
@@ -152,3 +160,6 @@ Location에는 Kubernetes 내부 Service 주소를 사용하므로 Windows Host�
 - GitOps Promotion PR #132: https://github.com/seokpan/seokpan-gitops/pull/132
 - GitOps Promotion PR #133: https://github.com/seokpan/seokpan-gitops/pull/133
 - GitOps Promotion PR #134: https://github.com/seokpan/seokpan-gitops/pull/134
+- Jenkins Pipeline 환경변수 문서: https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables
+- Jenkins Core `JenkinsLocationConfiguration` Javadoc: https://javadoc.jenkins.io/jenkins/model/JenkinsLocationConfiguration.html
+- Jenkins Kubernetes Plugin 문서: https://github.com/jenkinsci/kubernetes-plugin
