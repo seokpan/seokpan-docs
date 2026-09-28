@@ -693,38 +693,83 @@ PASS:
 
 대상 Source:
 
-```text
+~~~text
 worker-01 = 192.168.51.30
 worker-02 = 192.168.52.30
 
 허용 CIDR:
 192.168.51.0/24
 192.168.52.0/24
-```
+~~~
 
 대상 VRouter Metric 주소:
 
-```text
+~~~text
 192.168.51.10:9100
 192.168.52.10:9100
 192.168.53.10:9100
 192.168.54.10:9100
-```
+~~~
+
+Worker→VRouter 접근은 Source와 Target의 위치에 따라 대상 VRouter로 유입되는 NIC와 zone이 다르다.
+
+~~~text
+같은 사설망의 자기 VRouter 접근
+
+worker-01(192.168.51.30)
+→ vrouter-01(192.168.51.10)
+→ 대상 VRouter의 internal NIC / internal zone
+
+worker-02(192.168.52.30)
+→ vrouter-02(192.168.52.10)
+→ 대상 VRouter의 internal NIC / internal zone
+
+
+다른 사설망의 VRouter 접근
+
+예:
+worker-01
+→ 192.168.52.10 / 192.168.53.10 / 192.168.54.10
+→ Source VRouter를 거쳐 라우팅
+→ 대상 VRouter의 external NIC / external zone으로 유입
+~~~
+
+따라서 `external zone`의 Worker CIDR `9100/tcp` 허용 규칙은 모든 Worker→VRouter 접근을 위한 규칙이 아니다.
+
+이 규칙은 **다른 사설망에서 대상 VRouter로 들어오는 Cross-VRouter 트래픽에 필요한 최소 허용 경계**로 해석한다.
+
+향후 실제 Run에서는 Source→Target 조합별로 다음 정보를 함께 기록한다.
+
+~~~text
+Source IP
+Target VRouter IP
+ip route get 결과
+Target ingress NIC
+Target ingress zone
+HTTP/TCP 결과
+~~~
 
 PASS:
 
-- Worker에서 VRouter `:9100`까지 Network 접근이 가능하다.
-- 실제 트래픽 유입 zone인 `external`의 필요한 Source CIDR에만 최소 허용 규칙이 존재한다.
+- Source→Target 조합의 실제 경로와 대상 VRouter의 ingress NIC/zone을 설명할 수 있다.
+- 같은 사설망의 자기 VRouter 접근은 대상 VRouter의 `internal` 경로로 확인된다.
+- 다른 사설망의 VRouter 접근은 대상 VRouter의 `external` 경로로 확인된다.
+- Cross-VRouter 접근에 필요한 Worker Source CIDR의 `9100/tcp` 최소 허용 규칙이 존재한다.
+- 허용 범위를 불필요하게 전체 Source로 확대하지 않는다.
 - Role 재실행 시 정상 상태를 불필요하게 변경하지 않는다.
 
-현재 결과: `PASS — 과거 Runtime Evidence`.
+현재 결과: `PASS — 과거 Cross-VRouter Runtime Evidence 범위`.
 
 Evidence:
 
-- Infra #205 — Worker→VRouter `9100/tcp` 차단 원인 진단
-- Infra PR #206 — `vrouter_firewall` Role에 external zone 최소 허용 통합
-- 당시 `52.10/53.10/54.10:9100` HTTP 200 확인
+- Infra #205 — `worker-01`에서 `vrouter-02/03/04`의 `52.10/53.10/54.10:9100` 접근 실패 원인 조사
+- Infra PR #206 — Cross-VRouter 트래픽이 대상 VRouter의 `external` zone으로 유입되는 경로에 Worker CIDR 최소 허용 통합
+- 당시 `worker-01 → 52.10/53.10/54.10:9100` HTTP 200 확인
 - Role 재실행 시 변경 없음 확인
+
+위 Historical Evidence는 **Cross-VRouter 경로에 대한 검증 범위**다.
+
+`worker-01 → vrouter-01` 또는 `worker-02 → vrouter-02`와 같은 같은 사설망의 자기 VRouter 접근을 `external zone` Evidence로 확대하지 않는다.
 
 Prometheus에서 실제 Target이 UP인지의 최종 Consumer 판정은 `NAE-MET-01`에서 수행한다.
 
