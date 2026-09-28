@@ -31,3 +31,4 @@ Registry·빌드·배포와 로그·지표 등 관측 경로 관련 사례를 �
 - [K8S-008 — CoreDNS 설정 줄바꿈 오류로 신규 Pod가 CrashLoopBackOff 발생](../kubernetes-platform-integration/K8S-008_CoreDNS_관리_Block_newline_escaping_CrashLoop.md)
 - [K8S-009 — Kubernetes containerd가 Harbor 내부 CA를 신뢰하지 못해 Image Pull 실패](../kubernetes-platform-integration/K8S-009_Kubernetes_containerd_Harbor_CA_Trust_미적용.md)
 - [DB-013 — mysqld_exporter slave_status collector의 SLAVE MONITOR 권한 누락으로 Access denied 발생](../database-storage-recovery/DB-013_mysqld_exporter_SLAVE_MONITOR_권한_누락.md)
+- [NET-007 — VRouter node_exporter 방화벽 Zone 불일치](../network-ansible-automation/NET-007_VRouter_node_exporter_방화벽_Zone_불일치.md)
