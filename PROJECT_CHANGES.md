@@ -424,6 +424,32 @@
   - `seokpan/seokpan-infra#91`
   - `seokpan/seokpan-docs#30`
 
+
+### Ansible MariaDB Collection 고정
+
+- 구분: 공용 Ansible 실행환경 의존성 추가 확정
+- 기존 기준:
+  - 2026-08-28에 Project Python `3.12.13`, ansible-core `2.20.8`, Python kubernetes client `36.0.3`, `kubernetes.core 6.5.0` 기준을 확정했다.
+  - 당시 Project Collection 정의에는 `kubernetes.core 6.5.0`만 명시되어 있었고, MariaDB 계정 자동화에 필요한 Collection은 공용 실행환경 기준에 포함되지 않았다.
+- 변경/확정 내용:
+  - MariaDB 계정 관련 모듈 사용을 위해 Project Collection에 `ansible.mariadb 6.0.2`를 Exact Lock으로 추가한다.
+  - `ansible/requirements.yml`을 공용 Collection 기준으로 사용하며 Bootstrap 과정에서 Collection의 누락과 버전 불일치를 확인한다.
+  - Project Collection 기준은 `kubernetes.core 6.5.0`과 `ansible.mariadb 6.0.2`를 함께 사용한다.
+  - 기존 Project Python `3.12.13`, ansible-core `2.20.8`, Python kubernetes client `36.0.3` 기준은 변경하지 않는다.
+  - System Python과 System Ansible은 Rollback 용도로 유지하며 이번 결정으로 변경하지 않는다.
+- 검증:
+  - 빈 Project 실행환경에서 `requirements.yml` 기준으로 두 Collection의 동일 버전을 다시 설치할 수 있음을 확인했다.
+  - MariaDB 관련 Playbook Syntax Check와 기존 VM 대상 최소 Smoke를 별도 검증했다.
+  - Project/System 실행환경 복귀 가능성도 확인했으며, 이를 신규 Kubernetes Cluster Clean Build나 Python 자체의 최초 설치 재현 완료로 확대하지 않는다.
+- 영향:
+  - MariaDB 자동화도 다른 담당자의 Project 실행환경과 동일한 Collection 정의를 사용하게 된다.
+  - 최초 Version Lock 사건의 Version Matrix와 당시 검증 결과는 NET-001에 그대로 보존하고, 이후 추가된 Collection과 실행환경 보완은 후속 운영 기준으로 연결한다.
+- 관련:
+  - `seokpan/seokpan-infra#94`
+  - `seokpan/seokpan-infra` PR #96
+  - `seokpan/seokpan-infra#84`
+  - `seokpan/seokpan-docs#50`
+
 ---
 
 ## 2026-09-03
@@ -617,6 +643,39 @@
   - `seokpan/seokpan-infra#128`
   - `seokpan/seokpan-infra#129`
   - `seokpan/seokpan-infra` PR #117, #125, #130, #131
+
+
+### Chrony 공통 NTP 및 상태 기반 검증 기준 확정
+
+- 구분: 공통 VM 시간 동기화 운영 기준 확정
+- 기존 기준:
+  - Chrony Role의 초기 기본 NTP Source와 실제 VM에 적용된 NTP Source가 일치하지 않았다.
+  - 초기 Role 기본값은 `0~3.pool.ntp.org` 계열이었고, 실제 관리 대상 VM에서는 `pool 2.centos.pool.ntp.org iburst`가 공통으로 사용되고 있었다.
+  - Chrony RPM 버전도 모든 VM에서 하나의 Patch Version으로 동일하지 않았다.
+- 변경/확정 내용:
+  - 공통 NTP Pool을 `chrony_ntp_pool: 2.centos.pool.ntp.org`로 확정하고 `/etc/chrony.conf`에는 `pool 2.centos.pool.ntp.org iburst`를 공통 기준으로 사용한다.
+  - Chrony RPM은 하나의 Exact Version으로 강제하지 않는다.
+  - CentOS Stream 9에서 정상 지원되는 패키지를 사용하면서 서비스·설정·실제 시간 동기화 상태를 정상 판정 기준으로 삼는다.
+  - 정상 판정은 최소 다음 상태를 함께 확인한다.
+    - `chronyd` active
+    - `chronyd` enabled
+    - `NTPSynchronized=yes`
+    - 선택된 NTP Source 존재
+    - `Leap status: Normal`
+    - 공통 NTP Source 설정 일치
+  - 같은 NTP Pool을 사용하더라도 각 VM이 실제로 선택한 NTP Server IP가 다른 것은 설정 불일치로 판단하지 않는다.
+- 검증:
+  - Harbor를 포함한 관리 대상 16대에 대해 Check Mode와 Actual Run을 검증했다.
+  - 반복 Actual Run에서 전 Host `changed=0`, `failed=0`, `unreachable=0`을 확인했다.
+  - Ansible Ping과 HAProxy, NFS, MariaDB, MaxScale, Kubernetes, Harbor의 기존 서비스 영향도 함께 확인했다.
+- 영향:
+  - 정상 VM을 단순 Chrony RPM Patch Version 차이만으로 임의 Upgrade/Downgrade하지 않는다.
+  - 전체 OS Package Exact Lock이 필요해지는 경우 Chrony만 단독 고정하지 않고 별도 OS Package Baseline 작업으로 분리한다.
+  - NET-003의 9시간 Clock Drift는 격리 DR 환경의 Time Zone 잔존 문제이므로 이번 16대 공통 Chrony 기준과 동일 사건으로 합치지 않는다.
+- 관련:
+  - `seokpan/seokpan-infra#39`
+  - `seokpan/seokpan-infra` PR #40
+  - `seokpan/seokpan-docs#49`
 
 ---
 
@@ -1008,6 +1067,60 @@
   - `seokpan/seokpan-infra#119`
   - `seokpan/seokpan-infra` PR #197
 
+
+### Ansible 공용 안전 실행기 및 Credential 공급 기준 확정
+
+- 구분: 공용 Ansible 실행·보안 운영 기준 추가 확정
+- 기존 기준:
+  - Project `.venv`, Python·ansible-core·Collection Version Lock은 구성되어 있었지만, 팀원이 Playbook을 실행할 때 사용할 공용 진입점과 Vault/Become Credential 공급·승인 절차는 하나의 운영 경로로 확정되어 있지 않았다.
+  - 실행자별 checkout·Python 환경과 Credential 취급 방식이 달라질 경우 같은 Playbook이라도 실행환경과 보안 절차가 달라질 수 있었다.
+- 변경/확정 내용:
+  - 각 사용자는 자신의 Linux 계정과 자신의 Repository checkout을 사용한다.
+  - 최초 1회 `<자기 checkout>/ansible`에서 `./tools/ars-setup`을 실행해 Project 실행환경과 사용자별 Credential 공급 경로를 준비한다.
+  - 이후 공용 실행 명령은 `ars <playbook.yml> [허용 옵션]`을 사용한다.
+  - `ars-setup`은 Project Python `3.12.13` Exact Lock, Project `.venv`, pinned Python Package와 Ansible Collection을 확인하고 사용자별 설정을 구성한다.
+  - Vault/Become Credential은 Git이나 평문 Secret 파일에 저장하지 않고 현재 사용자의 Persistent Kernel Keyring에 등록한다.
+  - `ansible-safe-run`은 Playbook별로 Vault와 Become Password 필요 여부를 각각 판정하고, 필요한 Credential만 Keyring에서 메모리로 공급한다.
+  - `--inspect-only`는 Ansible 구조·Syntax와 필요한 Vault decrypt까지 확인하지만 SSH, Become 실행, Check Mode, Apply는 수행하지 않는다.
+  - root 직접 실행, sudo를 통한 실행, setuid 형태 실행, 허용되지 않은 사용자는 차단한다.
+  - 근거가 등록되지 않은 `check_mode:false` Task는 자동 허용하지 않고 fail-closed로 중단한다.
+  - 안전성을 사람이 검토한 Task만 파일 SHA256과 Task identity Evidence를 기준으로 허용하며 파일이 변경되면 기존 근거를 다시 검토한다.
+  - 위험 Playbook은 일반 Playbook과 별도 Gate를 적용하고 실제 Apply 전에는 사용자의 명시적 승인을 받는다.
+  - DB Operator는 generic `ars` 경로와 분리하여 기존 `tools/db-operator-login`과 수동 Vault 인증 예외 경로를 유지한다.
+- 검증:
+  - `ksh` 사용자는 실제 Project Vault/Become Credential을 Kernel Keyring에서 자동 공급해 `controller_ca_trust.yml`의 Vault decrypt, Become, Check Mode와 실제 Apply까지 완료했다.
+  - `jth` 사용자는 별도 checkout에서 `ars-setup`, `ars --help`, `kubernetes_validate.yml --inspect-only`까지 성공했다.
+  - `jth`의 일반 실행은 SSH probe 이후 Check Mode에서 fail-closed로 중단됐고 실제 Apply는 수행하지 않았다.
+  - 따라서 모든 허용 사용자 4명이 동일한 실행·Apply 시험을 완료한 것으로 기록하지 않는다.
+  - 추가 회귀검증에서는 A 담당 `lb_network.yml`의 `--inspect-only`, SSH, Check Mode, 승인 후 실제 Apply와 사후 Network 상태를 확인했다.
+- 영향:
+  - 공용 Ansible 운영은 Version Lock된 Project Runtime을 실행 전에 확인하고 안전 Gate를 거쳐 실행하는 경로를 사용한다.
+  - Version Lock 자체의 발생 원인과 당시 검증 결과는 NET-001에 보존하며, 이 항목에서는 안전 실행·Credential 공급 기준만 기록한다.
+  - Credential 실제 값은 문서·Issue·PR 댓글에 기록하지 않는다.
+- 관련:
+  - `seokpan/seokpan-infra#160`
+  - `seokpan/seokpan-infra` PR #184
+  - `seokpan/seokpan-docs#145`
+  - `seokpan/seokpan-docs#50`
+
+### HPA를 1차 MVP 완료조건에서 Deferred
+
+- 구분: 1차 MVP 범위 조정 및 Validation 경계 확정
+- 기존 기준:
+  - 07/09/11/12에서는 Backend Scale-out 이후 HPA 적용 가능성을 후속 Validation Track으로 두었다.
+  - 실제 A-10 Runtime은 Backend 2 Replica와 Worker 분산까지 검증했지만 HPA에 필요한 Resource Metrics, Request/Limit, Trigger/Target, Argo CD와 `spec.replicas` 소유권은 확정되지 않았다.
+- 변경/확정 내용:
+  - 1차 프로젝트 완료조건에는 HPA 구현을 포함하지 않는다.
+  - 1차의 Scale-out Evidence는 검증된 Backend 2 Replica + Worker 분산 + Shared Runtime 경로를 기준으로 사용한다.
+  - HPA는 Resource Metric과 부하 기준, `replicas` 관리 주체를 정량적으로 확정할 수 있는 시점에 다시 검토한다.
+  - 구현하지 않은 HPA 결과를 Scale-out/HPA PASS로 표현하지 않는다.
+- 영향:
+  - 09/11/12와 CURRENT_STATE에서 HPA는 `NOT IMPLEMENTED / DEFERRED`로 구분한다.
+  - 2차에서 OpenShift/ROSA의 Autoscaling 기능을 사용하더라도 1차 HPA 설계를 그대로 전제하지 않고 새 환경의 Metric/Policy를 기준으로 재평가한다.
+- 관련:
+  - `seokpan/seokpan-app#3`
+  - `seokpan/seokpan-docs#128`
+
 ## 2026-09-18
 
 ### DB/MaxScale/NFS Observability Exporter 1단계 코드화 — node_exporter/mysqld_exporter
@@ -1076,18 +1189,6 @@ turn_no 등)를 재구성할 수 있음을 격리 환경에서 실증.
 
 ---
 
-## 작성 형식
-
-### 변경 또는 결정 제목
-
-- 구분:
-- 기존 기준:
-- 변경/확정 내용:
-- 영향:
-- 관련:
-
----
-
 ## 2026-09-21
 
 ### 방장 연결 단절 처리 10초 재접속 유예 확정
@@ -1136,28 +1237,6 @@ turn_no 등)를 재구성할 수 있음을 격리 환경에서 실증.
   - `seokpan/seokpan-infra` PR #214
   - `seokpan/seokpan-docs` OPS-014
 
-
-
-## 2026-09-16
-
-### HPA를 1차 MVP 완료조건에서 Deferred
-
-- 구분: 1차 MVP 범위 조정 및 Validation 경계 확정
-- 기존 기준:
-  - 07/09/11/12에서는 Backend Scale-out 이후 HPA 적용 가능성을 후속 Validation Track으로 두었다.
-  - 실제 A-10 Runtime은 Backend 2 Replica와 Worker 분산까지 검증했지만 HPA에 필요한 Resource Metrics, Request/Limit, Trigger/Target, Argo CD와 `spec.replicas` 소유권은 확정되지 않았다.
-- 변경/확정 내용:
-  - 1차 프로젝트 완료조건에는 HPA 구현을 포함하지 않는다.
-  - 1차의 Scale-out Evidence는 검증된 Backend 2 Replica + Worker 분산 + Shared Runtime 경로를 기준으로 사용한다.
-  - HPA는 Resource Metric과 부하 기준, `replicas` 관리 주체를 정량적으로 확정할 수 있는 시점에 다시 검토한다.
-  - 구현하지 않은 HPA 결과를 Scale-out/HPA PASS로 표현하지 않는다.
-- 영향:
-  - 09/11/12와 CURRENT_STATE에서 HPA는 `NOT IMPLEMENTED / DEFERRED`로 구분한다.
-  - 2차에서 OpenShift/ROSA의 Autoscaling 기능을 사용하더라도 1차 HPA 설계를 그대로 전제하지 않고 새 환경의 Metric/Policy를 기준으로 재평가한다.
-- 관련:
-  - `seokpan/seokpan-app#3`
-  - `seokpan/seokpan-docs#128`
-
 ## 2026-09-22
 
 ### Jenkins → GitOps Promotion PR 자동화 및 사람 승인 경계 확정
@@ -1183,3 +1262,17 @@ turn_no 등)를 재구성할 수 있음을 격리 환경에서 실증.
   - `seokpan/seokpan-gitops` PR #132
   - `seokpan/seokpan-gitops` PR #133
   - `seokpan/seokpan-gitops` PR #134
+
+---
+
+## 작성 형식
+
+### 변경 또는 결정 제목
+
+- 구분:
+- 기존 기준:
+- 변경/확정 내용:
+- 영향:
+- 관련:
+
+---
