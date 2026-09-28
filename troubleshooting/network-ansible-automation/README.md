@@ -4,7 +4,7 @@
 
 네트워크와 공용 Ansible 실행환경·Inventory·공통 변수·통합 자동화 기반 관련 사례를 기록합니다.
 
-등록 문서: **4건**
+등록 문서: **5건**
 
 ## 문서 목록
 
@@ -12,6 +12,7 @@
 - [NET-002 — DR-02 격리 etcd 3-member 간 Peer 통신 실패(firewalld 신규 포트 차단)](NET-002_DR-02%20%EA%B2%A9%EB%A6%AC%20etcd%203-member%20%EA%B0%84%20Peer%20%ED%86%B5%EC%8B%A0%20%EC%8B%A4%ED%8C%A8%20%28firewalld%20%EC%8B%A0%EA%B7%9C%20%ED%8F%AC%ED%8A%B8%20%EC%B0%A8%EB%8B%A8%29.md)
 - [NET-003 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)](NET-003_DR-02%20%EA%B2%A9%EB%A6%AC%20VM%20%EA%B0%84%209%EC%8B%9C%EA%B0%84%20Clock%20Drift%28%ED%83%80%EC%9E%84%EC%A1%B4%20UTC%20%EC%9E%94%EC%A1%B4%29.md)
 - [NET-004 — 초기 VM의 DNS Search Domain 설정이 Pod까지 남아 있던 문제](NET-004_초기_VM_DNS_Search_Domain_잔존.md)
+- [NET-005 — Network Role의 NIC Fact 탐색에서 IPv4 자료형을 잘못 가정해 실패](NET-005_Network_Role_NIC_Fact_자료형_가정_오류.md)
 
 ## 다른 영역의 관련 사례
 
