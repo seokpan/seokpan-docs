@@ -121,6 +121,8 @@ http://jenkins-controller.cicd.svc.cluster.local:8080/job/.../<build>/
 
 PR #132, #133, #134의 본문에는 각각 Jenkins Build #21, #22, #23과 내부 Service 주소를 기준으로 한 Build URL이 기록되어 있다. 세 PR은 모두 병합됐다.
 
+현재 `seokpan-app`의 `scripts/promote_gitops.py`는 `BUILD_URL`을 필수 환경변수로 읽고 Promotion PR 본문의 `Jenkins build URL` 항목에 기록한다. 현재 코드는 후속 소비 계약을 확인하는 근거이며, 2026-09-11 최초 실패의 원시 실행 로그를 대신하는 근거로 사용하지 않는다.
+
 따라서 후속 Promotion 흐름에서 Jenkins가 `BUILD_URL`을 생성하고, 그 값이 Promotion PR 본문까지 전달되는 경로를 반복 확인했다. 이 결과를 전체 Jenkins 기능 또는 모든 CI/CD 실패 경로의 정상화로 확대하지 않는다.
 
 별도 복구 실행은 필요 상황이 발생하지 않아 수행하지 않았다.
@@ -139,7 +141,7 @@ After
 JCasC unclassified.location.url 추가
 → Jenkins 내부 Service URL을 Location으로 사용
 → 후속 Build #21 / #22 / #23에서 BUILD_URL 반복 생성
-→ Job/Agent 기반 Promotion Workflow 정상 수행
+→ 해당 값이 Promotion PR #132 / #133 / #134 본문까지 전달됨
 ```
 
 ## 운영 제약
@@ -160,6 +162,7 @@ Location에는 Kubernetes 내부 Service 주소를 사용하므로 Windows Host�
 - GitOps Promotion PR #132: https://github.com/seokpan/seokpan-gitops/pull/132
 - GitOps Promotion PR #133: https://github.com/seokpan/seokpan-gitops/pull/133
 - GitOps Promotion PR #134: https://github.com/seokpan/seokpan-gitops/pull/134
+- 현재 Promotion 소비 코드 `scripts/promote_gitops.py`: https://github.com/seokpan/seokpan-app/blob/main/scripts/promote_gitops.py
 - Jenkins Pipeline 환경변수 문서: https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables
 - Jenkins Core `JenkinsLocationConfiguration` Javadoc: https://javadoc.jenkins.io/jenkins/model/JenkinsLocationConfiguration.html
 - Jenkins Kubernetes Plugin 문서: https://github.com/jenkinsci/kubernetes-plugin
