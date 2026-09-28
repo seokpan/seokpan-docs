@@ -4,7 +4,7 @@
 
 네트워크와 공용 Ansible 실행환경·Inventory·공통 변수·통합 자동화 기반 관련 사례를 기록합니다.
 
-등록 문서: **5건**
+등록 문서: **7건**
 
 ## 문서 목록
 
@@ -13,6 +13,8 @@
 - [NET-003 — DR-02 격리 VM 간 9시간 Clock Drift(타임존 UTC 잔존)](NET-003_DR-02%20%EA%B2%A9%EB%A6%AC%20VM%20%EA%B0%84%209%EC%8B%9C%EA%B0%84%20Clock%20Drift%28%ED%83%80%EC%9E%84%EC%A1%B4%20UTC%20%EC%9E%94%EC%A1%B4%29.md)
 - [NET-004 — 초기 VM의 DNS Search Domain 설정이 Pod까지 남아 있던 문제](NET-004_초기_VM_DNS_Search_Domain_잔존.md)
 - [NET-005 — Network Role의 NIC Fact 탐색에서 IPv4 자료형을 잘못 가정해 실패](NET-005_Network_Role_NIC_Fact_자료형_가정_오류.md)
+- [NET-006 — VRouter 영구 정적 Route 멱등성 오류](NET-006_VRouter_영구_정적_Route_멱등성_오류.md)
+- [NET-007 — VRouter node_exporter 방화벽 Zone 불일치](NET-007_VRouter_node_exporter_방화벽_Zone_불일치.md)
 
 ## 다른 영역의 관련 사례
 
