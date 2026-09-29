@@ -30,15 +30,9 @@
 구현 상태만을 근거로 원 요구사항을 변경하지 않는다.
 PDF 이후 확정된 변경은 `PROJECT_CHANGES.md`에 명시된 항목에 한해 적용하며, 그 밖의 MVP 기준은 유지한다.
 
-| 구분 | 현재 상태 |
-| --- | --- |
-| MVP·구현 방향 | 확정 |
-| Backend·Frontend Windows Compatibility Spike | 통과 |
-| Application 서비스 세부 구현 기준 1차안 | 확정, 구현 진행 중 (`seokpan-app#3` 기준) |
-| Linux Container 동일 Lock·Image 실행 | 검증 대기 |
-| 실제 MariaDB·Redis Provider 통합 | Redis Runtime 구성 완료, 실제 Backend 연결 및 MariaDB Provider 통합 대기 |
-| Harbor·Gateway·GitOps·Argo CD 통합 | 기반 구성 완료, 실제 Application Runtime 통합 대기 |
-| Application Scaffold·기능 구현 | 진행 중 — 세부 상태는 `seokpan-app#3` 기준 |
+이 문서는 현행 구현 계약과 검증 경계를 유지한다. 기능 구현·A-09 이미지/CI·A-10 실제 MariaDB/Redis·Gateway/GitOps 통합의 기존 완료 범위는 [CURRENT_STATE.md](CURRENT_STATE.md)와 [Application Roadmap](https://github.com/seokpan/seokpan-app/issues/3)에서 추적한다. 구현 착수 당시의 `통합 대기`, `Scaffold 진행 중` 표를 현재 상태로 사용하지 않는다.
+
+Windows Compatibility Spike와 단계별 Fake·Linux·실제 Provider 시험은 각각 해당 실행 기록의 범위로 보존한다. 추가 검증의 진행 상태를 이 문서에 중복 집계하지 않으며, Source/통합 완료와 전체 MVP Acceptance를 동일시하지 않는다.
 
 결정, 정적 자산 존재, 담당자 실행 보고, 직접 Runtime 검증을 같은 완료 상태로 표시하지 않는다.
 
@@ -56,18 +50,18 @@ Jenkins는 Application을 직접 `kubectl apply`하지 않고 검증된 Image와
 
 ### Project Endpoint 기준
 
-프로젝트에서 사용하는 고정 FQDN은 `seokpan-infra`의 공용 Endpoint 정의를 기준으로 관리한다.
-Host에서 필요한 이름은 `/etc/hosts`, Kubernetes Pod에서 필요한 이름은 CoreDNS를 통해 제공한다.
+프로젝트에서 사용하는 고정 FQDN은 `seokpan-infra`의 [공용 Endpoint 정의](https://github.com/seokpan/seokpan-infra/blob/main/ansible/inventory/group_vars/all/vars.yml)를 기준으로 관리한다.
+`host_publish`와 `coredns_publish`는 각각 Host `/etc/hosts`와 Pod DNS에 게시할지를 정한 선언이다. 아래 표는 이 선언을 설명하며 실제 각 Host의 적용 상태나 서비스 Health를 새로 조회한 결과가 아니다.
 
-| Endpoint | 주소 | Host `/etc/hosts` | CoreDNS | 현재 상태 |
+| Endpoint | 주소 | `host_publish` | `coredns_publish` | 연결 근거·선언된 보류 사유 |
 | --- | --- | --- | --- | --- |
-| `harbor.seokpan.soldesk.store` | `192.168.53.61:443` | 적용 | 적용 | BuildKit → Harbor 실제 사용 경로 확인 |
-| `db.seokpan.soldesk.store` | `10.1.93.90:3306` | 적용 | 적용 | DNS/TCP 확인, 실제 Backend DB 연결은 별도 통합 작업 |
-| `game.seokpan.soldesk.store` | `10.1.93.90:80/443` | 적용 | 적용 | Gateway HTTPS 기반 완료, 실제 Application Route는 별도 |
-| `grafana.seokpan.soldesk.store` | `10.1.93.90:443` | 적용 | 적용 | 이름 해석 적용, 실제 Observability 서비스 상태는 별도 확인 |
-| `k8s-api.seokpan.soldesk.store` | `10.1.93.90:6443` 예정 | 미적용 | 미적용 | API Server 인증서 SAN 정리 전 |
-| `jenkins.seokpan.soldesk.store` | `10.1.93.90:443` 예정 | 미적용 | 미적용 | 외부 Route 구성 전 |
-| `argocd.seokpan.soldesk.store` | `10.1.93.90:443` 예정 | 미적용 | 미적용 | MVP 외부 UI 비필수로 보류 |
+| `harbor.seokpan.soldesk.store` | `192.168.53.61:443` | `true` | `true` | `active`; 기존 이미지 공급 결과는 CURRENT_STATE에서 추적 |
+| `db.seokpan.soldesk.store` | `10.1.93.90:3306` | `true` | `true` | `active`; 실제 Backend/MaxScale TLS 통합 기록 존재 |
+| `game.seokpan.soldesk.store` | `10.1.93.90:80/443` | `true` | `true` | `active`; Gateway·Application HTTP/WSS 통합 기록 존재 |
+| `grafana.seokpan.soldesk.store` | `10.1.93.90:443` | `true` | `true` | Endpoint 메타데이터는 `runtime_pending`; 서비스 Health 판정과 구분 |
+| `k8s-api.seokpan.soldesk.store` | `10.1.93.90:6443` 예정 | `false` | `false` | `pending_api_san` |
+| `jenkins.seokpan.soldesk.store` | `10.1.93.90:443` 예정 | `false` | `false` | `deferred_route` |
+| `argocd.seokpan.soldesk.store` | `10.1.93.90:443` 예정 | `false` | `false` | `deferred_external_ui` |
 
 Redis는 `redis.platform.svc.cluster.local:6379`을 사용하고, Prometheus·Loki·Alertmanager 등 Kubernetes 내부 서비스도 Kubernetes Service DNS를 사용한다.
 NFS는 현재 Storage Backend IP 기준을 유지한다.
@@ -238,21 +232,23 @@ D07 3쪽의 Must/Should 분류는 원 설계 이력으로 유지한다. 이후 �
 - AI 판세 분석은 기존 MVP 제외를 유지하고 해당 영역에는 정적인 미제공 안내만 둔다. 분석 API·모델·Workload, 공개 복기, 채팅 영구 이력은 추가하지 않는다. 이미지 간 상이한 수치·권한은 서비스 규칙으로 채택하지 않는다.
 
 실제 작업은 [App #56](https://github.com/seokpan/seokpan-app/issues/56)과 [PR #59](https://github.com/seokpan/seokpan-app/pull/59)에서 추적한다.
-A-08의 Memory 기반 화면 시험은 실제 Provider 검증과 다르다. Linux Container·Jenkins는 A-09, 채팅 Redis 전달·접속자 공유 집계의 구현과 랭킹 MariaDB 연결·다중 Replica·Gateway/WSS·자료 버전 전환 검증은 A-10에 남긴다.
+A-08의 Memory 기반 화면 시험은 실제 Provider 검증과 다르다. Linux Container·Jenkins를 A-09에, 채팅 Redis 전달·접속자 공유 집계·랭킹 MariaDB 연결·다중 Replica·Gateway/WSS·자료 버전 전환을 A-10에 연결한 것은 당시 단계 간 검증 경계다. 이후 구현·통합 결과는 CURRENT_STATE와 각 원본 기록에서 확인하며, 이 이관 설명을 현재 전체 미구현 목록으로 사용하지 않는다.
 
 ## 8. Image·실행·환경 기준
 
-| Workload | Runtime | Port | 현재/활성화 기준 |
+| Workload | Runtime | Port | 현재 선언·확인 위치 |
 | --- | --- | --- | --- |
-| Backend | `python:3.13.15-slim-trixie`, Uvicorn 단일 Process | 8000 | 현재 `0`, 실제 활성화 시 초기 `1` Replica |
-| Frontend | `nginxinc/nginx-unprivileged:1.30.4-alpine3.24` | 8080 | 현재 `0`, 초기 Replica는 활성화 작업에서 확정 |
+| Backend | `python:3.13.15-slim-trixie`, Uvicorn 단일 Process | 8000 | [Backend Deployment](https://github.com/seokpan/seokpan-gitops/blob/main/apps/backend/deployment.yaml)의 `replicas: 2` |
+| Frontend | `nginxinc/nginx-unprivileged:1.30.4-alpine3.24` | 8080 | [Frontend Deployment](https://github.com/seokpan/seokpan-gitops/blob/main/apps/frontend/deployment.yaml)의 `replicas: 2` |
+
+표의 Replica는 GitOps 선언 기준이다. 실제 Pod 수·Ready·Image ID와 현재 실행 결과는 해당 시점의 Runtime 근거로 별도 확인한다. 초기 0→1→2 Replica 활성화 순서는 과거 통합 기록으로 보존한다.
 
 - Backend와 Frontend는 별도 Image·Workload로 배포한다.
 - 외부 주소는 `https://game.seokpan.soldesk.store`, Registry는 `harbor.seokpan.soldesk.store`다.
 - Harbor 관련 명칭은 VM `harbor-01`, Ansible Inventory Host `harbor`, 서비스 FQDN `harbor.seokpan.soldesk.store`, IP `192.168.53.61`로 구분한다. 현행 Ansible 자산은 OS hostname 자체를 설정하지 않는다.
 - Image Tag는 `git-<12자리-main-commit>` 형식을 사용하고 동일 Tag를 덮어쓰지 않는다. GitOps는 검증된 Digest를 소비한다.
-- Backend와 Frontend Kubernetes Service Port 이름은 `http`를 사용한다. Application용 ServiceMonitor는 Backend `/metrics` 구현과 실제 Metric Port/Label 계약이 확인된 뒤 추가한다.
-- Backend Health는 `/health/startup`, `/health/live`, `/health/ready`를 사용한다. `/metrics`는 아직 구현 전이며 구현 후 별도 검증한다. DB·Redis 장애를 Liveness 실패로 처리하지 않는다.
+- Backend와 Frontend Kubernetes Service Port 이름은 `http`를 사용한다. Application용 [ServiceMonitor](https://github.com/seokpan/seokpan-gitops/blob/main/observability/servicemonitor-app.yaml)는 Backend `/metrics`의 Metric Port/Label 계약을 참조한다. 현재 수집 성공 여부는 Manifest 존재와 구분해 확인한다.
+- Backend Health는 `/health/startup`, `/health/live`, `/health/ready`를 사용한다. Backend `/metrics` 구현과 기존 수집 결과는 CURRENT_STATE의 Observability 근거에서 추적한다. DB·Redis 장애를 Liveness 실패로 처리하지 않는다.
 - Frontend Health는 `/health/live`를 사용한다.
 - 설정 Prefix는 `SEOKPAN_`이다. 공용 이름은 `SEOKPAN_ENVIRONMENT`, `SEOKPAN_LOG_LEVEL`, `SEOKPAN_PUBLIC_BASE_URL`,
   `SEOKPAN_ALLOWED_ORIGINS`, `SEOKPAN_TRUSTED_HOSTS`, `SEOKPAN_IDENTITY_DATABASE_URL`, `SEOKPAN_GAME_DATABASE_URL`, `SEOKPAN_DATABASE_CA_FILE`, `SEOKPAN_REDIS_URL`, `SEOKPAN_INSTANCE_ID`를 사용한다.
@@ -290,6 +286,8 @@ WebSocket 재접속 후 Snapshot으로 상태 재확인, 장애로 인한 오패
 - Markdown 문서는 실행 자산과 구분하며 특정 Worktree EOL을 강제하지 않는다. Git 정규화와 파일 내 혼합 개행 방지만 적용한다.
 
 ## 11. 구현·Provider 단계에서 확정하거나 검증할 항목
+
+아래는 구현 단계에서 확정값과 검증 근거를 갖춰야 하는 항목이다. 모두 현재 미구현·미확정이라는 뜻은 아니며, 이미 확정·검증한 항목은 해당 Source·Issue·PR의 결과를 재사용한다.
 
 - 정확한 HTTP Request/Response와 WebSocket Event Payload Schema, 생성 OpenAPI
 - Linux Application Container에서 측정할 Argon2id 비용 Parameter

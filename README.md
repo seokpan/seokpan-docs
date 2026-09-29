@@ -34,8 +34,8 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 | 문서 | 역할 |
 | --- | --- |
 | [PROJECT_CHANGES.md](PROJECT_CHANGES.md) | PDF 이후 확정된 변경·추가·삭제 결정의 이력 |
-| [MVP_IMPLEMENTATION_BASELINE.md](MVP_IMPLEMENTATION_BASELINE.md) | App·Infra·GitOps가 함께 소비하는 MVP 구현 기준과 검증 상태 |
-| [CURRENT_STATE.md](CURRENT_STATE.md) | 2026-09-23 종료 시점의 실제 구현·검증, 미완료 강화 검증 및 2차 인계 범위 |
+| [MVP_IMPLEMENTATION_BASELINE.md](MVP_IMPLEMENTATION_BASELINE.md) | App·Infra·GitOps가 함께 소비하는 MVP 구현 계약과 검증 경계 |
+| [CURRENT_STATE.md](CURRENT_STATE.md) | 2026-09-23 종료 시점의 실제 구현·검증, 후속 현행화 및 2차 인계 범위 |
 
 요구사항 범위는 07의 MVP를 우선합니다. 변경 이력은 명시된 항목에만 적용하며,
 구현 기준 문서는 원 기획·설계의 범위를 임의로 확대하거나 대체하지 않습니다.
@@ -50,9 +50,9 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 | 09 | [실행·통합 실시설계](09_MVP_실행·통합_실시설계/) | 네트워크·Ansible·외부 인프라, Kubernetes·애플리케이션, 데이터·스토리지·복구, 배포·관측성 영역의 역할별 현행 구성과 통합 기준 |
 | 10 | [GitHub 협업 및 Repository 운영](10_GitHub_협업_및_Repository_운영/10_GitHub_협업_및_Repository_운영.md) | 저장소 책임, 협업 순서, 검증 근거를 남기는 방식 |
 | 11 | [구축·자동화 Runbook](11_MVP_구축·자동화_Runbook/) | 네 영역의 구축·재실행·복구 절차 |
-| 12 | [검증·측정 기록](12_MVP_검증·측정_계획/) | 세 영역의 검증 방법과 완료·미완료 결과 |
+| 12 | [검증·측정 기록](12_MVP_검증·측정_계획/) | 네 영역의 검증 방법과 완료·미완료 결과 |
 
-네트워크·외부 인프라의 구축 코드는 [`seokpan-infra`](https://github.com/seokpan/seokpan-infra)의 Role과 Playbook에서 확인합니다. 09·11은 네 영역, 12는 현재 세 영역의 역할별 문서가 존재합니다.
+네트워크·외부 인프라의 구축 코드는 [`seokpan-infra`](https://github.com/seokpan/seokpan-infra)의 Role과 Playbook에서 확인합니다. 09·11·12는 각각 네 영역의 역할별 문서가 존재합니다. Network / Ansible / External Infra 문서 추가와 인계 연결은 [CURRENT_STATE의 문서·인계 상태](CURRENT_STATE.md#10-문서인계-상태)에서 확인합니다. 문서 작성 완료는 각 역할의 실제 시험이나 전체 Acceptance 완료를 의미하지 않습니다.
 
 ## Historical Record → Current State Traceability
 
