@@ -127,7 +127,7 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 | Application ServiceMonitor | Running, Prometheus Target 2개 `UP` |
 | Application Metrics | Runtime Query Validated |
 | Production Game lifecycle mode | `legacy` — captured Source는 main 반영, 실제 activation은 Deferred / #112 V-06 |
-| P4 Source Closeout / 강화 Validation | Implementation 수렴 / Validation #112 Pending |
+| P4 Source Closeout / 강화 Validation | Implementation #76 완료 / Validation #112 Pending |
 
 이 표는 재실행·장애 대응 시 사용할 Current State 기준점이다.
 
