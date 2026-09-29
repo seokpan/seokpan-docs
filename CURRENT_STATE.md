@@ -3,6 +3,7 @@
 - 기준일: **2026-09-23** (1차 종료 스냅샷)
 - 후속 현행화: **2026-09-27** (GitHub 기록·Source 기준, 운영 서버 재조회 없음)
 - 문서 인덱스 현행화: **2026-09-29 KST** (Network 문서 추가·참조 범위 반영. Runtime 및 App #112의 진행 중 검증 결과는 이번 변경에서 재판정하지 않음)
+- Closeout 현행화: **2026-09-29 KST** (App PR #119/#120, Infra PR #220, GitOps PR #138 merge와 Docs #89 최종 A안 반영. App #117 Runtime Gate와 #112 Validation은 별도 Open 유지)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -322,7 +323,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 - 전체 P4 Performance Baseline은 완료된 수치가 없는 항목을 PASS로 쓰지 않음
 - Cross-role DR 이후 Application 정상화는 동일 Run/Revision으로 연결된 Evidence가 확보된 범위만 인정
 - 현재 GitOps Promotion은 Repository write/PR 전용 Credential + 사람 승인 구조이며 자동 승인/merge는 하지 않음
-- App PR #113의 Realtime 10초 정책 문서 변경은 병합 완료(필수 Jenkins status 미보고에 따른 예외 기록은 PR 댓글 참조). 이 병합 사실을 모든 하위 문서의 현행 정합성이나 후속 Runtime 검증 완료로 확대하지 않음
+- App PR #119에서 Realtime 10초 재접속 계약·Provider 문서를 추가 현행화해 main에 반영했다. PR #119의 Jenkins 실패는 기존 `undici 8.10.0` audit 취약점 때문이었고 Backend/Frontend 검사·빌드는 통과했다. 후속 PR #120에서 `undici 8.10.2`와 Background Runner transient Redis 복구 Source를 main에 반영했으며 Jenkins `pr-head`는 success였다. 다만 App #117의 실제 Runtime 복구 Gate와 #112 강화 Validation은 별도 Open 범위다.
 
 ### 7.3 MariaDB Backup 공유 Lock — 현행 구현 계약
 
@@ -375,9 +376,9 @@ Infra PR #168에서 공유 NFS lock은 초기 `flock -w 60` 대기 방식으로 
 
 PR #182의 병합 시각은 2026-09-28 15:19:45 UTC, 한국시간으로 **2026-09-29 00:19:45 KST**다. 이 문서 추가를 9월 23일 종료 시점에 이미 존재했던 것으로 소급하지 않는다.
 
-Network 12의 `Partial / Blocked / Not Tested / Planned / Deferred`는 해당 문서와 실행 근거에서 그대로 추적한다. 파일 추가는 Network 전체 Acceptance 완료를 뜻하지 않는다. [Docs #89](https://github.com/seokpan/seokpan-docs/issues/89)의 문서 부재 전제는 해소됐지만, 유지 계약·환경 종속 구현·실제 Evidence·Known Limitation·2차 재평가 대상의 최소 교차검증과 별도 Handoff 문서 필요 여부 판단은 별도다. 이 인덱스 변경만으로 #89 또는 개인 Closeout #127을 종료하지 않는다.
+Network 12의 `Partial / Blocked / Not Tested / Planned / Deferred`는 해당 문서와 실행 근거에서 그대로 추적한다. 파일 추가는 Network 전체 Acceptance 완료를 뜻하지 않는다. [Docs #89](https://github.com/seokpan/seokpan-docs/issues/89)는 Network / Ansible / External Infra 09·11·12와 CURRENT_STATE를 최종 교차검증한 뒤 2026-09-29 **A안(기존 1차 Source와 Evidence로 충분, 별도 Transition/Handoff 문서 불필요)**으로 completed 종료했다. 이 판단은 2차 상세 아키텍처나 기술 선택을 확정하지 않는다.
 
-App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(애플리케이션 구조·배포 안내), GitOps PR #136(배포 흐름·NetworkPolicy 서술), Infra PR #218(실제 VM 구성도)이 2026-09-28 각 저장소 main에 병합됐다. 이 세 변경은 README·SVG 문서 범위이며 운영 VM·Cluster 상태를 다시 측정한 결과가 아니다.
+App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(애플리케이션 구조·배포 안내), GitOps PR #136(배포 흐름·NetworkPolicy 서술), Infra PR #218(실제 VM 구성도)이 2026-09-28 각 저장소 main에 병합됐다. 이후 2026-09-29 App PR #119, Infra PR #220, GitOps PR #138 및 Docs PR #184로 현재 계약·실행 안내·배포 주석·Network 인덱스를 추가 현행화했다. 문서 변경은 운영 VM·Cluster 상태를 새로 측정한 결과와 구분한다.
 
 ## 11. 주요 Source / Evidence Index
 
@@ -399,13 +400,14 @@ App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(�
 - `seokpan-app#94` — Gateway Browser Happy Path
 - `seokpan-app#98` — GitOps Promotion Automation
 - `seokpan-app#112` — Closeout Realtime Validation Backlog
+- `seokpan-app#117` — Background Runner transient Redis 복구 Source 반영 후 Runtime Gate
 - `seokpan-gitops#57` — CD / Self-Heal / Rollback
 - `seokpan-gitops#109` — F04 Runtime / Loki Evidence
 
 ### Closeout / Phase 2
 
 - `seokpan-docs#153` — Current State Closeout
-- `seokpan-docs#89` — 1차 → 2차 Handoff 구조 판단
+- `seokpan-docs#89` — 1차 → 2차 Handoff 구조 판단 (completed, A안: 기존 Source로 충분)
 - `seokpan-docs#127` — tjung03 개인 Closeout Final Audit
 
 ## 12. Closeout 원칙
