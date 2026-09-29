@@ -177,7 +177,7 @@ HPA를 도입할 경우 `Deployment.spec.replicas`를 Argo CD와 HPA 중 누가 
 A-01~A-08: 기능·Headless·Frontend First Success — Completed
 A-09: Container / Jenkins / Image Acceptance — Completed
 A-10: Production Provider / GitOps / Kubernetes Runtime Integration — Completed
-P4 Source Stabilization — Implementation Closeout / 강화 Validation #112 Pending
+P4 Source Stabilization — Implementation Closeout #76 완료 / 강화 Validation #112 Pending
 ```
 
 A-10 완료는 실제 Provider와 Kubernetes Runtime 연결이 성립했다는 의미다.
@@ -554,7 +554,7 @@ Final MVP Acceptance: Partial / Validation Pending
 | D Backend First Runtime | PASS | Migration 후 Backend 1 Replica 실제 Provider 연결 검증 |
 | E Scale-out / Frontend | PASS | Backend 2 Replica·Worker 분산·Frontend 2 Replica PASS. HPA는 별도 미검증 Track |
 | F External Route / Transport | PASS | HTTPRoute·HTTPS·API·WebSocket·Windows/Linux 접속 Runtime Gate PASS. Realtime semantics 전체는 P4 별도 검증 |
-| G MVP Acceptance | Partial / Validation Pending | 구현 Closeout은 수렴 중이며 실제 Realtime·Recovery·Measurement 강화 Validation은 #112 및 역할별 12에서 추적 |
+| G MVP Acceptance | Partial / Validation Pending | 구현 Closeout은 #76에서 완료됐으며 실제 Realtime·Recovery·Measurement 강화 Validation은 #112 및 역할별 12에서 추적 |
 
 A-10 완료 판정과 Gate G 최종 Acceptance 판정을 분리한다.
 
@@ -582,7 +582,7 @@ A-10의 기존 직접 Blocker는 해소됐다.
 - Cross-role DR 이후 Application 정상화 Test
 - P4 Performance / Recovery의 최종 정량 판정
 
-현재 진행 중인 버그픽스의 개별 식별 번호나 임시 Root Cause 가설은 이 문서에 중복 기록하지 않고 `seokpan-app#76`을 Source로 사용한다.
+완료된 P4 구현 분류는 `seokpan-app#76`을 Source로 사용하고, 실제 미완료 강화 검증과 새 결함은 `seokpan-app#112` 및 연결 Issue에서 추적한다.
 
 ### Deferred / Non-blocking
 
@@ -600,14 +600,14 @@ A-10 Critical Path는 완료됐다.
 
 ```text
 A-10 Runtime Integration Completed
-→ P4 기능 안정화
-→ 핵심 Game / Realtime / 2 Replica 경로 재검증
+→ P4 Source Closeout (#76 완료)
+→ #112 Game / Realtime / 2 Replica 강화 검증
 → Concurrency / Recovery / Performance Evidence
 → Final Browser Acceptance
 → MVP Acceptance
 ```
 
-UX/UI 개선은 기능 안정화 결과를 가리지 않는 범위에서 별도로 진행하며, 진행 중인 버그픽스 중간 결과를 09 Current State로 확정하지 않는다.
+완료된 UX/UI Source 변경과 #112의 진행 중 강화 검증은 구분한다. 검증 중간 결과를 09의 최종 PASS로 확정하지 않는다.
 
 ## 12. 완료 기준
 

@@ -896,13 +896,9 @@ MVP Acceptance를 막는 **Blocker는 없다**. 아래는 "완료"로 확대 해
 
 ## 10.2 문서 기준 현행화
 
-```text
-PROJECT_CHANGES 2026-09-11 "Jenkins는 GitOps PR 생성 안 함"
-→ 2026-09-18 App #98로 조건부 확장(4.5절)
-→ PROJECT_CHANGES 후속 항목 미작성
-```
+`PROJECT_CHANGES.md`의 2026-09-11 "Jenkins는 GitOps PR 생성을 자동 수행하지 않는다" 결정은 후속 App #98 구현·2026-09-22 결정으로 대체됐다. 현재는 검증된 Final Digest의 GitOps Promotion PR 생성까지 자동화하며, 승인·병합은 사람이 수행한다.
 
-`seokpan-gitops` Manifest 주석 중 이미 해소된 TODO가 남아 있다(예: `alertmanager-config.yaml` 상단 "SMTP 서버 미확정", `jenkins.yaml` "갭 5건 Issue 번호 기입", NetworkPolicy의 `8000 [TODO]`·`loadgen` 항목). 동작에는 영향이 없으나 현행 상태와 다르므로 정리 대상이다.
+GitOps PR #138에서 Alertmanager SMTP 공급 주석을, PR #140/#145에서 Observability NetworkPolicy의 종료된 TODO·내부 대화 표현을 정리했다. `argocd/applications/jenkins.yaml`의 "갭 5건 Issue 번호 기입" placeholder는 GitOps #147/PR #148에서 주석 전용으로 정리 중이다. PR #148이 병합되기 전까지는 Jenkins Application 주석의 정리가 완료됐다고 표기하지 않는다.
 
 ## 10.3 Observability 잔여 범위
 
