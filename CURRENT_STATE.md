@@ -4,6 +4,7 @@
 - 후속 현행화: **2026-09-27** (GitHub 기록·Source 기준, 운영 서버 재조회 없음)
 - 문서 인덱스 현행화: **2026-09-29 KST** (Network 문서 추가·참조 범위 반영. Runtime 및 App #112의 진행 중 검증 결과는 이번 변경에서 재판정하지 않음)
 - Closeout 현행화: **2026-09-29 KST** (App PR #119/#120, Infra PR #220, GitOps PR #138 merge와 Docs #89 최종 A안 반영. App #117 Runtime Gate와 #112 Validation은 별도 Open 유지)
+- 문서·Delivery 후속 현행화: **2026-09-29 KST** (App PR #128, GitOps PR #145/#146 merge 확인. PR #146의 GitOps Desired State 변경은 운영 Argo CD Sync·Pod Ready 재검증과 구분)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -175,6 +176,8 @@ App main
 - Jenkins BUILD_URL 실제 기록
 - Argo CD Self-Heal PASS
 - Git Revert 기반 Runtime Rollback PASS
+
+후속 App PR #128은 Reference 문서와 Dockerfile 주석만 정리했다. 그 병합 Commit `0005d0d8c834405ad31a4eb4d0d166eb04768744`를 Jenkins Image Pipeline Build #29가 처리했고, Dockerfile 경로 변경으로 Backend·Frontend 두 Component의 새 Digest와 Source SHA를 기록한 GitOps Promotion PR #146이 승인 후 병합됐다. 이는 **GitOps Desired State 반영** 근거이며, 해당 Revision의 운영 Argo CD Sync·Pod Ready·Gateway Smoke를 이번 문서 현행화에서 재조회한 결과는 아니다. 단순 주석 변경도 현재 Component 영향 경로에는 포함될 수 있으므로 비영향 변경의 rollout 방지는 경로 판정 범위에서만 주장한다.
 
 ### 4.4 Observability — IMPLEMENTED + VALIDATED
 
@@ -378,7 +381,7 @@ PR #182의 병합 시각은 2026-09-28 15:19:45 UTC, 한국시간으로 **2026-0
 
 Network 12의 `Partial / Blocked / Not Tested / Planned / Deferred`는 해당 문서와 실행 근거에서 그대로 추적한다. 파일 추가는 Network 전체 Acceptance 완료를 뜻하지 않는다. [Docs #89](https://github.com/seokpan/seokpan-docs/issues/89)는 Network / Ansible / External Infra 09·11·12와 CURRENT_STATE를 최종 교차검증한 뒤 2026-09-29 **A안(기존 1차 Source와 Evidence로 충분, 별도 Transition/Handoff 문서 불필요)**으로 completed 종료했다. 이 판단은 2차 상세 아키텍처나 기술 선택을 확정하지 않는다.
 
-App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(애플리케이션 구조·배포 안내), GitOps PR #136(배포 흐름·NetworkPolicy 서술), Infra PR #218(실제 VM 구성도)이 2026-09-28 각 저장소 main에 병합됐다. 이후 2026-09-29 App PR #119, Infra PR #220, GitOps PR #138 및 Docs PR #184로 현재 계약·실행 안내·배포 주석·Network 인덱스를 추가 현행화했다. 문서 변경은 운영 VM·Cluster 상태를 새로 측정한 결과와 구분한다.
+App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(애플리케이션 구조·배포 안내), GitOps PR #136(배포 흐름·NetworkPolicy 서술), Infra PR #218(실제 VM 구성도)이 2026-09-28 각 저장소 main에 병합됐다. 이후 2026-09-29 App PR #119, Infra PR #220, GitOps PR #138 및 Docs PR #184로 현재 계약·실행 안내·배포 주석·Network 인덱스를 추가 현행화했다. App PR #128과 GitOps PR #145의 문구 현행화도 병합됐으며, Image Promotion PR #146의 병합 범위는 4.3절에서 구분한다. 문서 변경은 운영 VM·Cluster 상태를 새로 측정한 결과와 구분한다.
 
 ## 11. 주요 Source / Evidence Index
 
