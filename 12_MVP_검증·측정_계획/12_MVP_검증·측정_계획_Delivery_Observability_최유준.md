@@ -911,7 +911,8 @@ Gate G(최종) 판정은 본 역할만으로 완료되지 않으며, Kubernetes/
 - Webhook 유/무 Sync 지연, Q-07 CI/CD 구간 분리 측정
 - Harbor Retention, Jenkins Job Git 선언, 레거시 Credential Secret 정리
 - DOB-AUT-01 전체 Role 멱등성 Evidence 단일 Run 정리
-2026-09-29 문서 현행화: `PROJECT_CHANGES.md`의 **2026-09-22** 항목에 Jenkins → GitOps Promotion PR 자동화 결정이 이미 반영됐다. `KAI-CD-02`의 PASS 근거에는 본 문서 DOB-CD-03과 GitOps #57 Step 8을 연결했다. 이 두 문서 연결 작업은 2차 미완료 검증 목록에 포함하지 않는다.
+
+2026-09-29 문서 현행화: `PROJECT_CHANGES.md`의 **2026-09-22** 항목에 Jenkins → GitOps Promotion PR 자동화 결정이 이미 반영됐다. `KAI-CD-02`의 PASS 근거에는 본 문서 DOB-CD-03과 GitOps #57 Step 8을 연결했다. 완료된 결정 기록과 문서 간 Evidence 연결은 2차 미완료 검증 목록에 포함하지 않는다.
 
 이미 PASS한 항목을 다시 미완료로 표현하지 않으며, 아직 실행하지 않은 장애 시험·전용 Alert·외부 VM Log 항목을 완료된 결과처럼 기록하지 않는다.
 
