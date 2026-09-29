@@ -967,7 +967,7 @@
 - kube-apiserver 서빙 인증서: `--cert-dir` 지정 시 자동 생성되는 self-signed 사용
 - kubectl 인증: 별도 self-signed CA로 서명한 client certificate 1개 발급
   (`--anonymous-auth=true` + `--authorization-mode=AlwaysAllow` 조합은 apiserver가
-  기동 시 AnonymousAuth를 강제로 false로 리셋해버려 사용 불가 — TS-0XX 참고)
+  기동 시 AnonymousAuth를 강제로 false로 리셋해버려 사용 불가 — [K8S-011](<troubleshooting/kubernetes-platform-integration/K8S-011_kube-apiserver AnonymousAuth·AlwaysAllow 조합 시 전체 401 Unauthorized.md>) 참고)
 
 **적용 범위**: 이번 DR-02 1회성 격리 검증 한정. 향후 격리 DR 테스트를 정기화할
 경우(Ansible 자동화 별도 이슈) internal_ca 재사용 여부를 다시 협의 필요.
