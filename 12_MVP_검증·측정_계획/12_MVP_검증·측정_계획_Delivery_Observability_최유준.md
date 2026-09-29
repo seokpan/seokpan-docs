@@ -434,7 +434,7 @@ PASS:
 
 ### DOB-CD-01 — Digest Pinning 배포
 
-Cross-role: 정태훈 `KAI-DEL-01`과 같은 Run을 공유한다. 본 역할은 Harbor → Pull Credential → Argo CD 구간을 소유한다.
+Cross-role: Kubernetes & Application Integration의 `KAI-DEL-01`과 같은 Run을 공유한다. 본 역할은 Harbor → Pull Credential → Argo CD 구간을 소유한다.
 
 PASS:
 
@@ -475,9 +475,9 @@ PASS:
 
 현재 결과: `PASS`. 불량 Merge 10:04 → Revert Merge 10:15.
 
-**함께 기록하는 관찰(FAIL 아님)**: 기본 RollingUpdate가 새 ReplicaSet 검증 전에 기존 ReplicaSet을 줄여 가용 Replica가 **2/2 → 1/2**로 떨어졌다. Rollback 경로 자체의 결함이 아니라 Deployment 전략 개선 후보(`maxUnavailable: 0`)로 정태훈에게 인계한다.
+**함께 기록하는 관찰(FAIL 아님)**: 기본 RollingUpdate가 새 ReplicaSet 검증 전에 기존 ReplicaSet을 줄여 가용 Replica가 **2/2 → 1/2**로 떨어졌다. Rollback 경로 자체의 결함이 아니라 Deployment 전략 개선 후보(`maxUnavailable: 0`)로 Kubernetes & Application Integration 역할에 인계한다.
 
-> **Cross-role 반영 요청**: 정태훈 12 문서의 `KAI-CD-02 — Git Revert Rollback`은 현재 `Not Tested`로 기록되어 있다. 본 Run(seokpan-gitops#57 Step 8, GitOps PR #119/#120)이 KAI-CD-02의 PASS 조건(검증된 Revision 복귀·Argo Sync·Runtime Ready·장기 Cluster patch 없음)을 충족하므로 해당 문서 현행화를 요청한다. Recovery time은 위 Merge 시각 기준값이며 Argo Synced 시각 기준 재측정은 필요 시 새 Run으로 수행한다.
+> **Cross-role 반영 요청**: Kubernetes & Application Integration 12 문서의 `KAI-CD-02 — Git Revert Rollback`은 현재 `Not Tested`로 기록되어 있다. 본 Run(seokpan-gitops#57 Step 8, GitOps PR #119/#120)이 KAI-CD-02의 PASS 조건(검증된 Revision 복귀·Argo Sync·Runtime Ready·장기 Cluster patch 없음)을 충족하므로 해당 문서 현행화를 요청한다. Recovery time은 위 Merge 시각 기준값이며 Argo Synced 시각 기준 재측정은 필요 시 새 Run으로 수행한다.
 
 ### DOB-CD-04 — GitOps Promotion PR 자동화
 
@@ -560,7 +560,7 @@ Evidence: seokpan-gitops#103, Issue #205 / Infra PR #206, Infra PR #204 / #208, 
 
 ### DOB-MET-03 — Application Metric
 
-Cross-role(정태훈 `KAI-OBS-01`). 본 역할은 ServiceMonitor 선택 label(`release: kube-prometheus-stack`)과 NetworkPolicy(8000) 경로를 제공했다.
+Cross-role(Kubernetes & Application Integration `KAI-OBS-01`). 본 역할은 ServiceMonitor 선택 label(`release: kube-prometheus-stack`)과 NetworkPolicy(8000) 경로를 제공했다.
 
 현재 결과: `PASS`. Evidence: seokpan-gitops#91 / GitOps PR #107.
 
@@ -574,7 +574,7 @@ PASS:
 
 현재 결과: `PASS`. Evidence: GitOps PR #81(`totalLinesProcessed` 증가 확인).
 
-> Cross-role: 정태훈 `KAI-OBS-02`(Application Logs 최종 Consumer Evidence)는 본 수집 경로 위에서 Application Log 내용·민감정보 미노출·ingestion delay를 판정한다. 수집 경로 자체는 본 Test로 PASS다.
+> Cross-role: Kubernetes & Application Integration `KAI-OBS-02`(Application Logs 최종 Consumer Evidence)는 본 수집 경로 위에서 Application Log 내용·민감정보 미노출·ingestion delay를 판정한다. 수집 경로 자체는 본 Test로 PASS다.
 
 ### DOB-LOG-02 — Node Journal
 
@@ -911,7 +911,7 @@ Gate G(최종) 판정은 본 역할만으로 완료되지 않으며, Kubernetes/
 - Webhook 유/무 Sync 지연, Q-07 CI/CD 구간 분리 측정
 - Harbor Retention, Jenkins Job Git 선언, 레거시 Credential Secret 정리
 - DOB-AUT-01 전체 Role 멱등성 Evidence 단일 Run 정리
-- 정태훈 KAI-CD-02 현행화(본 문서 DOB-CD-03 Evidence 연결)
+- Kubernetes & Application Integration의 KAI-CD-02 현행화(본 문서 DOB-CD-03 Evidence 연결)
 - `PROJECT_CHANGES.md`에 Jenkins → GitOps PR 자동화 확장(2026-09-18) 항목 추가
 
 이미 PASS한 항목을 다시 미완료로 표현하지 않으며, 아직 실행하지 않은 장애 시험·전용 Alert·외부 VM Log 항목을 완료된 결과처럼 기록하지 않는다.
