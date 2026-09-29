@@ -2,6 +2,7 @@
 
 - 기준일: **2026-09-23** (1차 종료 스냅샷)
 - 후속 현행화: **2026-09-27** (GitHub 기록·Source 기준, 운영 서버 재조회 없음)
+- 문서 인덱스 현행화: **2026-09-29 KST** (Network 문서 추가·참조 범위 반영. Runtime 및 App #112의 진행 중 검증 결과는 이번 변경에서 재판정하지 않음)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -321,7 +322,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 - 전체 P4 Performance Baseline은 완료된 수치가 없는 항목을 PASS로 쓰지 않음
 - Cross-role DR 이후 Application 정상화는 동일 Run/Revision으로 연결된 Evidence가 확보된 범위만 인정
 - 현재 GitOps Promotion은 Repository write/PR 전용 Credential + 사람 승인 구조이며 자동 승인/merge는 하지 않음
-- App 내부 Realtime 10초 정책 문서는 App PR #113으로 정합화·병합 완료(필수 Jenkins status 미보고에 따른 예외 기록은 PR 댓글 참조)
+- App PR #113의 Realtime 10초 정책 문서 변경은 병합 완료(필수 Jenkins status 미보고에 따른 예외 기록은 PR 댓글 참조). 이 병합 사실을 모든 하위 문서의 현행 정합성이나 후속 Runtime 검증 완료로 확대하지 않음
 
 ### 7.3 MariaDB Backup 공유 Lock — 현행 구현 계약
 
@@ -358,13 +359,23 @@ Infra PR #168에서 공유 NFS lock은 초기 `flock -w 60` 대기 방식으로 
 
 ## 10. 문서·인계 상태
 
-현재 역할별 09/11/12:
+2026-09-23 스냅샷에서는 아래 세 영역의 역할별 09/11/12를 확인했다.
 
 - Kubernetes & Application Integration — 정태훈
 - Database / Storage / Recovery — 김상희
 - Delivery / Observability — 최유준
 
-Network / External Infra 역할의 별도 09/11/12 문서 세트는 현재 Snapshot에서 확인되지 않는다. 별도 문서가 실제로 필요한지, 또는 Infra Repository·PROJECT_CHANGES·Troubleshooting을 공식 Source로 사용할지는 해당 Owner와 결정한다.
+후속으로 Network / Ansible / External Infra — 이유빈 문서가 PR #178/#180/#182를 통해 추가됐다. 현재 역할별 09·11·12는 각각 네 영역이며, Network 문서는 다음 실제 파일을 사용한다.
+
+| 문서 | 현재 파일 | 추가 근거 |
+| --- | --- | --- |
+| 09 실행·통합 실시설계 | [Network / Ansible / External Infra 09](09_MVP_실행·통합_실시설계/09_MVP_실행·통합_실시설계_Network_Ansible_External_Infra_이유빈.md) | [PR #178](https://github.com/seokpan/seokpan-docs/pull/178) |
+| 11 구축·자동화 Runbook | [Network / Ansible / External Infra 11](11_MVP_구축·자동화_Runbook/11_MVP_구축·자동화_Runbook_Network_Ansible_External_Infra_이유빈.md) | [PR #180](https://github.com/seokpan/seokpan-docs/pull/180) |
+| 12 검증·측정 계획 | [Network / Ansible / External Infra 12](12_MVP_검증·측정_계획/12_MVP_검증·측정_계획_Network_Ansible_External_Infra_이유빈.md) | [PR #182](https://github.com/seokpan/seokpan-docs/pull/182) |
+
+PR #182의 병합 시각은 2026-09-28 15:19:45 UTC, 한국시간으로 **2026-09-29 00:19:45 KST**다. 이 문서 추가를 9월 23일 종료 시점에 이미 존재했던 것으로 소급하지 않는다.
+
+Network 12의 `Partial / Blocked / Not Tested / Planned / Deferred`는 해당 문서와 실행 근거에서 그대로 추적한다. 파일 추가는 Network 전체 Acceptance 완료를 뜻하지 않는다. [Docs #89](https://github.com/seokpan/seokpan-docs/issues/89)의 문서 부재 전제는 해소됐지만, 유지 계약·환경 종속 구현·실제 Evidence·Known Limitation·2차 재평가 대상의 최소 교차검증과 별도 Handoff 문서 필요 여부 판단은 별도다. 이 인덱스 변경만으로 #89 또는 개인 Closeout #127을 종료하지 않는다.
 
 App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(애플리케이션 구조·배포 안내), GitOps PR #136(배포 흐름·NetworkPolicy 서술), Infra PR #218(실제 VM 구성도)이 2026-09-28 각 저장소 main에 병합됐다. 이 세 변경은 README·SVG 문서 범위이며 운영 VM·Cluster 상태를 다시 측정한 결과가 아니다.
 
