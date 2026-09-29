@@ -247,7 +247,7 @@ Evidence Revision 불일치
 | MariaDB Recovery 절차 자체(Gate E) | Validated | PASS(절차) |
 | MariaDB DR-01 최종 RTO/RPO(Gate E) | **Validated(완료, 이슈 #194 2026-09-18 close)** | PASS — Isolated RTO 27.376초 / Production RPO 3건·RTO 1분29초(단일)·4분(이중화) |
 | Redis Persistence(Gate F) | Validated | PASS |
-| Redis DR-03(PVC 손상 시 MariaDB 기준 재구성, Gate F) | **Validated(1차 Infra 레벨, 격리 환경, 2026-09-18)** | PASS(검증 범위 한정) — 운영 자동화는 이슈 #115 open 상태로 잔여 |
+| Redis DR-03(PVC 손상 시 MariaDB 기준 재구성, Gate F) | **Validated(1차 Infra 레벨, 격리 환경, 2026-09-18)** | PASS(검증 범위 한정) — #115는 Git Evidence 추적성 보완 때문에 Open; 운영 자동화는 별도 Deferred |
 | etcd Snapshot 생성/무결성/NFS 전송(Gate G) | Validated(축소 스코프) | PASS — 이슈 #113(2026-09-08 스코프 축소 후 completed) |
 | etcd DR-02 E2E 수동(Gate G) | Validated | PASS, RTO 38분44초(트러블슈팅 포함) — 이슈 #156 |
 | etcd DR-02 E2E 자동화(Gate G) | Validated | PASS, RTO 52초 — 이슈 #176, PR #191(2026-09-16 merged) |
@@ -273,7 +273,7 @@ DR-01/DR-02(etcd)는 실측까지 종결됐지만, Redis DR-03의 "검증 완료
 | DSR-REC-02 | Master 경로 버그 수정 재검증(PR #197) | E | 7.6 | PASS |
 | DSR-REDIS-01 | Redis Persistence(Pod 재시작) | F | 8.2 | PASS |
 | DSR-REDIS-02 | Redis DR-03(PVC 손상 시 MariaDB 기준 재구성) | F | 8.3~8.5 | **PASS(1차 Infra 레벨, 격리 환경)** |
-| DSR-REDIS-03 | Redis DR-03 운영 자동화 | F | 8.6 | Not Tested / Deferred(BLOCKING: RBAC 결정) |
+| DSR-REDIS-03 | Redis DR-03 운영 자동화 | F | 8.6 | Not Tested / Deferred(장애주입 RBAC 완료; 운영 쓰기 경로 미설계·미승인) |
 | DSR-ETCD-01 | etcd Snapshot 생성/무결성/전송 | G | 9.1~9.5 | PASS(축소 스코프, #113) |
 | DSR-ETCD-02 | etcd DR-02 E2E 수동(#156) | G | 9 참고값 | PASS, RTO 38분44초 |
 | DSR-ETCD-03 | etcd DR-02 E2E 자동화(#176/PR#191) | G | 9.6~9.7 | PASS, RTO 52초 |
@@ -301,7 +301,7 @@ DR-01/DR-02(etcd)는 실측까지 종결됐지만, Redis DR-03의 "검증 완료
 | DSR-REC-02 | PR #197 반영 확인 | Master/Replica 각각 실행 | `failed` 카운트 | 양쪽 `failed=0` | 실행 로그 |
 | DSR-REDIS-01 | Redis Runtime | Write→Pod 재생성→Read | Key 값 비교 | 값 유지 | redis-cli 출력 |
 | DSR-REDIS-02 | 격리 StatefulSet(redis-dr03-test), MariaDB synthetic 데이터 | AOF 손상 재현, MariaDB 기준 재구성 | 재구성값 vs 사전 계산값, Ahead/Behind/Exact 판정 | 값 일치, Loss/Duplicate/Stale 0건 | 이슈 #115 코멘트, `F_redis_recovery_contract.md` |
-| DSR-REDIS-03 | DSR-REDIS-02 PASS, RBAC 결정 | (미정의 — 자동화 착수 전) | (미정의) | (미정의 — Deferred, BLOCKING: 운영 쓰기 권한) | — |
+| DSR-REDIS-03 | DSR-REDIS-02 PASS, 장애주입 RBAC 완료 | (미정의 — 자동화 착수 전) | (미정의) | (미정의 — 1차 Deferred, 운영 쓰기 경로 별도 설계·승인) | — |
 | DSR-ETCD-01 | 클러스터 Health, 도구 SHA 검증 | Snapshot→NFS 전송(/srv/nfs/etcd-dr) | Hash/Revision/SHA-256 | 원본과 일치 | Snapshot Status(이슈 #113) |
 | DSR-ETCD-02 | DSR-ETCD-01 PASS, 별도 물리PC 격리망 | 수동 3-member Restore→API→Object | Quorum/Object 수/RTO | 원본과 일치, RTO 기록 | 이슈 #156 코멘트 |
 | DSR-ETCD-03 | DSR-ETCD-01 PASS, Safety Guard/Restore Decision Gate | 자동화 Playbook 실행 | Quorum/Object 수/RTO(자동 기록) | 원본과 일치, Object diff 0 | PR #191, dr-evidence/ |
@@ -412,13 +412,13 @@ Observation: 재구성된 move_no/turn_no/current_team/last_move 값과 사전 �
 
 PASS: 재구성값이 사전 계산값과 완전 일치, 3케이스 판정이 계약(`F_redis_recovery_contract.md`)대로 정확히 동작, Loss/Duplicate/Stale 전부 0건.
 
-현재 결과: `PASS`(1차 Infra 레벨, 격리 환경 한정, 2026-09-18). 이슈 #115는 이 결과와 별개로 open 상태를 유지한다 — 이유는 검증 미완료가 아니라 DSR-REDIS-03(운영 자동화)이 아직 남아 있기 때문.
+현재 결과: `PASS`(1차 Infra 레벨, 격리 환경 한정, 2026-09-18). 이슈 #115는 검증 미완료 때문에 Open인 것이 아니다. **2026-09-27 점검에서 Run ID·기준 SHA·비교 결과·로그·checksum·cleanup이 `(기입)` 상태로 남아 Git에서 원본 Run을 재추적하기 어렵다는 Evidence 추적성 한계가 확인되어 보완 대기 중이다.** DSR-REDIS-03 운영 자동화는 #115의 1차 PASS와 별개인 1차 Deferred Test Case다.
 
 Evidence 판정 경계: `seokpan-infra#115`의 담당자 결과·정정 코멘트는 격리 synthetic 실험의 PASS 근거다. 다만 최종 코멘트의 Run ID, 기준 SHA, 비교 JSON, 로그, checksum, cleanup 등은 `(기입)`으로 남아 있어 Git에서 재추적 가능한 원본 Evidence 연결은 아직 미완료다. Controller-local `/root/dr03-evidence/`의 실제 파일은 이번 문서 현행화에서 읽지 못했다. `F_redis_recovery_contract.md`의 현재 위치도 별도로 확인해야 한다. 검증 범위를 운영 전체 Session/Room/Vote로 넓히지 않으며, 담당자가 원본을 확인한 후 민감값을 제외한 식별자·요약·checksum 또는 접근 가능한 보관 링크로 채운다. 재실험 여부는 원본 확보 가능성을 확인한 뒤 결정한다.
 
 ### DSR-REDIS-03 — Redis DR-03 운영 자동화
 
-현재 `Not Tested / Deferred`. Ansible 자동화(`redis-dr-recovery-automation-handoff.md`로 인계)와 운영 `platform/redis-0`에 대한 재구성값 쓰기 반영 권한 결정이 BLOCKING 선행조건이다. 관찰/장애주입용 권한(`pods:delete`, `pods/log:get`)은 `platform/ksh` SA에 이미 부여됐으나(seokpan-gitops#47/#48), `pods/exec`는 부여하지 않기로 확정되어 있어 별도의 쓰기 경로 설계가 필요하다. 이 항목을 1차 프로젝트 MVP Acceptance의 필수 조건으로 포함하지 않는다.
+현재 `Not Tested / Deferred`. 관찰/장애주입용 권한(`pods:delete`, `pods/log:get`)은 `platform/ksh` SA에 이미 부여·검증 완료(seokpan-gitops#47/#48)했고 `pods/exec`는 비부여로 확정했다. 운영 `platform/redis-0`에 재구성값을 실제로 쓰는 경로는 별도 서비스 계정/Job 등 후속 설계·승인 대상이며 1차 MVP Acceptance의 필수 조건으로 포함하지 않는다.
 
 ### DSR-ETCD-01 — etcd Snapshot 생성/무결성/전송(축소 스코프)
 
@@ -519,13 +519,13 @@ DSR-REC-01(Isolated/Production RTO/RPO): PASS(완료, 이슈 #194)
 ```text
 DSR-REDIS-01: PASS
 DSR-REDIS-02(1차 Infra 레벨 검증): PASS
-DSR-REDIS-03(운영 자동화): Not Tested / Deferred(BLOCKING: RBAC 결정)
+DSR-REDIS-03(운영 자동화): Not Tested / Deferred(장애주입 RBAC 완료, 운영 쓰기 경로 후속 설계)
 DSR-ETCD-01(스냅샷/전송): PASS
 DSR-ETCD-02(수동 E2E): PASS(RTO 38분44초, 참고값)
 DSR-ETCD-03(자동화 E2E): PASS(RTO 52초, 대표값)
 ```
 
-Redis DR-03의 1차 검증 PASS를 "Gate F 전체 완료"로 확대 해석하지 않는다 — DSR-REDIS-03(운영 자동화)이 남아 있다.
+Redis DR-03의 1차 검증 PASS를 DSR-REDIS-03 운영 자동화 PASS로 확대 해석하지 않는다. DSR-REDIS-03은 1차 MVP 필수조건 밖의 Deferred다.
 
 ### Phase 4 — Observability
 
@@ -543,8 +543,8 @@ DSR-CFG-01: Not Tested
 현재 P4/최종 Acceptance에서 여전히 유효한 절대 조건:
 
 ```text
-Redis DR-03 운영 자동화(DSR-REDIS-03) 미착수, RBAC 결정 미확정
-→ Gate F 전체 PASS 금지(Persistence + 1차 DR-03 검증까지만 PASS)
+Redis DR-03 운영 자동화(DSR-REDIS-03) 미착수 / 1차 Deferred
+→ 장애주입 RBAC는 완료됐으며 운영 쓰기 경로는 후속 설계·승인. Persistence + 1차 DR-03 검증 PASS와 운영 자동화 Deferred를 분리
 
 maxscale_exporter 미배포
 → DSR-OBS-03 PASS 금지
@@ -676,7 +676,7 @@ Gate G(최종) 판정은 본 역할만으로 완료되지 않으며, Kubernetes/
 
 ### 15.2 최종 MVP Acceptance에 필요한 남은 검증
 
-- Redis DR-03 운영 자동화 착수 여부를 Go/No-Go로 결정하고 근거 기록(BLOCKING: `platform/redis-0` 쓰기 반영 권한 결정)
+- Redis DR-03 운영 자동화는 1차 Deferred로 기록하고, 후속에서 `platform/redis-0` 운영 쓰기 경로 설계·승인 필요성을 재평가
 - cron orphan 코드 레벨 정리(`state: absent`) 및 재검증
 - maxscale_exporter는 2차 프로젝트 이관 여부를 최종 확정하고, 그 근거를 Acceptance 문서에 남김
 - Application Data Consumer 연결의 최신 Revision 기준 재검증(DB/NFS/Backup/Recovery 자산 변경 시)
