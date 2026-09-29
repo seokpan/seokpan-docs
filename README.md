@@ -34,7 +34,7 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 | 문서 | 역할 |
 | --- | --- |
 | [PROJECT_CHANGES.md](PROJECT_CHANGES.md) | PDF 이후 확정된 변경·추가·삭제 결정의 이력 |
-| [MVP_IMPLEMENTATION_BASELINE.md](MVP_IMPLEMENTATION_BASELINE.md) | App·Infra·GitOps가 함께 소비하는 MVP 구현 계약과 검증 경계 |
+| [MVP_IMPLEMENTATION_BASELINE.md](MVP_IMPLEMENTATION_BASELINE.md) | App·Infra·GitOps가 함께 적용하는 MVP 구현 규칙과 검증 경계 |
 | [CURRENT_STATE.md](CURRENT_STATE.md) | 2026-09-23 종료 시점의 실제 구현·검증, 후속 현행화 및 2차 인계 범위 |
 
 요구사항 범위는 07의 MVP를 우선합니다. 변경 이력은 명시된 항목에만 적용하며,
