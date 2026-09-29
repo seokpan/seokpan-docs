@@ -477,7 +477,7 @@ PASS:
 
 **함께 기록하는 관찰(FAIL 아님)**: 기본 RollingUpdate가 새 ReplicaSet 검증 전에 기존 ReplicaSet을 줄여 가용 Replica가 **2/2 → 1/2**로 떨어졌다. Rollback 경로 자체의 결함이 아니라 Deployment 전략 개선 후보(`maxUnavailable: 0`)로 Kubernetes & Application Integration 역할에 인계한다.
 
-> **Cross-role 반영 요청**: Kubernetes & Application Integration 12 문서의 `KAI-CD-02 — Git Revert Rollback`은 현재 `Not Tested`로 기록되어 있다. 본 Run(seokpan-gitops#57 Step 8, GitOps PR #119/#120)이 KAI-CD-02의 PASS 조건(검증된 Revision 복귀·Argo Sync·Runtime Ready·장기 Cluster patch 없음)을 충족하므로 해당 문서 현행화를 요청한다. Recovery time은 위 Merge 시각 기준값이며 Argo Synced 시각 기준 재측정은 필요 시 새 Run으로 수행한다.
+> **Cross-role Evidence 연결**: Kubernetes & Application Integration 12 문서의 `KAI-CD-02 — Git Revert Rollback`은 현재 `PASS`로 반영되어 있다. 본 Run(seokpan-gitops#57 Step 8, GitOps PR #119/#120)은 해당 PASS의 근거 중 하나로 연결한다. Recovery time은 위 Merge 시각 기준값이며 Argo Synced 시각 기준 재측정은 필요 시 새 Run으로 수행한다.
 
 ### DOB-CD-04 — GitOps Promotion PR 자동화
 
