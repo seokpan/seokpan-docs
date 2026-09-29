@@ -433,7 +433,7 @@ Step 8 Git Revert Rollback
     (sha256:123203a4…0b0701)
 ```
 
-Step 8에서 기본 RollingUpdate 전략이 새 ReplicaSet 검증 전에 기존 ReplicaSet을 축소해 가용 Pod가 2/2 → 1/2로 떨어지는 것을 관찰했다. 이는 Rollback 경로의 결함이 아니라 Deployment 전략 개선 후보(`maxUnavailable: 0`)이며 Backend/Frontend Desired State Owner(정태훈)에게 인계한다(10.4절).
+Step 8에서 기본 RollingUpdate 전략이 새 ReplicaSet 검증 전에 기존 ReplicaSet을 축소해 가용 Pod가 2/2 → 1/2로 떨어지는 것을 관찰했다. 이는 Rollback 경로의 결함이 아니라 Deployment 전략 개선 후보(`maxUnavailable: 0`)이며 Backend/Frontend Desired State를 담당하는 Kubernetes & Application Integration 역할에 인계한다(10.4절).
 
 판정: `Validated`(Sync / Self-Heal / Git Revert Rollback).
 
@@ -456,7 +456,7 @@ Application Refresh / Sync
 
 - 1단계: `server.insecure=true`(Infra PR #209)
 - Webhook Secret: `argocd_webhook_secret` Role — `argocd-secret` 전체가 아니라 `webhook.github.secret` 필드만 JSON merge patch(Infra PR #210). Route 공개 전에 먼저 적용해 서명 없는 Trigger를 차단한다.
-- 2단계: HTTPRoute + ReferenceGrant(GitOps PR #123). 기존 `game` Route hostname을 재사용하고 path·method를 제한해 기존 라우팅 회귀가 없도록 정태훈과 합의했다.
+- 2단계: HTTPRoute + ReferenceGrant(GitOps PR #123). 기존 `game` Route hostname을 재사용하고 path·method를 제한해 기존 라우팅 회귀가 없도록 Kubernetes & Application Integration 역할과 Cross-role 기준을 확정했다.
 
 판정: `Validated`.
 
@@ -497,7 +497,7 @@ Argo CD `observability` Application은 Helm Chart(kube-prometheus-stack)와 Raw 
 ```
 
 - ServiceMonitor 선택 label: `release: kube-prometheus-stack`
-- Application Metrics: Backend `/metrics` ServiceMonitor 활성화, 2 Replica Target UP, 실제 Metric Query 확인(GitOps #91 / PR #107, 정태훈과 Cross-role)
+- Application Metrics: Backend `/metrics` ServiceMonitor 활성화, 2 Replica Target UP, 실제 Metric Query 확인(GitOps #91 / PR #107, Kubernetes & Application Integration Cross-role)
 - Alloy 자체 Metric: `servicemonitor-alloy.yaml`
 
 ### 외부 VM Exporter

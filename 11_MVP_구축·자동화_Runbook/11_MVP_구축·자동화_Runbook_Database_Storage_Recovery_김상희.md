@@ -516,7 +516,7 @@ requests / request-expiries (TTL 20h) → 재구성 대상 아님(4번 규칙의
 
 ```text
 1차 수동 절차 검증 완료(§8.3~8.5)
-→ Ansible 자동화 착수(redis-dr-recovery-automation-handoff.md로 Claude Code 인계)
+→ Ansible 자동화 착수(`redis-dr-recovery-automation-handoff.md` 작업 인계 기준 사용)
 → 운영 platform/redis-0에 대한 재구성값 쓰기 경로 설계·승인  ← 1차 Deferred
 → 운영 Redis 자동 복구 절차 확정
 ```
