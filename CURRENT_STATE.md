@@ -177,6 +177,8 @@ App main
 - Argo CD Self-Heal PASS
 - Git Revert 기반 Runtime Rollback PASS
 
+App #123 / PR #124에서 Frontend Runtime Image의 `libexpat` 수정 가능한 HIGH를 패치했다. Jenkins Image Pipeline main Build #28은 Frontend `CRITICAL=0`, 수정 가능한 `HIGH=0`, Candidate Health·Promote·Final Digest를 확인했다. GitOps PR #141 병합 Revision `595288b25eff3b6a314eff3ce4b1be7444a09fdf`에서는 VM Argo `apps-frontend` Synced/Healthy, Frontend 2/2 Ready·Updated·Available와 Worker 분산, Gateway `/login` HTTP 200을 확인했다([App #123 완료 근거](https://github.com/seokpan/seokpan-app/issues/123)). 이 결과는 해당 Revision의 검증이며 App #112/#117의 미완료 범위를 해소하지 않는다.
+
 후속 App PR #128은 Reference 문서와 Dockerfile 주석만 정리했다. 그 병합 Commit `0005d0d8c834405ad31a4eb4d0d166eb04768744`를 Jenkins Image Pipeline Build #29가 처리했고, Dockerfile 경로 변경으로 Backend·Frontend 두 Component의 새 Digest와 Source SHA를 기록한 GitOps Promotion PR #146이 승인 후 병합됐다. 이는 **GitOps Desired State 반영** 근거이며, 해당 Revision의 운영 Argo CD Sync·Pod Ready·Gateway Smoke를 이번 문서 현행화에서 재조회한 결과는 아니다. 단순 주석 변경도 현재 Component 영향 경로에는 포함될 수 있으므로 비영향 변경의 rollout 방지는 경로 판정 범위에서만 주장한다.
 
 ### 4.4 Observability — IMPLEMENTED + VALIDATED
