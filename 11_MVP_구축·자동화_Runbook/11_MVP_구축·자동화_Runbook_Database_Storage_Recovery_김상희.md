@@ -92,7 +92,7 @@ Password, 전체 DB URL, Vault 평문 값, Token은 콘솔·Issue·PR·문서에
 | MariaDB Recovery 절차(`mariadb_dr_recovery.yml`) | Validated | Infra #119 PR #133 merge |
 | MariaDB DR-01 실측(RTO/RPO) | **Validated(완료, 2026-09-18 close)** | Infra #194 — Isolated RTO 27.376초 / Production RPO 3건·RTO 1분29초(단일)·4분(이중화). PR #197로 `replication_setup.yml:117` Gate 태스크의 `when` 누락 버그 수정 |
 | Redis Write/Read/PVC Persistence | Validated | 09 Gate F, seokpan-gitops#7 |
-| Redis DR-03(PVC 손상 시 MariaDB 기준 재구성) | **Validated(1차 Infra 레벨, 격리 환경, 2026-09-18)**, 운영 자동화는 미착수 | Infra #115(open) — §8 참고 |
+| Redis DR-03(PVC 손상 시 MariaDB 기준 재구성) | **Validated(1차 Infra 레벨, 격리 환경, 2026-09-18)**, 운영 자동화는 1차 Deferred | Infra #115(open: Git Evidence 추적성 보완) — §8 참고 |
 | etcd Snapshot 생성/무결성/NFS 전송 | Validated(축소 스코프) | Infra #113(2026-09-08 스코프 축소 후 completed) |
 | etcd DR-02 E2E(격리 3-member Restore, 수동) | Validated, RTO 38분44초(트러블슈팅 포함) | Infra #156(2026-09-11) |
 | etcd DR-02 E2E(자동화, Safety Guard/Restore Decision Gate) | Validated, RTO 52초 | Infra #176, PR #191(2026-09-16 merged) |
@@ -103,7 +103,7 @@ Password, 전체 DB URL, Vault 평문 값, Token은 콘솔·Issue·PR·문서에
 
 이 표는 재실행·장애 대응 시 사용할 Current State 기준점이며, 12 문서의 Test Case별 PASS/FAIL Evidence를 대신하지 않는다.
 
-> **Redis DR-03 관련 정정**: 이슈 #115가 "미완료"인 이유는 검증 자체가 안 끝나서가 아니라, 이번 검증에서 확정한 절차(§8)를 실제 운영 `platform/redis-0`에 자동 반영하기 위한 Ansible 자동화(`redis-dr-recovery-automation-handoff.md`로 인계)와 그 전제조건인 운영 Pod 쓰기 권한 결정이 아직 남아 있기 때문이다. 장애 관찰용 권한(`pods:delete`, `pods/log:get`)은 이미 `platform/ksh` SA에 부여 완료(seokpan-gitops#47/#48)했고, `pods/exec`는 부여하지 않기로 확정했다.
+> **Redis DR-03 관련 정정**: #115의 1차 Infra 검증은 PASS이며, 운영 자동화는 1차 MVP에서 별도 Deferred 범위다. 장애 관찰/주입 권한(`pods:delete`, `pods/log:get`)은 `platform/ksh` SA에 부여·검증 완료(seokpan-gitops#47/#48), `pods/exec`는 비부여로 확정했다. **#115가 현재 Open인 이유는 운영 자동화가 아니라 Git에서 재추적 가능한 Run ID·SHA·비교 결과·로그·checksum·cleanup 연결이 미완료이기 때문이다.**
 
 ---
 
@@ -517,11 +517,11 @@ requests / request-expiries (TTL 20h) → 재구성 대상 아님(4번 규칙의
 ```text
 1차 수동 절차 검증 완료(§8.3~8.5)
 → Ansible 자동화 착수(redis-dr-recovery-automation-handoff.md로 Claude Code 인계)
-→ 운영 platform/redis-0에 대한 재구성값 "쓰기" 반영 권한 결정  ← 아직 미확정, BLOCKING
+→ 운영 platform/redis-0에 대한 재구성값 쓰기 경로 설계·승인  ← 1차 Deferred
 → 운영 Redis 자동 복구 절차 확정
 ```
 
-장애 관찰/주입용 권한은 이미 부여됐다(`platform/ksh` SA, `platform/redis-0` 대상 `pods:delete`+`pods/log:get`, seokpan-gitops#47/#48). `pods/exec`는 부여하지 않기로 확정했으므로, 재구성값을 운영 Redis에 실제로 써넣는 방식(예: 별도 서비스 계정 경유, Job 방식 등)은 별도로 설계·결정해야 한다. 이 결정 전까지 이슈 #115는 open 상태를 유지한다.
+장애 관찰/주입용 권한은 이미 부여·검증됐다(`platform/ksh` SA, `platform/redis-0` 대상 `pods:delete`+`pods/log:get`, seokpan-gitops#47/#48). `pods/exec`는 부여하지 않기로 확정했으므로, 재구성값을 운영 Redis에 실제로 써넣는 방식(예: 별도 서비스 계정 경유, Job 방식 등)은 1차 Deferred로 두고 후속에서 별도 설계·승인한다. #115 Open 여부는 이 운영 자동화가 아니라 Evidence 추적성 보완과 연결한다.
 
 ---
 
