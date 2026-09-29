@@ -650,7 +650,8 @@ DB Schema Migration은 대상이 아니다.
 현재 결과: `PASS`.
 
 Evidence:
-- `seokpan-gitops#57` — 검증된 정상 Git Revision/Image Digest로 GitOps를 되돌린 뒤 Argo CD Sync와 Runtime Ready 복구를 실제 확인
+- `seokpan-gitops#57` Step 8·GitOps PR #119/#120 — 검증된 정상 Git Revision/Image Digest로 되돌린 뒤 Argo CD Sync와 Runtime Ready 복구를 실제 확인
+- [Delivery/Observability 12의 DOB-CD-03](12_MVP_검증·측정_계획_Delivery_Observability_최유준.md) — 같은 Git Revert 실행에서 불량 Digest의 `ImagePullBackOff`, Revert 후 2/2·Baseline Digest 복귀를 기록. 기본 RollingUpdate 중 가용 Replica 2→1 감소도 보존
 
 PASS:
 
