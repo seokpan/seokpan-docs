@@ -92,6 +92,7 @@ Historical record
 
 - [멘토링 기록 목차](mentoring/README.md)
 - 1차 멘토링: 2026-09-01
+- 2차 멘토링: 2026-09-15
 - 멘토 의견, 해당 시점의 GitHub 실제 상태, 다음 멘토링까지의 반영 추적과 변화 기록을 함께 관리합니다.
 - 단순 회의록이 아니라 `피드백 → 판단 → 구현/조치 → 검증 → 변화`를 연결해 팀 공유 및 포트폴리오 근거로 활용합니다.
 
@@ -105,7 +106,9 @@ seokpan-docs/
 ├─ 11_MVP_구축·자동화_Runbook/
 ├─ 12_MVP_검증·측정_계획/
 ├─ logical-architecture/
-└─ physical-architecture/
+├─ physical-architecture/
+├─ mentoring/
+└─ troubleshooting/
 ```
 
 * `logical-architecture/`  : 서비스 흐름, Kubernetes 및 주요 구성요소의 논리 구조
