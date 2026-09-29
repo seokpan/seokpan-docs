@@ -502,7 +502,7 @@ Redis DR은 "Redis 데이터를 별도로 백업했다가 복원"하는 방식�
 * Redis Ahead(무효화)/Behind(재동기화)/Exact 3케이스 판정 로직(PASS)
 * Data Loss/Duplicate/Stale 3종 무결성 검증(PASS, 전부 없음)
 
-**이 검증 완료가 곧 운영 반영 완료를 의미하지 않는다.** 운영 `platform/redis-0`에 대한 자동 복구(Ansible 자동화, `redis-dr-recovery-automation-handoff.md`로 인계)는 아직 착수 전이며, 재구성값을 운영 Redis에 실제로 쓰는 권한 설계가 BLOCKING 선행조건으로 남아 있다. 장애 관찰/주입용 권한(`pods:delete`, `pods/log:get`)은 `platform/ksh` SA에 이미 부여됐고(seokpan-gitops#47/#48), `pods/exec`는 부여하지 않기로 확정했다. 이슈 #115는 이 잔여 작업 때문에 open 상태를 유지한다.
+**이 검증 완료가 곧 운영 반영 완료를 의미하지 않는다.** 운영 `platform/redis-0`에 대한 자동 복구(Ansible 자동화)는 1차 MVP에서 Deferred다. 장애 관찰/주입용 권한(`pods:delete`, `pods/log:get`)은 `platform/ksh` SA에 이미 부여·검증됐고(seokpan-gitops#47/#48), `pods/exec`는 부여하지 않기로 확정했다. 운영 재구성값을 실제로 쓰는 경로는 별도 설계·승인 대상이다. **이슈 #115의 현재 Open 사유는 운영 자동화 미착수가 아니라 2026-09-27 점검에서 확인된 Run ID·SHA·비교 결과·로그·checksum·cleanup의 Git 추적성 미완료다.**
 
 ---
 
@@ -898,7 +898,7 @@ Redis DR-03(1차 Infra 레벨, 격리 환경)
 → PASS
 
 Redis DR-03 운영 자동화
-→ Not Tested(BLOCKING: 운영 Pod 쓰기 반영 권한 결정)
+→ Not Tested / Deferred(운영 쓰기 경로 미설계·미승인)
 ```
 
 ---
@@ -941,7 +941,7 @@ Snapshot
 | E    | MariaDB Recovery         | **`Validated`(완료)** | Restore / 정합성 / RTO·RPO 확정(이슈 #194) |
 | F    | Redis Persistence        | `Validated` | Write / Read / Pod Recreation            |
 | F    | Redis DR-03(1차 Infra)    | **`Validated`** | 격리 환경 재구성 절차 검증 완료(이슈 #115) |
-| F    | Redis DR-03(운영 자동화)      | `Not Tested` | BLOCKING: RBAC/쓰기 반영 권한 결정            |
+| F    | Redis DR-03(운영 자동화)      | `Not Tested / Deferred` | 장애주입 RBAC 완료; 운영 쓰기 경로는 별도 설계·승인 |
 | G    | etcd DR                  | `Validated` | Isolated Restore / Quorum / API / Object, RTO 52초(자동화) |
 
 ---
@@ -1142,7 +1142,7 @@ RTO / RPO (확정)
 * [x] Write / Read
 * [x] Pod Recreation 후 데이터 유지
 * [x] DR-03 1차 Infra 레벨 검증(격리 환경, MariaDB 기준 재구성, 이슈 #115)
-* [ ] DR-03 운영 자동화(Ansible, `platform/redis-0` 실제 쓰기 반영) — BLOCKING: 쓰기 권한 결정
+* [ ] DR-03 운영 자동화(Ansible, `platform/redis-0` 실제 쓰기 반영) — 1차 Deferred; 운영 쓰기 경로 별도 설계·승인
 
 ---
 
@@ -1219,7 +1219,7 @@ etcd DR-02 RTO(자동화, 이슈 #176/PR #191, 대표값) = 52초
 | 항목                | 추적 대상          | 목적                                |
 | ----------------- | -------------- | ---------------------------------- |
 | DR-03 설계/계약        | `F_redis_recovery_contract.md` | MariaDB 기준 재구성 규칙 정의     |
-| DR-03 1차 검증        | Infra #115(open) | 격리 환경(redis-dr03-test) 재구성 절차 검증 |
+| DR-03 1차 검증        | Infra #115(open) | 격리 환경(redis-dr03-test) 재구성 절차 PASS; Git 추적 가능한 원본 Evidence 연결 보완 필요 |
 | DR-03 RBAC         | seokpan-gitops#47 / #48 | 장애 관찰/주입 권한(`pods:delete`+`pods/log:get`) 부여, `pods/exec` 미부여 확정 |
 | DR-03 운영 자동화 인계    | `redis-dr-recovery-automation-handoff.md` | Ansible 자동화 착수 명세(진행 중) |
 
@@ -1263,4 +1263,4 @@ MariaDB
 + Application Data Consumer 검증
 ```
 
-이 모든 항목의 실제 실행 결과와 Evidence를 기준으로 최종 상태를 판정하며, Redis DR-03 운영 자동화가 남아 있는 한 "전체 Data Platform DR Acceptance 완료"는 아직 선언하지 않는다.
+이 모든 항목의 실제 실행 결과와 Evidence를 기준으로 최종 상태를 판정한다. Redis DR-03 운영 자동화는 1차 MVP Acceptance 필수조건이 아닌 Deferred 범위이며, #115의 1차 Infra PASS와 운영 자동화 Deferred를 분리한다. 전체 Data Platform DR Acceptance는 각 Test Case의 실제 PASS/Deferred 및 Evidence 경계를 기준으로 판단한다.
