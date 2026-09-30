@@ -5,6 +5,7 @@
 - 문서 인덱스 현행화: **2026-09-29 KST** (Network 문서 추가·참조 범위 반영. Runtime 및 App #112의 진행 중 검증 결과는 이번 변경에서 재판정하지 않음)
 - Closeout 현행화: **2026-09-29 KST** (App PR #119/#120, Infra PR #220, GitOps PR #138 merge와 Docs #89 최종 A안 반영. App #117 Runtime Gate와 #112 Validation은 별도 Open 유지)
 - 문서·Delivery 후속 현행화: **2026-09-29 KST** (App PR #128, GitOps PR #145/#146 merge 확인. PR #146의 GitOps Desired State 변경은 운영 Argo CD Sync·Pod Ready 재검증과 구분)
+- UX Fix 후속 현행화: **2026-09-30 KST** (App #129 완료, PR #130·GitOps PR #149 병합 및 지정 Browser Evidence 연결. #112/#117과 cp-03/API VIP HA의 미완료 경계 유지)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -148,6 +149,10 @@ A-01~A-10 Application Roadmap의 Runtime Integration은 완료됐다.
 - Local Operation Feedback Source 및 기본 UI 회귀
 
 후속 Frontend 변경은 Jenkins Image Pipeline과 GitOps Promotion PR을 통해 최종 Desired State에 반영됐다. Realtime failure-path의 강화 Browser/Provider 검증은 별도 #112에서 관리한다.
+
+2026-09-30 후속 UX Fix [App #129](https://github.com/seokpan/seokpan-app/issues/129)는 닫힌 Room Socket에서 동작하지 않는 `상태 다시 확인` 버튼을 제거한 [PR #130](https://github.com/seokpan/seokpan-app/pull/130) 병합 후 완료됐다. 병합 Source `1128ebcc21bc1523aea68f46659ce6beeed7b00d`의 Frontend는 Jenkins Image Pipeline main Build #31 및 [GitOps Promotion PR #149](https://github.com/seokpan/seokpan-gitops/pull/149) 병합으로 Desired State에 반영됐고 Backend는 `NO_COMPONENT_CHANGE`였다.
+
+App #129/#112에 기록된 `cp-01/root` 직접 기능 Gate `DIRECT_GATE_EXIT_CODE=0`과 Windows Host 실제 Gateway Browser의 무효 CTA 부재·수동 재연결·같은 Room Binding·교차 Chat·시험 Room/Session 정리 `FINAL_EXIT_CODE=0`, `BROWSER_EXIT_CODE=0`을 해당 Fix의 완료 근거로 연결한다. 이는 기존 실행 기록을 반영한 것으로 이번 문서 작업에서 Runtime을 재측정한 결과가 아니다. #112 V-04 전체 및 cp-03/API VIP HA 장애는 별도 미완료 범위이며 이 기능 Gate를 Cluster HA 전체 PASS로 확대하지 않는다.
 
 ### 4.3 CI/CD / GitOps — IMPLEMENTED + VALIDATED
 
