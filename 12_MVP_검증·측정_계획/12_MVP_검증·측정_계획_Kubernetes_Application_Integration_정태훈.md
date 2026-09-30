@@ -1027,3 +1027,10 @@ Captured production activation = NOT PERFORMED / DEFERRED
 - HPA — `NOT IMPLEMENTED / DEFERRED`
 - P4 Performance / Recovery — 실제 최종 정량 Evidence가 없는 항목은 `NOT TESTED` 또는 진행 상태 유지
 - Cross-role DR 이후 Application 정상화 — 각 DR Run과 동일 Revision으로 연결된 Evidence가 확보될 때만 PASS
+
+## 18. 2026-09-30 닫힌 Room Socket CTA Fix 완료 근거
+
+- [App #129](https://github.com/seokpan/seokpan-app/issues/129) / [PR #130](https://github.com/seokpan/seokpan-app/pull/130): 닫힌 Socket의 무효 `상태 다시 확인` CTA를 숨기고 `다시 연결`을 유지한다. 열린 Socket의 Snapshot Refresh 경로는 PR 회귀시험·Source로 확인했다. PR HEAD의 필수 Jenkins `pr-head`는 success이며 병합 Source는 `1128ebcc21bc1523aea68f46659ce6beeed7b00d`다.
+- Jenkins Image Pipeline main Build #31의 Frontend Digest는 [GitOps PR #149](https://github.com/seokpan/seokpan-gitops/pull/149)로 병합됐다. Backend는 `NO_COMPONENT_CHANGE`였다.
+- App #129 및 [#112의 2026-09-30 Browser Evidence](https://github.com/seokpan/seokpan-app/issues/112)에 기록된 직접 기능 Gate `DIRECT_GATE_EXIT_CODE=0`, 실제 Gateway Browser의 닫힌 Room Socket 무효 CTA 부재·수동 재연결·같은 Room Binding·교차 Chat·시험 Room/Session 정리 `FINAL_EXIT_CODE=0`, `BROWSER_EXIT_CODE=0`을 연결한다. 이 문서 작업에서는 해당 시험을 재실행하지 않았다.
+- 판정: **App #129 지정 Fix 완료 / completed 종료**. KAI-E2E-01 전체, #112 V-04의 모든 상태·CTA·command lifetime 및 #117 Runtime 복구를 전체 PASS로 바꾸지 않는다. cp-03/API VIP HA 장애는 별도 미해결이며 직접 기능 Gate를 Cluster HA PASS로 사용하지 않는다.
