@@ -41,6 +41,16 @@ PDF 작성 이후 확정된 변경과 구현 단계의 공용 기준은 아래 �
 구현 기준 문서는 원 기획·설계의 범위를 임의로 확대하거나 대체하지 않습니다.
 실제 코드·Manifest·자동화와 작업 상태는 각 구현 Repository에서 관리합니다.
 
+## Related Repositories
+
+1차 프로젝트의 구현 저장소입니다.
+
+| 저장소 | 역할 |
+| --- | --- |
+| [`seokpan-infra`](https://github.com/seokpan/seokpan-infra) | 서버·네트워크·DB·Kubernetes 기반 인프라의 Ansible 자동화 |
+| [`seokpan-gitops`](https://github.com/seokpan/seokpan-gitops) | Kubernetes 배포 설정(Desired State)과 Argo CD 구성 |
+| [`seokpan-app`](https://github.com/seokpan/seokpan-app) | Frontend·Backend 소스, 테스트, 컨테이너·CI 설정 |
+
 ## Execution & Collaboration
 
 01~08 Baseline 이후의 실행·협업 단계에서 사용하는 후속 문서는 아래에서 확인합니다.
