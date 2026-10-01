@@ -6,6 +6,7 @@
 - Closeout 현행화: **2026-09-29 KST** (App PR #119/#120, Infra PR #220, GitOps PR #138 merge와 Docs #89 최종 A안 반영. App #117 Runtime Gate와 #112 Validation은 별도 Open 유지)
 - 문서·Delivery 후속 현행화: **2026-09-29 KST** (App PR #128, GitOps PR #145/#146 merge 확인. PR #146의 GitOps Desired State 변경은 운영 Argo CD Sync·Pod Ready 재검증과 구분)
 - UX Fix 후속 현행화: **2026-09-30 KST** (App #129 완료, PR #130·GitOps PR #149 병합 및 지정 Browser Evidence 연결. #112/#117과 cp-03/API VIP HA의 미완료 경계 유지)
+- 완료 근거 후속 현행화: **2026-10-02 KST** (App #132/#134/#138 종료·Runner #136/#137 및 GitOps #150/#151/#152 반영. 지정 측정·격리 시험·시점 관찰과 #112/#117 잔여 검증을 구분)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -152,7 +153,7 @@ A-01~A-10 Application Roadmap의 Runtime Integration은 완료됐다.
 
 2026-09-30 후속 UX Fix [App #129](https://github.com/seokpan/seokpan-app/issues/129)는 닫힌 Room Socket에서 동작하지 않는 `상태 다시 확인` 버튼을 제거한 [PR #130](https://github.com/seokpan/seokpan-app/pull/130) 병합 후 완료됐다. 병합 Source `1128ebcc21bc1523aea68f46659ce6beeed7b00d`의 Frontend는 Jenkins Image Pipeline main Build #31 및 [GitOps Promotion PR #149](https://github.com/seokpan/seokpan-gitops/pull/149) 병합으로 Desired State에 반영됐고 Backend는 `NO_COMPONENT_CHANGE`였다.
 
-App #129/#112에 기록된 `cp-01/root` 직접 기능 Gate `DIRECT_GATE_EXIT_CODE=0`과 Windows Host 실제 Gateway Browser의 무효 CTA 부재·수동 재연결·같은 Room Binding·교차 Chat·시험 Room/Session 정리 `FINAL_EXIT_CODE=0`, `BROWSER_EXIT_CODE=0`을 해당 Fix의 완료 근거로 연결한다. 이는 기존 실행 기록을 반영한 것으로 이번 문서 작업에서 Runtime을 재측정한 결과가 아니다. #112 V-04 전체 및 cp-03/API VIP HA 장애는 별도 미완료 범위이며 이 기능 Gate를 Cluster HA 전체 PASS로 확대하지 않는다.
+App #129/#112에 기록된 `cp-01/root` 직접 기능 Gate `DIRECT_GATE_EXIT_CODE=0`과 Windows Host 실제 Gateway Browser의 무효 CTA 부재·수동 재연결·같은 Room Binding·교차 Chat·시험 Room/Session 정리 `FINAL_EXIT_CODE=0`, `BROWSER_EXIT_CODE=0`을 해당 Fix의 완료 근거로 연결한다. 이는 기존 실행 기록을 반영한 것으로 이번 문서 작업에서 Runtime을 재측정한 결과가 아니다. #112 V-04 전체와 cp-03/API VIP HA는 당시 별도 미완료로 남겼다. 이후 가용성 시점 관찰은 5.4절에 연결하며 이 기능 Gate를 Cluster HA 전체 PASS로 확대하지 않는다.
 
 ### 4.3 CI/CD / GitOps — IMPLEMENTED + VALIDATED
 
@@ -230,6 +231,16 @@ Backend structured stdout
 
 각 역할의 상세 결과와 보장 범위는 해당 12 문서 및 원 Issue를 사용한다.
 
+### 4.6 2026-10-02 완료 Fix·Backend Security 후속 현행화
+
+아래는 원본 Issue/PR에 기록된 완료 근거의 반영이다. 이번 문서 작업에서 운영 서버나 성능 시험을 다시 실행하지 않았다.
+
+- [App #132](https://github.com/seokpan/seokpan-app/issues/132) / [PR #133](https://github.com/seokpan/seokpan-app/pull/133)은 Vote Snapshot의 `REDIS_SNAPSHOT_CHANGED`에 전체 Game Key→Turn Lua 읽기를 최대 3회 재시도하고, 소진 시 HTTP 503 `SNAPSHOT_CHANGED`로 응답하도록 수정했다. 다른 Redis Provider 오류는 일반 503과 내부 정제 WARNING으로 구분한다. 승인·필수 PR Head CI·병합 후 Build #33 및 [GitOps PR #150](https://github.com/seokpan/seokpan-gitops/pull/150)으로 배포됐다. Run `a10-m02-b551ad9e`는 Member/Guest 1→2→4 Game, 합계 7 Game·63 Vote·HTTP 오류 0, Prometheus 관찰 및 finalRuntimeGate PASS를 기록했다. 실제 Snapshot 경합 분기의 발생을 직접 관찰한 근거는 아니며 **M-02/KAI-PERF-01 최종 Baseline 완료는 아니다**. 수치·범위는 역할별 12의 19절을 따른다.
+- [App #134](https://github.com/seokpan/seokpan-app/issues/134) / [PR #135](https://github.com/seokpan/seokpan-app/pull/135)의 OpenSSL 패키지 고정 수정 후 Build #33의 Backend/Frontend Scan은 CRITICAL 0·수정 가능 HIGH 0, Health/Promote/Digest를 통과했다. GitOps #150 병합 후 2026-09-30 12:58:29 UTC cp-01 읽기 전용 확인은 `APP134_POSTPROMOTION_READ_ONLY_PASS`, EXIT 0을 기록했다.
+- [App #138](https://github.com/seokpan/seokpan-app/issues/138) / [PR #139](https://github.com/seokpan/seokpan-app/pull/139)의 PCRE2 패키지 고정 수정 후 Build #36은 같은 Scan·Health·Promote Gate를 통과했고 [GitOps PR #152](https://github.com/seokpan/seokpan-gitops/pull/152)가 병합됐다. 이전 Build #35의 Scan 차단은 그대로 실패 이력이다. 2026-10-01 10:21:47 UTC cp-01 확인은 `APP138_POSTPROMOTION_READ_ONLY_PASS`, 최종/개별 Gate EXIT 0을 기록했다.
+
+최신 기록된 배포 근거는 GitOps Revision `8a7ccdbeab24f67978dff8c0763cc8175a86e9a2`, Backend Source `a75867b7b579de08b14fe93f80b1a7b05cc85890`, Digest `sha256:f4ba7afba1f3ee21592886f09ab464a60179cf0ea92119f549f4712318c1114c`다. Frontend는 GitOps #150의 Source `26fac7ed6ba17955bac902ad9d727b9efcc9a765`를 유지했다. #134/#138의 확인 범위는 Argo Revision·정확한 Image/Source, Backend/Frontend 각각 2/2 Ready·2 Worker 분산·각 2 Endpoint, Gateway Programmed 및 신뢰 TLS Login HTTP 200이다. #132/#134/#138은 completed 종료됐으며 #112/#117의 전체 Validation 완료를 의미하지 않는다.
+
 ## 5. 구현 완료 / 강화 Validation Pending
 
 ### 5.1 Realtime·2 Replica·Reconnect
@@ -290,6 +301,24 @@ Captured production activation = NOT PERFORMED / DEFERRED
 - V-07 — F10/F13 Measurement
 
 이 Validation이 남았다는 이유로 final main에 이미 통합된 Source를 미구현으로 되돌려 기록하지 않으며, 실제 미실행 항목을 PASS로 기록하지도 않는다.
+
+### 5.3 Background Runner — 완료 Source·부분 Runtime 근거와 잔여
+
+Canonical: [App #117](https://github.com/seokpan/seokpan-app/issues/117), **Open 유지**.
+
+- [PR #136](https://github.com/seokpan/seokpan-app/pull/136)은 필수 Runner의 늦은 비정상 종료에 Ready 하강·CRITICAL `production.runner.process_shutdown_requested`·자기 Uvicorn PID SIGTERM을 구현했다. 정상 Lifespan 취소와 transient Redis NotReady·Backoff·DB/Redis 회복 Probe는 구분한다. 필수 PR Head CI·승인·병합, Build #34 및 [GitOps PR #151](https://github.com/seokpan/seokpan-gitops/pull/151) 반영은 완료다.
+- [PR #137](https://github.com/seokpan/seokpan-app/pull/137)은 최초 Provider 실패의 고정 `provider_cause` 분류와 내부 오류 코드, App/Data/Platform 수동 점검·인계 절차를 추가했다. 필수 PR Head CI·승인·병합 완료이며 Build #35 차단 후 #139의 Build #36/GitOps #152로 배포됐다.
+- [#117 격리 late fatal 근거](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5922946065)는 배포 Image와 Fake Provider를 사용한 비서비스 Pod에서 실제 Uvicorn PID 1 종료·Kubernetes Restart 1회를 확인했다. 임시 Pod 삭제와 운영 Backend 2/2·Endpoint·UID/Restart 보존을 확인한 범위다.
+- [정상 운영 Redis 재시작 관찰](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5927572676)은 약 10초 후 Redis Ready 및 AOF/DBSIZE 290→290, Backend 2/2·Endpoint/UID 보존, Provider 오류→회복 약 8.2초를 기록했다. 이 짧은 시험에서는 Kubernetes Backend Ready가 하강하지 않았으므로 Ready False→True 실측 근거로 사용하지 않는다.
+- [후속 30초 격리 Fake Provider 시험](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5927688241)은 Kubernetes Ready True→False→True, HTTP Ready 503→200과 시험 정리 PASS/EXIT 0을 기록했다. 앞선 Harness Assertion EXIT 1 실행은 별도 실패 이력이며 소급 PASS로 바꾸지 않는다.
+
+이 근거는 운영 공유 Redis의 지속 장애·2-Replica 장시간 수렴, 과거 두 사건의 저수준 원인·당시 HTTP/Session 영향, 지속 장애 감시 주체·에스컬레이션의 실제 검증을 완료한 것이 아니다. Game Event가 관찰되지 않은 짧은 시간대를 사용자 영향 없음으로 해석하지 않는다. 상세 범위는 역할별 12의 19절과 원본 #117을 따른다.
+
+### 5.4 Control Plane / API VIP — 후속 시점 관찰
+
+[#112의 2026-09-30 후속 근거](https://github.com/seokpan/seokpan-app/issues/112#issuecomment-5901873087)는 팀원 2명의 실제 신뢰 TLS Login/Lobby·동일 Waiting Room/Chat/Leave 관찰과 함께 cp-01 읽기 전용 조회에서 Backend/Frontend 2/2, 관련 Argo Synced/Healthy, Control Plane 3대의 직접 readyz **각 3/3** 및 API VIP **9/9**를 기록했다. Screenshot와 사용자 관찰은 자동 시험 결과와 구분한다.
+
+이는 앞선 cp-03/API VIP 장애 이후 해당 시점의 가용성 관찰이다. 장애 원인 규명·장애 주입·HA 절체/복구 전체 PASS를 뜻하지 않으며 과거 장애를 삭제하지 않는다. #112의 강화 Validation은 계속 Open이다.
 
 ## 6. 1차에서 구현하지 않은 항목
 
@@ -390,6 +419,8 @@ Network 12의 `Partial / Blocked / Not Tested / Planned / Deferred`는 해당 �
 
 App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(애플리케이션 구조·배포 안내), GitOps PR #136(배포 흐름·NetworkPolicy 서술), Infra PR #218(실제 VM 구성도)이 2026-09-28 각 저장소 main에 병합됐다. 이후 2026-09-29 App PR #119, Infra PR #220, GitOps PR #138 및 Docs PR #184로 현재 계약·실행 안내·배포 주석·Network 인덱스를 추가 현행화했다. App PR #128과 GitOps PR #145의 문구 현행화도 병합됐으며, Image Promotion PR #146의 병합 범위는 4.3절에서 구분한다. 문서 변경은 운영 VM·Cluster 상태를 새로 측정한 결과와 구분한다.
 
+Docs [PR #201](https://github.com/seokpan/seokpan-docs/pull/201)의 README Related Repositories 연결도 main에 반영됐다. 2026-10-02 재점검은 1차 App/Infra/GitOps/Docs 및 공통 `.github`만 대상으로 수행했으며 2차 저장소는 변경하지 않았다.
+
 ## 11. 주요 Source / Evidence Index
 
 ### 공용
@@ -410,7 +441,9 @@ App / Infra / GitOps README의 2026-09-23 요약형 개편 이후, App PR #116(�
 - `seokpan-app#94` — Gateway Browser Happy Path
 - `seokpan-app#98` — GitOps Promotion Automation
 - `seokpan-app#112` — Closeout Realtime Validation Backlog
-- `seokpan-app#117` — Background Runner transient Redis 복구 Source 반영 후 Runtime Gate
+- `seokpan-app#117` — Runner 복구·늦은 종료/원인 분류 Source와 부분 Runtime 근거, 잔여 Gate (5.3절)
+- `seokpan-app#132` — Vote Snapshot Fix 완료, 소규모 측정과 최종 M-02 구분
+- `seokpan-app#134/#138` — Backend Security Scan·Promotion·지정 Runtime Gate 완료
 - `seokpan-gitops#57` — CD / Self-Heal / Rollback
 - `seokpan-gitops#109` — F04 Runtime / Loki Evidence
 
