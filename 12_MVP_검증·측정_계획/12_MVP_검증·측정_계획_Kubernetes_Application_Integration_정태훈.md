@@ -293,7 +293,7 @@ A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 | KAI-OBS-02 | Application Logs | G | 14 | PASS |
 | KAI-E2E-01 | Browser M5 First Success | F~G | 11~14 | In Progress — 외부 접속 Runtime Gate PASS, P4 전체 사용자 흐름 미완료 |
 | KAI-CON-01 | M-01 / P4 | G | 9 | In Progress / Not Final |
-| KAI-PERF-01 | M-02 / P4 | G | 9~10 | Not Tested |
+| KAI-PERF-01 | M-02 / P4 | G | 9~10 | Partial / Not Final — 지정 소규모 Run, 19절; 최종 Baseline 미완료 |
 | KAI-REC-01 | M-03 / P4 | G | 9/15/17 | In Progress / Not Final |
 | KAI-CD-01 | Self-Heal | G | 13 | PASS |
 | KAI-CD-02 | Git Revert Rollback | G | 13/17 | PASS |
@@ -937,7 +937,7 @@ Kubernetes / Application Integration
 | Browser External Runtime Gate | PASS |
 | Browser 전체 M5 / 실제 데이터 UX Acceptance | In Progress |
 | M-01 Concurrency | In Progress / Not Final |
-| M-02 Performance Baseline | Not Tested |
+| M-02 Performance Baseline | Partial / Not Final — 지정 소규모 Run, 19절; 최종 Baseline 미완료 |
 | M-03 Recovery | In Progress / Not Final |
 | Argo CD Self-Heal | PASS |
 | Git Revert Rollback | PASS |
@@ -1033,4 +1033,51 @@ Captured production activation = NOT PERFORMED / DEFERRED
 - [App #129](https://github.com/seokpan/seokpan-app/issues/129) / [PR #130](https://github.com/seokpan/seokpan-app/pull/130): 닫힌 Socket의 무효 `상태 다시 확인` CTA를 숨기고 `다시 연결`을 유지한다. 열린 Socket의 Snapshot Refresh 경로는 PR 회귀시험·Source로 확인했다. PR HEAD의 필수 Jenkins `pr-head`는 success이며 병합 Source는 `1128ebcc21bc1523aea68f46659ce6beeed7b00d`다.
 - Jenkins Image Pipeline main Build #31의 Frontend Digest는 [GitOps PR #149](https://github.com/seokpan/seokpan-gitops/pull/149)로 병합됐다. Backend는 `NO_COMPONENT_CHANGE`였다.
 - App #129 및 [#112의 2026-09-30 Browser Evidence](https://github.com/seokpan/seokpan-app/issues/112)에 기록된 직접 기능 Gate `DIRECT_GATE_EXIT_CODE=0`, 실제 Gateway Browser의 닫힌 Room Socket 무효 CTA 부재·수동 재연결·같은 Room Binding·교차 Chat·시험 Room/Session 정리 `FINAL_EXIT_CODE=0`, `BROWSER_EXIT_CODE=0`을 연결한다. 이 문서 작업에서는 해당 시험을 재실행하지 않았다.
-- 판정: **App #129 지정 Fix 완료 / completed 종료**. KAI-E2E-01 전체, #112 V-04의 모든 상태·CTA·command lifetime 및 #117 Runtime 복구를 전체 PASS로 바꾸지 않는다. cp-03/API VIP HA 장애는 별도 미해결이며 직접 기능 Gate를 Cluster HA PASS로 사용하지 않는다.
+- 판정: **App #129 지정 Fix 완료 / completed 종료**. KAI-E2E-01 전체, #112 V-04의 모든 상태·CTA·command lifetime 및 #117 Runtime 복구를 전체 PASS로 바꾸지 않는다. cp-03/API VIP HA는 당시 별도 미완료로 남겼으며 이후 가용성 시점 관찰은 19.4절에서 구분한다. 직접 기능 Gate를 Cluster HA PASS로 사용하지 않는다.
+
+## 19. 2026-10-02 완료 Fix·배포 및 부분 검증 후속 현행화
+
+이번 변경은 2026-09-30~10-01 원본 실행 기록을 연결한다. 운영 서버·Browser·측정 시험을 다시 실행한 결과가 아니며 01~08 Baseline이나 과거 실패 Run을 소급 수정하지 않는다.
+
+### 19.1 Vote Snapshot Fix와 지정 소규모 M-02 Run
+
+[App #132](https://github.com/seokpan/seokpan-app/issues/132) / [PR #133](https://github.com/seokpan/seokpan-app/pull/133)은 `REDIS_SNAPSHOT_CHANGED`의 전체 Game Key→Turn Lua 읽기를 최대 3회 재시도하고, 소진 시 HTTP 503 `SNAPSHOT_CHANGED`를 반환한다. 다른 Provider 오류는 일반 503과 내부 정제 WARNING으로 구분한다. 승인·필수 PR Head CI·병합 후 Build #33 및 [GitOps #150](https://github.com/seokpan/seokpan-gitops/pull/150)으로 반영됐다.
+
+Run `a10-m02-b551ad9e`의 Member/Guest 1→2→4 동시 Game 기록:
+
+| 동시 Game 단계 | 기록된 p95 |
+| --- | --- |
+| 1 | 236.079 ms |
+| 2 | 448.251 ms |
+| 4 | 1006.876 ms |
+
+총 7 Game·63 Vote·HTTP 오류 0, 각 Game Move 9·Result 1·Member Rating History 1, Prometheus 관찰 및 finalRuntimeGate PASS가 기록됐다. [원본 #132](https://github.com/seokpan/seokpan-app/issues/132)의 측정·영속 데이터 근거를 함께 읽는다.
+
+판정은 **App #132 Fix 완료 / KAI-PERF-01 Partial / Not Final**이다. 실제 Snapshot 경합 코드 분기의 발생을 직접 관찰한 Run은 아니며 소규모 표본을 최종 성능·운영 Capacity·V-07 전체 PASS로 사용하지 않는다. 이전 실패 Run의 Game/Rating 결과를 이번 성공으로 정정하지 않는다. M-02 공식 Baseline과 #112는 미완료다.
+
+### 19.2 Runner 완료 Source 및 지정 Runtime 근거
+
+| 범위 | 근거 | 인정 범위 |
+| --- | --- | --- |
+| 늦은 필수 Runner 종료 | [App PR #136](https://github.com/seokpan/seokpan-app/pull/136), Build #34, [GitOps #151](https://github.com/seokpan/seokpan-gitops/pull/151) | 필수 PR Head CI·승인·병합·배포; Ready 하강·CRITICAL Event·자기 Uvicorn PID SIGTERM Source |
+| Provider 원인 분류·수동 인계 | [App PR #137](https://github.com/seokpan/seokpan-app/pull/137), Build #36/[GitOps #152](https://github.com/seokpan/seokpan-gitops/pull/152) | 고정 provider_cause·내부 error_code 정제 로그, App/Data/Platform 수동 절차; Build #35 Scan 실패 보존 |
+| 격리 late fatal | [#117 실행 기록](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5922946065) | 비서비스 Pod·배포 Image·Fake Provider에서 실제 Uvicorn PID 1 종료, Restart 1회; 운영 Backend 보존·임시 Pod 삭제 |
+| 짧은 운영 Redis 정상 재시작 | [#117 실행 기록](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5927572676) | Redis 약 10초 후 Ready·AOF/DBSIZE 290→290, Backend 2/2·Endpoint/UID 보존, Provider 오류→회복 약 8.2초. Backend Kube Ready 하강은 관찰되지 않음 |
+| 후속 30초 격리 Provider 불가 | [#117 실행 기록](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5927688241) | Run UID `c3235c35-1caf-4df8-afb7-ef022fb44aaf`; Kube Ready True 08:21:58→False 08:22:13→True 08:22:33 UTC, HTTP Ready 503→200, Fake Runner 순서·시험 정리 PASS/EXIT 0 |
+
+앞선 30초 시험의 Harness Assertion EXIT 1은 별도 실패 이력이다. 후속 성공으로 해당 실행을 PASS로 바꾸지 않는다. 격리 Fake Provider 결과는 실제 공유 Redis 지속 장애·2-Replica 장시간 수렴의 증거가 아니다. 짧은 관찰 구간의 Game Start/Move/Result 0건은 당시 HTTP/Session 사용자 영향 없음의 증거도 아니다.
+
+**App #117은 Open**이다. 과거 두 사건의 저수준 원인·당시 사용자 영향·지속 장애 감시 주체와 에스컬레이션 검증은 미확정이다. 수동 대응 Source 추가를 실제 경보 발송/수신·운영 Ownership 검증 완료로 확대하지 않는다. 정상 Lifespan 취소, transient Provider 재시도/회복 Probe와 늦은 fatal 종료 계약을 구분한다.
+
+### 19.3 Backend Security·최신 기록된 배포 Gate
+
+- [App #134](https://github.com/seokpan/seokpan-app/issues/134)/[PR #135](https://github.com/seokpan/seokpan-app/pull/135): OpenSSL 패키지 고정 수정 → Build #33 Backend/Frontend CRITICAL 0·수정 가능 HIGH 0, Health/Promote/Digest → GitOps #150. 2026-09-30 12:58:29 UTC cp-01 읽기 전용 `APP134_POSTPROMOTION_READ_ONLY_PASS`, EXIT 0.
+- [App #138](https://github.com/seokpan/seokpan-app/issues/138)/[PR #139](https://github.com/seokpan/seokpan-app/pull/139): PCRE2 패키지 고정 수정 → Build #36 동일 Gate → GitOps #152. 2026-10-01 10:21:47 UTC cp-01 `APP138_POSTPROMOTION_READ_ONLY_PASS`, 최종/개별 Gate EXIT 0.
+
+두 Issue는 completed 종료됐다. 최신 기록된 GitOps Revision은 `8a7ccdbeab24f67978dff8c0763cc8175a86e9a2`, Backend Source `a75867b7b579de08b14fe93f80b1a7b05cc85890`, Digest `sha256:f4ba7afba1f3ee21592886f09ab464a60179cf0ea92119f549f4712318c1114c`다. Frontend는 GitOps #150의 Source `26fac7ed6ba17955bac902ad9d727b9efcc9a765`를 유지했다. 읽기 전용 확인 범위는 Argo Revision/Image/Source, Backend/Frontend 각 2/2 Ready·2 Worker·각 2 Endpoint, Gateway Programmed·신뢰 TLS Login HTTP 200이다. 현재 시점 전체 서비스 재검증이나 #117 완료 판정으로 확대하지 않는다.
+
+### 19.4 Control Plane / API VIP 후속 시점 관찰
+
+[#112의 2026-09-30 후속 기록](https://github.com/seokpan/seokpan-app/issues/112#issuecomment-5901873087)은 팀원 2명의 실제 신뢰 TLS Login/Lobby·같은 Waiting Room/Chat/Leave 관찰과 cp-01 읽기 전용 Backend/Frontend 2/2·관련 Argo Synced/Healthy·Control Plane 3대의 직접 readyz 각 3/3·API VIP 9/9를 기록했다. Screenshot와 사용자 관찰은 자동 시험 결과와 구분한다.
+
+이는 해당 시점의 가용성 관찰이다. 앞선 cp-03/API VIP 장애 원인 규명, HA 장애 주입·절체/복구 전체 PASS가 아니며 #112 전체를 닫지 않는다.
