@@ -955,7 +955,7 @@ Kubernetes / Application Integration
 - M-03 장애·복구 최종 판정과 Recovery time 측정
 - Realtime / 2 Replica / Reconnect 강화 검증 — `seokpan-app#112 V-01~V-04`
 - Room admission / Session concurrency — `seokpan-app#112 V-05`
-- Game lifecycle / Recovery / captured activation — `seokpan-app#112 V-06`
+- Game lifecycle / Recovery의 D01/D07 행동 요구 — 현행 `legacy` 경로의 M-01/M-03 및 `seokpan-app#112` 실제 Evidence; Captured 운영 활성화 자체는 1차 NOT REQUIRED
 - F10/F13 Measurement — `seokpan-app#112 V-07`
 - 필요한 경우 HPA의 구현 여부와 미구현/Deferred 근거 확정
 - Cross-role DR 이후 Application 정상화 Evidence 연결
@@ -1009,12 +1009,12 @@ Backend structured stdout
 ```text
 Captured lifecycle Source = IMPLEMENTED / main 반영
 Production lifecycle mode = legacy
-Captured production activation = NOT PERFORMED / DEFERRED
+Captured production activation = NOT REQUIRED for 1차 / NOT TESTED
 ```
 
-현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다.
+현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다. 이는 선언 기준이며 운영 Pod 실효값을 별도 조회한 증거는 아니다.
 
-따라서 captured lifecycle의 실제 Provider/2 Replica/Recovery 결과를 PASS로 기록하지 않는다. 실제 전환 Gate와 필요성 재평가는 `seokpan-app#112 V-06` 및 Docs #89에서 추적한다.
+따라서 captured lifecycle의 실제 Provider/2 Replica/Recovery 결과를 PASS로 기록하지 않는다. Captured 운영 활성화는 1차 Acceptance 필수가 아니며, 새 요구가 생기면 전환 Runbook을 바탕으로 별도 설계·승인한다. D01/D07의 Game/Result 정확성·오패배 방지·Recovery는 현행 `legacy` 경로에서도 M-01/M-03과 `seokpan-app#112`의 실제 Evidence로 판정한다.
 
 ### Closeout Validation Backlog
 
@@ -1022,7 +1022,7 @@ Captured production activation = NOT PERFORMED / DEFERRED
 
 - `seokpan-app#112 V-01~V-04` — F07 cross-Pod replacement, F08 connected lifecycle, Safe Leave/Reconnect, Realtime presentation
 - `seokpan-app#112 V-05` — Room admission / Session concurrency
-- `seokpan-app#112 V-06` — Game lifecycle / Recovery / captured production activation
+- `seokpan-app#112`·M-01/M-03 — Game lifecycle / Recovery 행동 요구; captured production activation은 1차 NOT REQUIRED / NOT TESTED (새 요구 시 별도 승인)
 - `seokpan-app#112 V-07` — F10/F13 Performance/Scale measurement
 - HPA — `NOT IMPLEMENTED / DEFERRED`
 - P4 Performance / Recovery — 실제 최종 정량 Evidence가 없는 항목은 `NOT TESTED` 또는 진행 상태 유지

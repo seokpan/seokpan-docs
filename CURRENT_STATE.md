@@ -289,16 +289,16 @@ Canonical: `seokpan-app#112`
 ```text
 Captured lifecycle Source = IMPLEMENTED / main 반영
 Declared lifecycle mode = legacy (GitOps 설정·Application 기본값)
-Captured production activation = NOT PERFORMED / DEFERRED
+Captured production activation = NOT REQUIRED for 1차 / NOT TESTED
 ```
 
-현재 `seokpan-gitops/apps/backend/configmap.yaml`에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다. 따라서 captured lifecycle이 Production에서 활성화됐다고 주장하지 않는다. 이 문서는 2026-09-27 운영 Pod의 실효 환경변수를 재조회한 증거가 아니다.
+현재 `seokpan-gitops/apps/backend/configmap.yaml`에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없고 Application 기본값은 `legacy`다. 따라서 선언 기준 1차 경로는 `legacy`이며 captured lifecycle이 Production에서 활성화됐다고 주장하지 않는다. 이 문서는 운영 Pod의 실효 환경변수를 재조회한 증거가 아니다. D01/D07의 Game 시작·Result/Rating 정확성, 오패배 방지와 Recovery는 모드와 무관하게 M-01/M-03 및 실제 Evidence로 판정한다. Captured 운영 활성화는 1차 완료 필수가 아니며 새 요구가 생길 때 별도 설계·승인한다.
 
 `#112`에서 추가로 추적하는 범위:
 
 - V-01~V-04 — Realtime / Safe Leave / Reconnect / failure-path UX
 - V-05 — Room admission / Session concurrency
-- V-06 — Game lifecycle / Recovery / captured 전환 검증
+- V-06 — Game lifecycle / Recovery 행동 요구는 M-01/M-03에서 검증; captured 운영 전환은 1차 NOT REQUIRED / NOT TESTED
 - V-07 — F10/F13 Measurement
 
 이 Validation이 남았다는 이유로 final main에 이미 통합된 Source를 미구현으로 되돌려 기록하지 않으며, 실제 미실행 항목을 PASS로 기록하지도 않는다.
@@ -350,7 +350,6 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 ### 7.1 Deferred
 
 - Backend HPA
-- Captured Game lifecycle Production 활성화
 - 추가 `lb-02` / `maxscale-02` HA
 - Redis Sentinel / Redis Cluster
 - ANALYSIS Runtime
@@ -360,7 +359,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 
 ### 7.2 Known Limitation / Validation Boundary
 
-- Production Game lifecycle은 현재 `legacy`; captured Source는 main에 있으나 운영 전환은 Deferred
+- Production Game lifecycle은 선언 기준 `legacy`; captured Source는 main에 있으나 운영 활성화는 1차 NOT REQUIRED / NOT TESTED이며 필요 시 별도 요구·승인 대상
 - Realtime reconnect / replacement의 일부 failure boundary는 #112의 강화 검증 대상
 - 전체 P4 Performance Baseline은 완료된 수치가 없는 항목을 PASS로 쓰지 않음
 - Cross-role DR 이후 Application 정상화는 동일 Run/Revision으로 연결된 Evidence가 확보된 범위만 인정

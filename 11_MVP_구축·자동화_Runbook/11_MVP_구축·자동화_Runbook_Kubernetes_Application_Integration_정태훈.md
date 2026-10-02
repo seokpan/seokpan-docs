@@ -126,7 +126,7 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 | HPA | Not Implemented / Not Tested |
 | Application ServiceMonitor | Running, Prometheus Target 2개 `UP` |
 | Application Metrics | Runtime Query Validated |
-| Production Game lifecycle mode | `legacy` — captured Source는 main 반영, 실제 activation은 Deferred / #112 V-06 |
+| Production Game lifecycle mode | 선언 기준 `legacy` — captured Source는 main 반영, 운영 활성화는 1차 NOT REQUIRED / NOT TESTED; Game/Result·Recovery는 M-01/M-03 Gate 유지 |
 | P4 Source Closeout / 강화 Validation | Implementation #76 완료 / Validation #112 Pending |
 
 이 표는 재실행·장애 대응 시 사용할 Current State 기준점이다.
@@ -258,7 +258,7 @@ SEOKPAN_ALLOWED_ORIGINS: '["https://game.seokpan.soldesk.store"]'
 
 ### 4.8 Game lifecycle 운영 모드
 
-현재 Application Source에는 `legacy / captured` 두 lifecycle 구성이 존재하지만, 1차 종료 시점의 Production Runtime은 **legacy**다.
+현재 Application Source에는 `legacy / captured` 두 lifecycle 구성이 존재하지만, 1차 Production의 GitOps 선언과 Application 기본값은 **legacy**다. 운영 Pod 실효값은 별도 조회 없이 단정하지 않는다.
 
 현재 확인:
 
@@ -269,13 +269,13 @@ game_lifecycle_mode = legacy
 GitOps backend ConfigMap
 SEOKPAN_GAME_LIFECYCLE_MODE = 미설정
 
-Actual Production mode
+Declared Production mode
 legacy
 ```
 
 따라서 Source가 존재한다는 이유로 captured lifecycle이 운영 중이라고 판단하지 않는다.
 
-captured 전환은 `backend/docs/game-lifecycle-rollout.md`의 Gate를 모두 만족한 경우에만 수행한다.
+Captured 운영 활성화는 1차 완료 필수가 아니다(`NOT REQUIRED / NOT TESTED`). D01/D07의 Game 시작·Result/Rating 정확성과 Recovery는 현행 `legacy` 경로에서도 M-01/M-03 및 실제 Evidence로 판정한다. 새 요구로 전환을 선택한 경우에만 `backend/docs/game-lifecycle-rollout.md`의 Gate를 모두 만족한 뒤 수행한다.
 
 ```text
 고정 dependency 회귀
@@ -287,7 +287,7 @@ captured 전환은 `backend/docs/game-lifecycle-rollout.md`의 Gate를 모두 �
 → 트래픽 재개
 ```
 
-1차에서는 이 전환을 실행하지 않았으며 `DEFERRED`다. 실제 전환·Recovery 검증은 `seokpan-app#112 V-06`, 2차 필요성 판단은 Docs #89에서 연결한다.
+1차에서는 이 전환을 실행하지 않았고 필수 완료 Gate에서도 제외한다. Captured 활성화 필요성이 새로 제기되면 영향·복구·Rollback을 별도 설계·승인한다. 전환 Runbook은 그때 적용할 안전 조건으로 보존하며, 현행 경로의 Recovery 검증은 M-03과 `seokpan-app#112`에서 독립 판정한다.
 
 단순히 ConfigMap에 환경변수만 추가하거나 한 Replica만 captured로 변경하는 것은 허용하지 않는다.
 

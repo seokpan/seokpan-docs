@@ -699,10 +699,10 @@ Production Game lifecycle mode 경계:
 ```text
 Captured lifecycle Source = Implemented / final main 반영
 Production lifecycle mode = legacy
-Captured production activation = Deferred
+Captured production activation = NOT REQUIRED for 1차 / NOT TESTED
 ```
 
-현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없으므로 Application 기본값 `legacy`가 실제 Runtime 기준이다. captured activation과 실제 전환 검증은 `seokpan-app#112 V-06` 및 2차 재평가 대상으로 둔다.
+현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없으므로 Application 기본값 `legacy`가 선언된 Runtime 기준이다. 운영 Pod 실효값은 별도 조회 없이 단정하지 않는다. D01/D07의 Game·Result 정확성과 Recovery는 M-01/M-03 및 `seokpan-app#112`의 실제 Evidence로 계속 검증한다. Captured 운영 활성화는 1차 필수 Gate가 아니며, 새 요구가 생기면 전환 Runbook에 따라 별도 설계·승인한다.
 
 A-10 이후 추가로 완료된 현재 Evidence를 반영한다.
 
