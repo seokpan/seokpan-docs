@@ -7,6 +7,7 @@
 - 문서·Delivery 후속 현행화: **2026-09-29 KST** (App PR #128, GitOps PR #145/#146 merge 확인. PR #146의 GitOps Desired State 변경은 운영 Argo CD Sync·Pod Ready 재검증과 구분)
 - UX Fix 후속 현행화: **2026-09-30 KST** (App #129 완료, PR #130·GitOps PR #149 병합 및 지정 Browser Evidence 연결. #112/#117과 cp-03/API VIP HA의 미완료 경계 유지)
 - 완료 근거 후속 현행화: **2026-10-02 KST** (App #132/#134/#138 종료·Runner #136/#137 및 GitOps #150/#151/#152 반영. 지정 측정·격리 시험·시점 관찰과 #112/#117 잔여 검증을 구분)
+- Runner 완료 판정 후속 현행화: **2026-10-02 KST** (App #117은 현행 수동 대응 정책 기준으로 `completed` 종료. #112 강화 Validation은 Open 유지. 완료 근거와 미입증 범위는 5.3절과 원본 완료 판정에 연결)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -302,9 +303,9 @@ Captured production activation = NOT PERFORMED / DEFERRED
 
 이 Validation이 남았다는 이유로 final main에 이미 통합된 Source를 미구현으로 되돌려 기록하지 않으며, 실제 미실행 항목을 PASS로 기록하지도 않는다.
 
-### 5.3 Background Runner — 완료 Source·부분 Runtime 근거와 잔여
+### 5.3 Background Runner — 수동 대응 정책 기준 완료와 검증 경계
 
-Canonical: [App #117](https://github.com/seokpan/seokpan-app/issues/117), **Open 유지**.
+Canonical: [App #117](https://github.com/seokpan/seokpan-app/issues/117), **2026-10-02 `completed` 종료 (현행 수동 대응 정책 기준)**.
 
 - [PR #136](https://github.com/seokpan/seokpan-app/pull/136)은 필수 Runner의 늦은 비정상 종료에 Ready 하강·CRITICAL `production.runner.process_shutdown_requested`·자기 Uvicorn PID SIGTERM을 구현했다. 정상 Lifespan 취소와 transient Redis NotReady·Backoff·DB/Redis 회복 Probe는 구분한다. 필수 PR Head CI·승인·병합, Build #34 및 [GitOps PR #151](https://github.com/seokpan/seokpan-gitops/pull/151) 반영은 완료다.
 - [PR #137](https://github.com/seokpan/seokpan-app/pull/137)은 최초 Provider 실패의 고정 `provider_cause` 분류와 내부 오류 코드, App/Data/Platform 수동 점검·인계 절차를 추가했다. 필수 PR Head CI·승인·병합 완료이며 Build #35 차단 후 #139의 Build #36/GitOps #152로 배포됐다.
@@ -312,7 +313,9 @@ Canonical: [App #117](https://github.com/seokpan/seokpan-app/issues/117), **Open
 - [정상 운영 Redis 재시작 관찰](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5927572676)은 약 10초 후 Redis Ready 및 AOF/DBSIZE 290→290, Backend 2/2·Endpoint/UID 보존, Provider 오류→회복 약 8.2초를 기록했다. 이 짧은 시험에서는 Kubernetes Backend Ready가 하강하지 않았으므로 Ready False→True 실측 근거로 사용하지 않는다.
 - [후속 30초 격리 Fake Provider 시험](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5927688241)은 Kubernetes Ready True→False→True, HTTP Ready 503→200과 시험 정리 PASS/EXIT 0을 기록했다. 앞선 Harness Assertion EXIT 1 실행은 별도 실패 이력이며 소급 PASS로 바꾸지 않는다.
 
-이 근거는 운영 공유 Redis의 지속 장애·2-Replica 장시간 수렴, 과거 두 사건의 저수준 원인·당시 HTTP/Session 영향, 지속 장애 감시 주체·에스컬레이션의 실제 검증을 완료한 것이 아니다. Game Event가 관찰되지 않은 짧은 시간대를 사용자 영향 없음으로 해석하지 않는다. 상세 범위는 역할별 12의 19절과 원본 #117을 따른다.
+[후속 격리 Endpoint Run](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5945497727)은 현행 Image의 비서비스 Fake Provider Pod와 전용 Service에서 Ready·Endpoint `1→0→1` 및 시험 자원 정리를 확인했다. 이어 [#117 완료 판정](https://github.com/seokpan/seokpan-app/issues/117#issuecomment-5945531625)은 배포 Source·회귀, 격리/부분 운영 관찰, 과거 15분 경보 FIRING·메일 수신과 현재 Rule·담당 수동 대응 절차를 결합해 **현행 수동 대응 정책의 개정 완료 조건을 충족**한 것으로 판단했다. Provider 오류가 지속되는 동안 자동 2/2 복귀나 무조건 재시작을 보장하지 않는다.
+
+과거 9/28·9/29 Redis 오류의 저수준 원인, 현행 Image의 15분 단일 Pod 장애→메일 열람/ACK→한 Pod 수동 복구를 한 번에 재현한 결과, 실제 DB·Redis 장애 후 Probe와 당시 HTTP/Session 사용자 무영향은 미입증이다. 격리 시험의 Ready 하강을 정상 운영 Redis 재시작 당시 Backend Ready 하강으로 소급하지 않는다. Game Event가 관찰되지 않은 짧은 시간대를 사용자 영향 없음으로 해석하지 않는다. 강화 Application Validation은 [App #112](https://github.com/seokpan/seokpan-app/issues/112)에서 별도 Open으로 유지한다. 상세 범위는 역할별 12의 19절과 원본 #117을 따른다.
 
 ### 5.4 Control Plane / API VIP — 후속 시점 관찰
 
@@ -362,7 +365,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 - 전체 P4 Performance Baseline은 완료된 수치가 없는 항목을 PASS로 쓰지 않음
 - Cross-role DR 이후 Application 정상화는 동일 Run/Revision으로 연결된 Evidence가 확보된 범위만 인정
 - 현재 GitOps Promotion은 Repository write/PR 전용 Credential + 사람 승인 구조이며 자동 승인/merge는 하지 않음
-- App PR #119에서 Realtime 10초 재접속 계약·Provider 문서를 추가 현행화해 main에 반영했다. PR #119의 Jenkins 실패는 기존 `undici 8.10.0` audit 취약점 때문이었고 Backend/Frontend 검사·빌드는 통과했다. 후속 PR #120에서 `undici 8.10.2`와 Background Runner transient Redis 복구 Source를 main에 반영했으며 Jenkins `pr-head`는 success였다. 다만 App #117의 실제 Runtime 복구 Gate와 #112 강화 Validation은 별도 Open 범위다.
+- App PR #119에서 Realtime 10초 재접속 계약·Provider 문서를 추가 현행화해 main에 반영했다. PR #119의 Jenkins 실패는 기존 `undici 8.10.0` audit 취약점 때문이었고 Backend/Frontend 검사·빌드는 통과했다. 후속 PR #120에서 `undici 8.10.2`와 Background Runner transient Redis 복구 Source를 main에 반영했으며 Jenkins `pr-head`는 success였다. PR #120 병합 당시에는 App #117의 Runtime 복구 Gate와 #112 강화 Validation이 별도 Open 범위였다. 이후 #117은 2026-10-02 현행 수동 대응 정책 기준으로 완료 판정됐고, #112는 Open으로 남는다(5.3절).
 
 ### 7.3 MariaDB Backup 공유 Lock — 현행 구현 계약
 
@@ -441,7 +444,7 @@ Docs [PR #201](https://github.com/seokpan/seokpan-docs/pull/201)의 README Relat
 - `seokpan-app#94` — Gateway Browser Happy Path
 - `seokpan-app#98` — GitOps Promotion Automation
 - `seokpan-app#112` — Closeout Realtime Validation Backlog
-- `seokpan-app#117` — Runner 복구·늦은 종료/원인 분류 Source와 부분 Runtime 근거, 잔여 Gate (5.3절)
+- `seokpan-app#117` — Runner 복구·늦은 종료/원인 분류 Source, 격리/부분 운영 근거와 2026-10-02 수동 대응 정책 기준 완료 판정·남은 한계 (5.3절)
 - `seokpan-app#132` — Vote Snapshot Fix 완료, 소규모 측정과 최종 M-02 구분
 - `seokpan-app#134/#138` — Backend Security Scan·Promotion·지정 Runtime Gate 완료
 - `seokpan-gitops#57` — CD / Self-Heal / Rollback
