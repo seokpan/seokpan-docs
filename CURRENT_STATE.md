@@ -485,8 +485,8 @@ NO PERSONAL ACTION
 
 1차는 승인된 MVP 구현과 A-10 Provider/GitOps 통합, 지정 운영 Gate 및 담당 잔여 작업의 분류·인계를 마무리한 상태로 종료한다. 1차에 배정된 기간이 종료됐고 사용자 확인상 2차 프로젝트가 시작됐으므로, 이 Closeout을 근거로 새 1차 기능·추가 장애 주입·정량 부하·DR 시험을 시작하지 않는다. 이미 열린 Infra 작업은 원래 Owner와 완료 조건에 따라 별도 추적한다. 이 판정은 프로젝트 기간과 정태훈 담당 1차 작업 범위의 종료이며, 운영 중인 서비스의 중단·저장소 Archive·GitOps/Cluster 변경 명령이 아니다.
 
-2026-10-04 원격 재조회 기준 App·Docs·GitOps에는 Open Issue/PR이 없다. Infra의 Open Issue #24·#27·#115·#142·#143과 PR #222는 담당자별 실제 완료 조건을 따라 계속 열린 상태로 보존한다. 이 목록의 열린 상태를 1차 전체 PASS나 자동 2차 이관으로 간주하지 않으며, 이후 변동은 각 원본 Issue/PR에서 확인한다.
+2026-10-04 원격 재조회 기준 App·Docs·GitOps에는 Open Issue/PR이 없다. Infra의 Open Issue [#24](https://github.com/seokpan/seokpan-infra/issues/24)·[#27](https://github.com/seokpan/seokpan-infra/issues/27)·[#115](https://github.com/seokpan/seokpan-infra/issues/115)·[#142](https://github.com/seokpan/seokpan-infra/issues/142)·[#143](https://github.com/seokpan/seokpan-infra/issues/143)과 [PR #222](https://github.com/seokpan/seokpan-infra/pull/222)는 담당자별 실제 완료 조건을 따라 계속 열린 상태로 보존한다. 이 목록의 열린 상태를 1차 전체 PASS나 자동 2차 이관으로 간주하지 않으며, 이후 변동은 각 원본 Issue/PR에서 확인한다.
 
-App #112 V-02 다섯 전체 경로는 `NOT TESTED`이고 체크하지 않는다. 1차에서 추가 실행 계획은 없다. 격리 재접속/Redis 및 정상 BFCache의 부분 근거는 유지하되, 공유 운영 Redis 장애·두 Backend Socket/Session 수렴, 일반 오류 뒤 장기 상태, BFCache 실패 복귀를 검증한 것으로 쓰지 않는다. 운영 사건, 공식 복원력 Final 보장 필요 또는 2차의 명시적 요구가 생길 때만 영향·복구 계획을 별도 승인받아 재평가한다.
+[App #112](https://github.com/seokpan/seokpan-app/issues/112) V-02 다섯 전체 경로는 `NOT TESTED`이고 체크하지 않는다. 1차에서 추가 실행 계획은 없다. 격리 재접속/Redis 및 정상 BFCache의 부분 근거는 유지하되, 공유 운영 Redis 장애·두 Backend Socket/Session 수렴, 일반 오류 뒤 장기 상태, BFCache 실패 복귀를 검증한 것으로 쓰지 않는다. 운영 사건, 공식 복원력 Final 보장 필요 또는 2차의 명시적 요구가 생길 때만 영향·복구 계획을 별도 승인받아 재평가한다.
 
 공식 `KAI-E2E-01`은 In Progress, `KAI-CON-01`·`KAI-REC-01`은 In Progress / Not Final, `KAI-PERF-01`은 Partial / Not Final, `KAI-DR-01`은 Not Tested / Cross-role이다. 1차 종료를 이 Gate들의 Final PASS·운영 Capacity·DR 완료로 바꾸지 않는다. 이미 통과한 A-10 Runtime/Delivery Gate도 미완료로 되돌리지 않는다. 2차는 이 실제 상태와 한계를 입력으로 삼되, 별도 요구·Owner·Gate 없이 남은 시험을 자동 승계하지 않는다.
