@@ -127,7 +127,7 @@ Password, 전체 DB URL, Token, Private Key, Secret Value를 콘솔·Issue·PR·
 | Application ServiceMonitor | Running, Prometheus Target 2개 `UP` |
 | Application Metrics | Runtime Query Validated |
 | Production Game lifecycle mode | 선언 기준 `legacy` — captured Source는 main 반영, 운영 활성화는 1차 NOT REQUIRED / NOT TESTED; Game/Result·Recovery는 M-01/M-03 Gate 유지 |
-| P4 Source Closeout / 강화 Validation | Implementation #76 완료 / Validation #112 Pending |
+| P4 Source Closeout / 강화 Validation | Implementation seokpan/seokpan-app#76 완료 / Validation seokpan/seokpan-app#112는 2026-10-03 근거·미검증 분류·인계 후 `closed/completed`; 공식 KAI Gate는 비Final |
 
 이 표는 재실행·장애 대응 시 사용할 Current State 기준점이다.
 

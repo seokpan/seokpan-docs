@@ -264,7 +264,7 @@ Evidence Revision 불일치
 | Actual Backend/Frontend Workload Pull | Verified Digest Pull / Ready | PASS |
 | Migration Gate | 기존 Runtime DB + 신규 빈 DB 재현 | PASS |
 | MaxScale TLS / CA Consumer | 실제 Backend TLS 1.3 Session 및 CA Fingerprint 확인 | PASS |
-| Backend 2 Replica Shared Runtime | Scale-out/Session 공유 기본 경로 확인, Realtime Edge Case 강화 검증은 #112 진행 중 | Partial |
+| Backend 2 Replica Shared Runtime | Scale-out/Session 공유 기본 경로 확인; seokpan/seokpan-app#112는 분류·인계 후 종료, Realtime Edge Case 전체 경로는 미검증 | Partial |
 | HPA | Not Implemented | Not Tested |
 | Application HTTPRoute | Running | PASS |
 | HTTPS / API / WebSocket | A-10 Runtime Gate 통과 | PASS |
@@ -273,7 +273,7 @@ Evidence Revision 불일치
 | Application Logs | Backend structured stdout → Alloy → Loki Runtime Evidence | PASS |
 | Argo CD Self-Heal | 실제 Live State Drift 복구 확인 | PASS |
 | Git Revert Rollback | 정상 Revision으로 Git Revert → Argo CD Sync → Runtime Ready 복구 실측 | PASS |
-| P4 Source Closeout / 강화 Validation | `#76` 구현 분류 완료, 강화 검증은 `#112` | Partial / Validation Pending |
+| P4 Source Closeout / 강화 Validation | `seokpan/seokpan-app#76` 구현 분류 완료, `seokpan/seokpan-app#112`는 근거·미검증 분류·인계 후 `closed/completed` | Partial / 공식 Gate Not Final |
 
 A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 
@@ -285,7 +285,7 @@ A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 | KAI-DEL-01 | Artifact / Registry / GitOps / Argo | B~D/E | 5/8/11/13 | PASS |
 | KAI-MIG-01 | Migration Gate | C→D | 7 | PASS |
 | KAI-RUN-01 | Backend 1 Replica Provider | D | 8 | PASS |
-| KAI-RUN-02 | Backend 2 Replica Shared Runtime | E | 9 | Partial — A-10 Scale-out PASS, #112 Realtime 세부 검증 진행 중 |
+| KAI-RUN-02 | Backend 2 Replica Shared Runtime | E | 9 | Partial — A-10 Scale-out PASS, seokpan/seokpan-app#112 추적·인계 종료; Realtime 전체 경로는 미검증 |
 | KAI-HPA-01 | HPA / Workload Distribution | E | 10 | Not Implemented / Not Tested |
 | KAI-FE-01 | Frontend Runtime | E | 11 | PASS |
 | KAI-RT-01 | HTTPRoute / HTTPS / WSS | F | 12 | PASS |
@@ -304,7 +304,7 @@ A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 
 App #112 V-07의 F10/F13 **지정 측정**은 격리 내부 비용·Lock Profile과 운영 저부하 종단·과거 자원 표본의 범위에서 기록한다. 이는 별도 Test Case ID나 `KAI-PERF-01` 최종/Capacity PASS가 아니다.
 
-`KAI-RUN-02`는 Backend 2 Replica 배포 자체가 성공했다는 이유만으로 전체 PASS 처리하지 않는다. Cross-Pod WebSocket, Chat 권한, Runner/Realtime lifecycle과 reconnect 수렴은 P4에서 계속 검증한다.
+`KAI-RUN-02`는 Backend 2 Replica 배포 자체가 성공했다는 이유만으로 전체 PASS 처리하지 않는다. Cross-Pod WebSocket, Chat 권한, Runner/Realtime lifecycle과 reconnect 수렴은 확인된 범위만 인정한다. seokpan/seokpan-app#112는 검증 경계의 분류·인계 후 종료됐으며 미검증 경로의 재실행은 21절 재평가 조건을 따른다.
 
 ## 9. Test Contract Matrix
 
@@ -725,7 +725,7 @@ A-10 Production Provider
 ```text
 KAI-RUN-02
 ├─ Backend 2 Replica Scale-out: A-10 Runtime 범위 PASS
-└─ Shared Runtime 세부 검증: #112 진행 중
+└─ Shared Runtime 세부 검증: seokpan/seokpan-app#112 분류·인계 종료 / 공식 Gate Not Final
 
 KAI-HPA-01
 └─ Not Implemented / Not Tested
@@ -930,7 +930,7 @@ Kubernetes / Application Integration
 | Migration Gate | PASS |
 | Backend 1 Replica Provider Runtime | PASS |
 | Backend 2 Replica Scale-out / Worker 분산 | PASS |
-| Backend 2 Replica Shared Runtime 전체 | Partial — #112 세부 검증 진행 중 |
+| Backend 2 Replica Shared Runtime 전체 | Partial — seokpan/seokpan-app#112 분류·인계 종료, 전체 경로 미검증 |
 | HPA | Not Implemented / Not Tested |
 | Frontend 2 Replica Runtime | PASS |
 | HTTPRoute / HTTPS / API / WebSocket / Public TLS | PASS |
