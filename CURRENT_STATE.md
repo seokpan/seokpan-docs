@@ -299,7 +299,7 @@ Captured production activation = NOT REQUIRED for 1차 / NOT TESTED
 - V-01~V-04 — Realtime / Safe Leave / Reconnect / failure-path UX
 - V-05 — Room admission / Session concurrency
 - V-06 — Game lifecycle / Recovery 행동 요구는 M-01/M-03에서 검증; captured 운영 전환은 1차 NOT REQUIRED / NOT TESTED
-- V-07 — F10/F13 Measurement
+- V-07 — F10/F13 지정 측정은 2026-10-03 기준 격리 Adapter/Service 비용·Lock Profile과 운영 저부하 Gateway/Browser 종단 및 과거 자원 표본으로 범위를 한정해 기록했다. 공식 KAI-PERF-01·운영 Capacity는 Partial / Not Final이며, 통제된 운영 Room/연결 수 증가·지속/포화 부하와 M-01 정확성 유지는 미검증이다.
 
 이 Validation이 남았다는 이유로 final main에 이미 통합된 Source를 미구현으로 되돌려 기록하지 않으며, 실제 미실행 항목을 PASS로 기록하지도 않는다.
 

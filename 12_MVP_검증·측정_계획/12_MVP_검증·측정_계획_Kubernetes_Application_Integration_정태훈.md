@@ -302,6 +302,8 @@ A-10 완료와 P4 Acceptance 완료를 같은 의미로 사용하지 않는다.
 
 `PASS`는 해당 Test Case의 현재 정의 범위에 실제 Runtime Evidence가 존재할 때만 사용한다.
 
+App #112 V-07의 F10/F13 **지정 측정**은 격리 내부 비용·Lock Profile과 운영 저부하 종단·과거 자원 표본의 범위에서 기록한다. 이는 별도 Test Case ID나 `KAI-PERF-01` 최종/Capacity PASS가 아니다.
+
 `KAI-RUN-02`는 Backend 2 Replica 배포 자체가 성공했다는 이유만으로 전체 PASS 처리하지 않는다. Cross-Pod WebSocket, Chat 권한, Runner/Realtime lifecycle과 reconnect 수렴은 P4에서 계속 검증한다.
 
 ## 9. Test Contract Matrix
@@ -956,7 +958,7 @@ Kubernetes / Application Integration
 - Realtime / 2 Replica / Reconnect 강화 검증 — `seokpan-app#112 V-01~V-04`
 - Room admission / Session concurrency — `seokpan-app#112 V-05`
 - Game lifecycle / Recovery의 D01/D07 행동 요구 — 현행 `legacy` 경로의 M-01/M-03 및 `seokpan-app#112` 실제 Evidence; Captured 운영 활성화 자체는 1차 NOT REQUIRED
-- F10/F13 Measurement — `seokpan-app#112 V-07`
+- F10/F13 지정 측정은 `seokpan-app#112 V-07`의 2026-10-03 범위 한정 근거로 기록한다. 통제된 운영 Room 수·두 Pod 귀속·실제 Socket 확대와 포화/지속 부하, M-01 정확성 유지·병목 판정은 `KAI-PERF-01`의 남은 Gate다.
 - 필요한 경우 HPA의 구현 여부와 미구현/Deferred 근거 확정
 - Cross-role DR 이후 Application 정상화 Evidence 연결
 
@@ -1054,6 +1056,8 @@ Run `a10-m02-b551ad9e`의 Member/Guest 1→2→4 동시 Game 기록:
 총 7 Game·63 Vote·HTTP 오류 0, 각 Game Move 9·Result 1·Member Rating History 1, Prometheus 관찰 및 finalRuntimeGate PASS가 기록됐다. [원본 #132](https://github.com/seokpan/seokpan-app/issues/132)의 측정·영속 데이터 근거를 함께 읽는다.
 
 판정은 **App #132 Fix 완료 / KAI-PERF-01 Partial / Not Final**이다. 실제 Snapshot 경합 코드 분기의 발생을 직접 관찰한 Run은 아니며 소규모 표본을 최종 성능·운영 Capacity·V-07 전체 PASS로 사용하지 않는다. 이전 실패 Run의 Game/Rating 결과를 이번 성공으로 정정하지 않는다. M-02 공식 Baseline과 #112는 미완료다.
+
+이 문단의 #132 Run만으로 V-07 F10/F13 지정 측정도 완료됐다고 주장하지 않는다. 이후 2026-10-02~03 App #112의 분리된 격리·운영 저부하 Run에서 F10 Room 수별 Redis 명령·지연, F13 합성 연결별 Lock 대기·지연, Gateway Session HTTP 210/210 및 Browser Presence Ping→Snapshot 101개, 짧은 Prometheus 자원 창이 수집됐다. 두 지정 측정은 범위 한정 근거이며 환경이 달라 수치를 직접 비교하거나 용량·병목으로 확정하지 않는다. 공식 `KAI-PERF-01`은 단계 부하·급격한 악화 지점, M-01 정확성 유지 및 원인 분석이 남아 계속 **Partial / Not Final**이다. App #112의 M-01 정상 Game/DB와 별도 stale·동일 요청 재전송 증거는 복합 근거이되, Backend 2 Replica Shared Runtime 미완료 Gate 때문에 `KAI-CON-01`도 **In Progress / Not Final**이다.
 
 ### 19.2 Runner 완료 Source 및 지정 Runtime 근거
 
