@@ -1102,3 +1102,9 @@ Headless Playwright의 별도 일반 History Run은 BFCache 복원을 관찰하�
 공식 `KAI-CON-01`과 `KAI-REC-01`은 **In Progress / Not Final**, `KAI-PERF-01`은 **Partial / Not Final**, `KAI-DR-01`은 **Not Tested / Cross-role**을 유지한다. Captured 운영 활성화는 1차 **NOT REQUIRED / NOT TESTED**다. #112의 Validation 추적을 `NOT TESTED`로 수렴하는 결정은 D01/D07의 정확성·복구 요구를 삭제하거나 해당 공식 Gate를 PASS 처리하는 결정이 아니다.
 
 19.2절의 “App #117은 Open”은 그 절 작성 당시 상태다. 이후 [App #117](https://github.com/seokpan/seokpan-app/issues/117)은 현행 경보·수동 대응 정책의 개정 완료 기준과 격리 Ready/Endpoint·부분 운영 관찰을 분리 기록한 뒤 `completed`로 종료됐다. 과거 저수준 장애 원인, 현행 공유 Provider 장기 장애에서 담당자 ACK→한 Pod 수동 복구, 당시 HTTP/Session 무영향은 입증되지 않았다. 이 종료를 #112 V-02 또는 `KAI-REC-01` Final PASS로 전용하지 않는다.
+
+## 21. 2026-10-03 #112 Validation Disposition 종료 후 공식 Gate 경계
+
+[Docs PR #208](https://github.com/seokpan/seokpan-docs/pull/208)이 병합된 뒤 [App #112](https://github.com/seokpan/seokpan-app/issues/112)는 V-02 다섯 전체 경로 `NOT TESTED`, Captured 운영 활성화 1차 `NOT REQUIRED / NOT TESTED`, 지정 V-07 측정과 Known Limitation·재평가 조건을 본문에 수렴하고 `closed/completed`로 종료됐다. 이는 강화 Validation **추적·분류·인계**의 완료다. 앞 절과 표의 “#112 Open/진행 중/미완료”는 각각 작성 당시의 상태이며 이 후속 판정으로 현재형 상태를 대체한다.
+
+V-02 운영 공유 Redis 장애의 두 Backend 실제 Socket/Session·10초 이후 `connected/generation` 수렴, 일반 내부 오류 `1011`의 장기 상태, BFCache 복귀 실패는 계속 미검증이다. #112 종료 뒤에도 공식 `KAI-E2E-01`은 In Progress, `KAI-CON-01`·`KAI-REC-01`은 In Progress / Not Final, `KAI-PERF-01`은 Partial / Not Final, `KAI-DR-01`은 Not Tested / Cross-role이다. D01/D07의 Game/Result 정확성·오패배 방지·Recovery 요구와 대표 부하·DR Gate를 삭제하거나 PASS로 바꾸지 않는다. 운영 사건 발생, 공식 복원력 Final 주장 필요 또는 2차 명시 요구가 생기면 App 담당 `tjung03`이 영향·복구 Gate와 후속 Issue 필요성을 재평가한다.

@@ -8,6 +8,7 @@
 - UX Fix 후속 현행화: **2026-09-30 KST** (App #129 완료, PR #130·GitOps PR #149 병합 및 지정 Browser Evidence 연결. #112/#117과 cp-03/API VIP HA의 미완료 경계 유지)
 - 완료 근거 후속 현행화: **2026-10-02 KST** (App #132/#134/#138 종료·Runner #136/#137 및 GitOps #150/#151/#152 반영. 지정 측정·격리 시험·시점 관찰과 #112/#117 잔여 검증을 구분)
 - Runner 완료 판정 후속 현행화: **2026-10-02 KST** (App #117은 현행 수동 대응 정책 기준으로 `completed` 종료. #112 강화 Validation은 Open 유지. 완료 근거와 미입증 범위는 5.3절과 원본 완료 판정에 연결)
+- Validation Disposition 후속 현행화: **2026-10-03 KST** (Docs PR #208 병합 뒤 App #112는 V-02 다섯 전체 경로 `NOT TESTED`·공식 Gate 비Final을 명시하고 `completed` 종료. 이전 Open 표기는 당시 상태이며 운영 장애 검증 PASS로 소급하지 않음)
 - 목적: 1차 프로젝트 종료 시점의 Actual State, Validation Backlog, 미구현·Deferred, Known Limitation, 2차 재평가 대상을 한 문서에서 추적한다.
 - 성격: 01~08 기획·설계 Baseline을 대체하지 않는다. **현재 실제 상태를 연결하는 Closeout Snapshot**이다.
 
@@ -304,6 +305,8 @@ Captured production activation = NOT REQUIRED for 1차 / NOT TESTED
 - V-07 — F10/F13 지정 측정은 2026-10-03 기준 격리 Adapter/Service 비용·Lock Profile과 운영 저부하 Gateway/Browser 종단 및 과거 자원 표본으로 범위를 한정해 기록했다. 공식 KAI-PERF-01·운영 Capacity는 Partial / Not Final이며, 통제된 운영 Room/연결 수 증가·지속/포화 부하와 M-01 정확성 유지는 미검증이다.
 
 2026-10-03 사용자 승인에 따른 V-02 전체 경로 판정은 **다섯 항목 모두 `NOT TESTED`**다. 배포 Backend Image의 Handler/실제 Redis Adapter와 Pod-local Redis에서 Claim 전·후 Provider 실패, setup Disconnect Lease, Provider `1011`의 오이탈 방지, 재접속 Generation·옛 Disconnect Fence를 부분 확인했다. 실제 Chrome에서는 `pageshow.persisted=true` 정상 BFCache 복귀와 같은 Session/Participant/Room을 확인했다. 그러나 운영 공유 Redis 장애에서 두 Backend의 실제 Socket·Session·10초 이후 `connected/generation` 수렴, 일반 내부 오류 `1011`의 장기 상태, **BFCache 복귀 실패**는 검증하지 않았다. 격리/정상 부분 PASS를 이 다섯 전체 항목이나 공식 `KAI-CON-01`·`KAI-REC-01` Final PASS로 승격하지 않는다. 운영 사건 발생, 복원력 Final 주장 필요 또는 2차 명시 요구가 생기면 App 담당 `tjung03`이 영향·복구 Gate와 후속 Issue 필요성을 재평가한다. [App #112](https://github.com/seokpan/seokpan-app/issues/112)는 이 분류의 Canonical 기록이다.
+
+후속 판정: [Docs PR #208](https://github.com/seokpan/seokpan-docs/pull/208)이 병합된 뒤 [App #112](https://github.com/seokpan/seokpan-app/issues/112)는 2026-10-03 `closed/completed`로 종료됐다. 완료 의미는 V-01~V-07의 지정 근거·`NOT TESTED`·`NOT REQUIRED` 분류와 Known Limitation·재평가 조건의 **기록·인계 수렴**이다. 이 문서의 앞선 “#112 Open/진행 중” 표현은 각 절 작성 당시의 상태다. V-02 다섯 전체 경로와 공유 Provider 장애·BFCache 실패 경로는 여전히 미검증이며, 공식 `KAI-E2E-01`은 In Progress, `KAI-CON-01`·`KAI-REC-01`은 In Progress / Not Final, `KAI-PERF-01`은 Partial / Not Final, `KAI-DR-01`은 Not Tested / Cross-role이다. #112 종료를 이 공식 Gate의 Final PASS나 운영 Capacity 승인으로 해석하지 않는다.
 
 이 Validation이 남았다는 이유로 final main에 이미 통합된 Source를 미구현으로 되돌려 기록하지 않으며, 실제 미실행 항목을 PASS로 기록하지도 않는다.
 
