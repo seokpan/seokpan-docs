@@ -329,7 +329,7 @@ Canonical: [App #117](https://github.com/seokpan/seokpan-app/issues/117), **2026
 
 [#112의 2026-09-30 후속 근거](https://github.com/seokpan/seokpan-app/issues/112#issuecomment-5901873087)는 팀원 2명의 실제 신뢰 TLS Login/Lobby·동일 Waiting Room/Chat/Leave 관찰과 함께 cp-01 읽기 전용 조회에서 Backend/Frontend 2/2, 관련 Argo Synced/Healthy, Control Plane 3대의 직접 readyz **각 3/3** 및 API VIP **9/9**를 기록했다. Screenshot와 사용자 관찰은 자동 시험 결과와 구분한다.
 
-이는 앞선 cp-03/API VIP 장애 이후 해당 시점의 가용성 관찰이다. 장애 원인 규명·장애 주입·HA 절체/복구 전체 PASS를 뜻하지 않으며 과거 장애를 삭제하지 않는다. #112는 이후 근거·미검증 범위를 분류·인계해 2026-10-03 종료됐지만, 이 관찰을 공식 복원력 Gate의 Final PASS로 바꾸지 않는다.
+이는 앞선 cp-03/API VIP 장애 이후 해당 시점의 가용성 관찰이다. 장애 원인 규명·장애 주입·HA 절체/복구 전체 PASS를 뜻하지 않으며 과거 장애를 삭제하지 않는다. seokpan/seokpan-app#112는 이후 근거·미검증 범위를 분류·인계해 2026-10-03 종료됐지만, 이 관찰을 공식 복원력 Gate의 Final PASS로 바꾸지 않는다.
 
 ## 6. 1차에서 구현하지 않은 항목
 
@@ -372,7 +372,7 @@ Frontend의 AI 관련 표현이 존재하더라도 실제 Runtime 분석 기능�
 - 전체 P4 Performance Baseline은 완료된 수치가 없는 항목을 PASS로 쓰지 않음
 - Cross-role DR 이후 Application 정상화는 동일 Run/Revision으로 연결된 Evidence가 확보된 범위만 인정
 - 현재 GitOps Promotion은 Repository write/PR 전용 Credential + 사람 승인 구조이며 자동 승인/merge는 하지 않음
-- App PR #119에서 Realtime 10초 재접속 계약·Provider 문서를 추가 현행화해 main에 반영했다. PR #119의 Jenkins 실패는 기존 `undici 8.10.0` audit 취약점 때문이었고 Backend/Frontend 검사·빌드는 통과했다. 후속 PR #120에서 `undici 8.10.2`와 Background Runner transient Redis 복구 Source를 main에 반영했으며 Jenkins `pr-head`는 success였다. PR #120 병합 당시에는 App #117의 Runtime 복구 Gate와 #112 강화 Validation이 별도 Open 범위였다. 이후 #117은 2026-10-02 현행 수동 대응 정책 기준으로, #112는 2026-10-03 근거·미검증 분류와 인계 기준으로 각각 완료 판정됐다. 공식 Gate의 비Final 상태는 5.2절과 13절을 따른다.
+- App PR [#119](https://github.com/seokpan/seokpan-app/pull/119)에서 Realtime 10초 재접속 계약·Provider 문서를 추가 현행화해 main에 반영했다. PR [#119](https://github.com/seokpan/seokpan-app/pull/119)의 Jenkins 실패는 기존 `undici 8.10.0` audit 취약점 때문이었고 Backend/Frontend 검사·빌드는 통과했다. 후속 PR [#120](https://github.com/seokpan/seokpan-app/pull/120)에서 `undici 8.10.2`와 Background Runner transient Redis 복구 Source를 main에 반영했으며 Jenkins `pr-head`는 success였다. PR [#120](https://github.com/seokpan/seokpan-app/pull/120) 병합 당시에는 App [#117](https://github.com/seokpan/seokpan-app/issues/117)의 Runtime 복구 Gate와 seokpan/seokpan-app#112 강화 Validation이 별도 Open 범위였다. 이후 seokpan/seokpan-app#117은 2026-10-02 현행 수동 대응 정책 기준으로, seokpan/seokpan-app#112는 2026-10-03 근거·미검증 분류와 인계 기준으로 각각 완료 판정됐다. 공식 Gate의 비Final 상태는 5.2절과 13절을 따른다.
 
 ### 7.3 MariaDB Backup 공유 Lock — 현행 구현 계약
 
