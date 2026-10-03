@@ -177,12 +177,12 @@ HPA를 도입할 경우 `Deployment.spec.replicas`를 Argo CD와 HPA 중 누가 
 A-01~A-08: 기능·Headless·Frontend First Success — Completed
 A-09: Container / Jenkins / Image Acceptance — Completed
 A-10: Production Provider / GitOps / Kubernetes Runtime Integration — Completed
-P4 Source Stabilization — Implementation Closeout #76 완료 / 강화 Validation #112 Pending
+P4 Source Stabilization — Implementation Closeout #76 완료 / 강화 Validation seokpan/seokpan-app#112 판정·인계 완료(`closed/completed`), 공식 Gate 비Final
 ```
 
 A-10 완료는 실제 Provider와 Kubernetes Runtime 연결이 성립했다는 의미다.
 
-`seokpan-app#76`은 2026-09-23 Closeout에서 구현·Source 상태를 재분류했으며, 실제 Provider·2-Pod·Failure/Measurement 강화 검증은 `seokpan-app#112`로 분리했다. 따라서 A-10 완료를 #112의 Validation PASS로 확대하지 않는다.
+`seokpan-app#76`은 2026-09-23 Closeout에서 구현·Source 상태를 재분류했으며, 실제 Provider·2-Pod·Failure/Measurement 강화 검증은 `seokpan/seokpan-app#112`로 분리했다. 따라서 A-10 완료를 seokpan/seokpan-app#112의 Validation PASS로 확대하지 않는다.
 
 ### 5.2 Build / Artifact
 
@@ -527,7 +527,7 @@ Evidence:
 
 ### Gate G — MVP Acceptance
 
-A-10까지의 Runtime Integration은 완료됐지만, 최종 MVP Acceptance는 아직 진행 중이다.
+A-10까지의 Runtime Integration은 완료됐다. 공식 MVP Acceptance Gate는 비Final이며, 1차 범위의 종료·인계 판정은 [공용 CURRENT_STATE](../CURRENT_STATE.md) 13절을 따른다.
 
 현재:
 
@@ -536,11 +536,11 @@ Application Metrics Integration: PASS
 Application Logging Runtime → Alloy → Loki: PASS
 Argo CD Self-Heal: PASS
 Git Revert 기반 Runtime Rollback: PASS
-P4 Concurrency / Realtime / Recovery / Performance: Validation Pending / #112 및 역할별 12에서 추적
-Final MVP Acceptance: Partial / Validation Pending
+P4 Concurrency / Realtime / Recovery / Performance: seokpan/seokpan-app#112 지정 근거·미검증 경계 인계 완료 / 공식 Gate 비Final
+Final MVP Acceptance: Partial / Not Final (1차 범위 종료·인계)
 ```
 
-`seokpan-app#76`은 구현 Closeout 분류를 완료했고, 강화 Validation은 `seokpan-app#112`를 Canonical로 사용한다.
+`seokpan-app#76`은 구현 Closeout 분류를 완료했고, 강화 Validation의 종료 판정·한계는 종료된 [App #112](https://github.com/seokpan/seokpan-app/issues/112) 및 [공용 CURRENT_STATE](../CURRENT_STATE.md) 13절을 사용한다.
 
 버그픽스 중간 상태는 09에 세부 복제하지 않고 최종 검증 결과만 후속 현행화한다.
 
@@ -554,7 +554,7 @@ Final MVP Acceptance: Partial / Validation Pending
 | D Backend First Runtime | PASS | Migration 후 Backend 1 Replica 실제 Provider 연결 검증 |
 | E Scale-out / Frontend | PASS | Backend 2 Replica·Worker 분산·Frontend 2 Replica PASS. HPA는 별도 미검증 Track |
 | F External Route / Transport | PASS | HTTPRoute·HTTPS·API·WebSocket·Windows/Linux 접속 Runtime Gate PASS. Realtime semantics 전체는 P4 별도 검증 |
-| G MVP Acceptance | Partial / Validation Pending | 구현 Closeout은 #76에서 완료됐으며 실제 Realtime·Recovery·Measurement 강화 Validation은 #112 및 역할별 12에서 추적 |
+| G MVP Acceptance | Partial / Not Final | 구현 Closeout #76과 강화 Validation 분류·인계 seokpan/seokpan-app#112는 완료됐다. V-02 `NOT TESTED`, 공식 Realtime·Recovery·Performance Gate 비Final은 역할별 12와 공용 CURRENT_STATE 13절을 따른다 |
 
 A-10 완료 판정과 Gate G 최종 Acceptance 판정을 분리한다.
 
@@ -582,7 +582,7 @@ A-10의 기존 직접 Blocker는 해소됐다.
 - Cross-role DR 이후 Application 정상화 Test
 - P4 Performance / Recovery의 최종 정량 판정
 
-완료된 P4 구현 분류는 `seokpan-app#76`을 Source로 사용하고, 실제 미완료 강화 검증과 새 결함은 `seokpan-app#112` 및 연결 Issue에서 추적한다.
+완료된 P4 구현 분류는 `seokpan-app#76`을 Source로 사용한다. 미검증 경계는 종료된 `seokpan/seokpan-app#112`와 공용 CURRENT_STATE 13절에 기록돼 있으며, 새 결함·요구가 생기면 별도 Issue와 승인된 Gate로 재평가한다.
 
 ### Deferred / Non-blocking
 
@@ -601,13 +601,12 @@ A-10 Critical Path는 완료됐다.
 ```text
 A-10 Runtime Integration Completed
 → P4 Source Closeout (#76 완료)
-→ #112 Game / Realtime / 2 Replica 강화 검증
-→ Concurrency / Recovery / Performance Evidence
-→ Final Browser Acceptance
-→ MVP Acceptance
+→ seokpan/seokpan-app#112 지정 근거·미검증 경계 분류·인계 완료
+→ 공식 Concurrency / Recovery / Performance Gate 비Final
+→ 1차 범위 종료 (공식 MVP Acceptance Final PASS 아님)
 ```
 
-완료된 UX/UI Source 변경과 #112의 진행 중 강화 검증은 구분한다. 검증 중간 결과를 09의 최종 PASS로 확정하지 않는다.
+완료된 UX/UI Source 변경과 seokpan/seokpan-app#112의 종료된 검증 범위 분류·인계를 구분한다. 부분 검증 결과를 09의 공식 Gate Final PASS로 확정하지 않는다.
 
 ## 12. 완료 기준
 
@@ -687,7 +686,7 @@ A-10 완료를 위 미검증 항목의 완료로 확대하지 않는다.
 - `seokpan-gitops#91` — Backend ServiceMonitor와 Prometheus Target/Metric Query
 - `seokpan-infra#188` — Let's Encrypt Production TLS와 Windows Host/Linux VM 외부 접속
 
-P4 구현 Closeout의 상세 분류는 `seokpan-app#76`, 강화 Validation은 `seokpan-app#112`에서 추적한다.
+P4 구현 Closeout의 상세 분류는 `seokpan-app#76`, 강화 Validation의 완료·미검증 판정과 인계는 종료된 `seokpan/seokpan-app#112`에서 확인한다.
 
 Historical 문서는 당시 상태를 유지한다. 이후 상태는 Change → Implementation → Runtime Validation으로 연결하고, 09에 개별 실행 로그나 버그픽스 중간 결과를 복제하지 않는다.
 
@@ -702,14 +701,14 @@ Production lifecycle mode = legacy
 Captured production activation = NOT REQUIRED for 1차 / NOT TESTED
 ```
 
-현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없으므로 Application 기본값 `legacy`가 선언된 Runtime 기준이다. 운영 Pod 실효값은 별도 조회 없이 단정하지 않는다. D01/D07의 Game·Result 정확성과 Recovery는 M-01/M-03 및 `seokpan-app#112`의 실제 Evidence로 계속 검증한다. Captured 운영 활성화는 1차 필수 Gate가 아니며, 새 요구가 생기면 전환 Runbook에 따라 별도 설계·승인한다.
+현재 GitOps Backend ConfigMap에는 `SEOKPAN_GAME_LIFECYCLE_MODE`가 없으므로 Application 기본값 `legacy`가 선언된 Runtime 기준이다. 운영 Pod 실효값은 별도 조회 없이 단정하지 않는다. D01/D07의 Game·Result 정확성과 Recovery에 관한 지정 근거·미검증 경계는 M-01/M-03 및 종료된 `seokpan/seokpan-app#112`에 분류돼 있다. 공식 Final Gate PASS를 뜻하지 않는다. Captured 운영 활성화는 1차 필수 Gate가 아니며, 새 요구가 생기면 전환 Runbook에 따라 별도 설계·승인한다.
 
 A-10 이후 추가로 완료된 현재 Evidence를 반영한다.
 
 - Final Application Source Freeze 이후 Jenkins Image Pipeline과 GitOps Promotion PR 자동화가 실제 동작했다.
 - GitOps #57에서 Git Revert 기반 Runtime Rollback 검증을 완료했다.
 - App #90 / GitOps #109에서 Backend structured log가 실제 Pod stdout → Alloy → Loki까지 수집되는 경로를 검증했다.
-- Realtime 10초 reconnect grace와 관련 Source는 final main에 반영됐으나, 일부 실제 2-Pod/Failure Boundary 강화 검증은 App #112로 분리한다.
+- Realtime 10초 reconnect grace와 관련 Source는 final main에 반영됐다. 실제 2-Pod/Failure Boundary의 미검증 범위는 종료된 seokpan/seokpan-app#112에 별도로 기록돼 있다.
 - HPA는 1차 완료조건에서 Deferred이며 구현·측정 완료로 표현하지 않는다.
 
 현재 종료 시점의 통합 Snapshot은 `CURRENT_STATE.md`를 사용하고, 본 09는 역할·Integration Gate와 책임 경계를 유지한다.
