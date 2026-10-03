@@ -1085,3 +1085,20 @@ Run `a10-m02-b551ad9e`의 Member/Guest 1→2→4 동시 Game 기록:
 [#112의 2026-09-30 후속 기록](https://github.com/seokpan/seokpan-app/issues/112#issuecomment-5901873087)은 팀원 2명의 실제 신뢰 TLS Login/Lobby·같은 Waiting Room/Chat/Leave 관찰과 cp-01 읽기 전용 Backend/Frontend 2/2·관련 Argo Synced/Healthy·Control Plane 3대의 직접 readyz 각 3/3·API VIP 9/9를 기록했다. Screenshot와 사용자 관찰은 자동 시험 결과와 구분한다.
 
 이는 해당 시점의 가용성 관찰이다. 앞선 cp-03/API VIP 장애 원인 규명, HA 장애 주입·절체/복구 전체 PASS가 아니며 #112 전체를 닫지 않는다.
+
+## 20. 2026-10-03 #112 V-02 검증 범위 Disposition
+
+이 절은 19절의 당시 실행·판정을 소급 수정하지 않는다. [App #112](https://github.com/seokpan/seokpan-app/issues/112)의 V-02 다섯 항목을 사용자 승인에 따라 **전체 경로 `NOT TESTED`**로 분류하되, 확보된 부분 근거를 버리지 않고 다음과 같이 분리한다.
+
+| V-02 범위 | 확보한 부분 근거 | 미입증 경계 |
+| --- | --- | --- |
+| 최초 Provider 실패·setup ghost connected | 배포 Backend Image Handler/실제 Redis Adapter+Pod-local Redis에서 Claim 전 기존 상태 불변, Claim 후 첫 Snapshot 실패의 Disconnect Lease·Due 확인 | 운영 공유 Redis 장애와 실제 두 Backend WebSocket/Session의 장시간 수렴 |
+| Provider `1011`·일반 내부 오류 정책 | 격리 Provider `1011`의 개인 이탈/Lease 오판 방지. 별도 일반 `RuntimeError` 뒤 `connected=true`·Lease 없음 관찰 | 실제 네트워크 종료 뒤 일반 오류 상태의 장기 처리·정책 적합성 및 사용자 영향 |
+| cleanup 후 `connected/generation` | 격리 재접속 Generation 증가·옛 Disconnect Fence·현재 Disconnect Due·재접속 시 Due 제거 | 운영 공유 Redis의 실제 Socket 종료·재접속과 10초 grace 이후 최종 상태 |
+| BFCache 정상/실패 복귀 | 실제 Chrome `pageshow.persisted=true`, 동일 문서·Member Session/Participant/Room·UI 입력 활성화로 정상 복귀 확인 | 실제 BFCache 복귀 중 인증/Provider 실패와 수동 복구의 단일 Browser 경로 |
+
+Headless Playwright의 별도 일반 History Run은 BFCache 복원을 관찰하지 못했다. 이를 실제 Chrome 정상 BFCache 근거와 혼동하지 않으며, 정상 복귀 PASS를 복귀 실패 경로 PASS로 확대하지 않는다. 다섯 체크를 미체크로 남기고 각 격리/정상 경로의 부분 Evidence만 인정한다. 운영 사건 발생, 복원력 Final 주장 필요 또는 2차 명시 요구가 생기면 App 담당 `tjung03`이 영향 상한·백업·사전/사후 Gate·중단/복구 절차와 후속 Issue 필요성을 재평가한다. 공유 Redis/Backend 장애를 이 문서 변경으로 승인하거나 실행하지 않는다.
+
+공식 `KAI-CON-01`과 `KAI-REC-01`은 **In Progress / Not Final**, `KAI-PERF-01`은 **Partial / Not Final**, `KAI-DR-01`은 **Not Tested / Cross-role**을 유지한다. Captured 운영 활성화는 1차 **NOT REQUIRED / NOT TESTED**다. #112의 Validation 추적을 `NOT TESTED`로 수렴하는 결정은 D01/D07의 정확성·복구 요구를 삭제하거나 해당 공식 Gate를 PASS 처리하는 결정이 아니다.
+
+19.2절의 “App #117은 Open”은 그 절 작성 당시 상태다. 이후 [App #117](https://github.com/seokpan/seokpan-app/issues/117)은 현행 경보·수동 대응 정책의 개정 완료 기준과 격리 Ready/Endpoint·부분 운영 관찰을 분리 기록한 뒤 `completed`로 종료됐다. 과거 저수준 장애 원인, 현행 공유 Provider 장기 장애에서 담당자 ACK→한 Pod 수동 복구, 당시 HTTP/Session 무영향은 입증되지 않았다. 이 종료를 #112 V-02 또는 `KAI-REC-01` Final PASS로 전용하지 않는다.
